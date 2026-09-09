@@ -16,6 +16,14 @@ const RADIO_DETEC  : float = 55.0
 const RADIO_VISUAL : float = 26.0
 const TASA_LLENADO : float = 0.0025   # ~6 min de 0 a 100%
 
+# Origen fijo del trabajador de limpieza para las 6 papeleras — un
+# rincón del campus (esquina sur-oeste, lejos de las 6 zonas reales:
+# ver DATOS_ZONAS_RECICLAJE en SceneMapaMundo.gd) que representa un
+# depósito/garita de servicios generales ficticio. Mismo punto para
+# todas las instancias de esta escena, en el espacio de coordenadas del
+# padre (el mapa), igual que position acá abajo.
+const PUNTO_SERVICIO : Vector2 = Vector2(70, 700)
+
 var _jugador_cerca : bool  = false
 var _completada    : bool  = false
 var _t             : float = 0.0
@@ -161,6 +169,13 @@ class TrabajadorVisual extends Node2D:
 class BinVisual extends Node2D:
 	var completada : bool  = false
 	var nivel_fill : float = 0.0
+	# Código QR flotante — sugerencia del tutor de pasantías: en vez de
+	# pedir el servicio de limpieza con un simple "[E]", mostrar algo que
+	# remita a "escanear para llamar". Es puramente decorativo: un patrón
+	# dibujado, determinístico por qr_semilla (no codifica nada real, no
+	# se puede escanear con un teléfono de verdad).
+	var mostrar_qr : bool  = false
+	var qr_semilla : int   = 0
 	var _t         : float = 0.0
 
 	func _process(delta: float) -> void:
@@ -171,6 +186,41 @@ class BinVisual extends Node2D:
 		_draw_bin()
 		if completada and nivel_fill < 0.2:
 			_draw_completado_icon()
+		if mostrar_qr:
+			_draw_qr()
+
+	func _draw_qr() -> void:
+		var size : float = 14.0
+		var cy   : float = -36.0
+		var half : float = size * 0.5
+
+		# Halo circular suave en vez de un cuadrado — se nota menos
+		# invasivo a este tamaño chico.
+		var pulso : float = 0.5 + 0.5 * sin(_t * 3.0)
+		draw_circle(Vector2(0, cy), half + 4.0, Color(0.20, 0.85, 0.95, 0.14 + 0.12 * pulso))
+		# Fondo blanco, como un cartel/QR impreso.
+		draw_rect(Rect2(-half, cy - half, size, size), Color(0.97, 0.97, 0.97), true)
+
+		# Grilla 4x4 determinística (misma semilla → mismo patrón siempre
+		# para esta papelera) con las tres esquinas tipo "finder pattern"
+		# de un QR real. Con gap entre celdas para que no se vea como un
+		# borrón sólido a este tamaño.
+		var celdas  : int   = 4
+		var celda_w : float = size / celdas
+		var rng := RandomNumberGenerator.new()
+		rng.seed = qr_semilla
+		for fila in range(celdas):
+			for col in range(celdas):
+				var es_esquina : bool = (fila < 1 and col < 1) \
+					or (fila < 1 and col >= celdas - 1) \
+					or (fila >= celdas - 1 and col < 1)
+				if es_esquina or rng.randf() > 0.5:
+					var px : float = -half + col * celda_w
+					var py : float = cy - half + fila * celda_w
+					draw_rect(Rect2(px + 0.5, py + 0.5, celda_w - 1.0, celda_w - 1.0),
+							Color(0.10, 0.10, 0.12), true)
+
+		draw_rect(Rect2(-half, cy - half, size, size), Color(0.20, 0.85, 0.95, 0.9), false, 1.0)
 
 	func _draw_bin() -> void:
 		var colores : Array = [
@@ -250,6 +300,7 @@ func _crear_collision() -> void:
 func _crear_visual() -> void:
 	_visual_node = BinVisual.new()
 	_visual_node.z_index = 1
+	(_visual_node as BinVisual).qr_semilla = mision_id.hash()
 	add_child(_visual_node)
 
 
@@ -287,6 +338,13 @@ func _process(delta: float) -> void:
 		if is_instance_valid(_visual_node):
 			(_visual_node as BinVisual).nivel_fill = nivel_llenado
 
+	# El QR solo se muestra en la misma ventana en la que ya se puede
+	# llamar al servicio (ver intentar_interactuar) — se apaga apenas
+	# en_servicio pasa a true, aunque sea a mitad de frame.
+	if is_instance_valid(_visual_node):
+		(_visual_node as BinVisual).mostrar_qr = \
+			_completada and not en_servicio and nivel_llenado >= 0.35
+
 	if _jugador_cerca:
 		_actualizar_prompt_texto()
 
@@ -310,7 +368,7 @@ func _actualizar_prompt_texto() -> void:
 	if not _completada:
 		_prompt_lbl.text = "♻ [E] Clasificar residuos — %s (%d%%)" % [nombre_zona, pct]
 	elif nivel_llenado >= 0.40:
-		_prompt_lbl.text = "🧹 [E] Llamar servicio de limpieza (%d%% lleno)" % pct
+		_prompt_lbl.text = "📱 [E] Escanear QR — llamar servicio de limpieza (%d%% lleno)" % pct
 	else:
 		_prompt_lbl.text = "✅ Papelera limpia — %s (%d%%)" % [nombre_zona, pct]
 
@@ -346,18 +404,189 @@ func solicitar_servicio_limpieza() -> void:
 	if en_servicio: return
 	en_servicio = true
 	_actualizar_prompt_texto()
+	_prompt_panel.visible = false
 
-	# 1. Crear trabajador animado a 120 px a la izquierda, fase 0 = caminando
+	await _mostrar_modal_qr()
+	_iniciar_trabajador()
+
+
+# Genera un identificador único por solicitud — no necesita ser
+# criptográficamente seguro (lo peor que puede pasar si alguien lo
+# adivina es marcar como "escaneada" una llamada al servicio ficticia
+# de una papelera), solo distinto entre solicitudes.
+func _generar_token() -> String:
+	return "%x-%x-%x" % [Time.get_ticks_usec(), randi(), OS.get_process_id()]
+
+
+func _url_qr(token: String) -> String:
+	# apikey en la URL (no solo en headers): un navegador de teléfono
+	# que abre el link como una página normal no puede mandar headers
+	# custom. La anon key es pública por diseño — ya viaja embebida en
+	# el cliente Godot — así que no expone nada nuevo acá.
+	return "%s/functions/v1/marcar_escaneado?token=%s&apikey=%s" % [
+		SupabaseManager.SUPABASE_URL, token.uri_encode(), SupabaseManager.SUPABASE_ANON_KEY
+	]
+
+
+# Panel grande y centrado con un QR REAL y escaneable (librería vendorizada
+# en addons/qrcode_generator/, MIT, ver LICENSE) que apunta a la Edge
+# Function marcar_escaneado. Crea la solicitud, muestra el QR, y espera
+# —consultando cada 1.5s— a que alguien lo escanee de verdad con un
+# teléfono. Nunca traba al jugador para siempre: hay un botón para
+# seguir sin escanear, y un timeout de 60s por si no hay nadie con
+# celular a mano.
+func _mostrar_modal_qr() -> void:
+	var token := _generar_token()
+
+	var canvas := CanvasLayer.new()
+	canvas.layer = 20
+	add_child(canvas)
+
+	var fondo := ColorRect.new()
+	fondo.color = Color(0.0, 0.0, 0.0, 0.55)
+	fondo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(fondo)
+
+	var panel := Panel.new()
+	panel.custom_minimum_size = Vector2(240, 330)
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.offset_left   = -120
+	panel.offset_top    = -165
+	panel.offset_right  =  120
+	panel.offset_bottom =  165
+	var ps := StyleBoxFlat.new()
+	ps.bg_color     = Color(0.05, 0.08, 0.10, 0.97)
+	ps.border_color = Color(0.20, 0.85, 0.95)
+	ps.set_border_width_all(2)
+	ps.set_corner_radius_all(12)
+	ps.shadow_color = Color(0.0, 0.0, 0.0, 0.4)
+	ps.shadow_size  = 10
+	panel.add_theme_stylebox_override("panel", ps)
+	canvas.add_child(panel)
+
+	var titulo := Label.new()
+	# Salto de línea a mano en vez de confiar en autowrap: el autowrap
+	# no estaba respetando el ancho del Label (se salía del panel por
+	# la derecha) — esto es a prueba de esa falla, no depende de que el
+	# cálculo de wrap ande bien.
+	titulo.text = "📱 Escaneá con tu celular\npara llamar al servicio"
+	titulo.position = Vector2(10, 14)
+	titulo.size      = Vector2(220, 44)
+	titulo.clip_text = true
+	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	titulo.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	titulo.add_theme_font_size_override("font_size", 13)
+	titulo.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
+	panel.add_child(titulo)
+
+	var qr_rect := TextureRect.new()
+	qr_rect.position        = Vector2(50, 66)
+	qr_rect.size             = Vector2(140, 140)
+	qr_rect.stretch_mode     = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	# Sin filtro: un QR difuminado por interpolación puede no leer bien
+	# con la cámara — cada módulo tiene que quedar como un bloque nítido.
+	qr_rect.texture_filter   = CanvasItem.TEXTURE_FILTER_NEAREST
+	var qrgen := QrCode.new()
+	qrgen.error_correct_level = QrCode.ErrorCorrectionLevel.MEDIUM
+	qr_rect.texture = qrgen.get_texture(_url_qr(token))
+	qrgen.free()
+	panel.add_child(qr_rect)
+
+	var estado_lbl := Label.new()
+	estado_lbl.text = "Generando código..."
+	estado_lbl.position = Vector2(10, 214)
+	estado_lbl.size      = Vector2(220, 40)
+	estado_lbl.clip_text = true
+	estado_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	estado_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	estado_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	estado_lbl.add_theme_font_size_override("font_size", 12)
+	estado_lbl.add_theme_color_override("font_color", Color(0.60, 0.75, 0.80))
+	panel.add_child(estado_lbl)
+
+	var btn_saltar := Button.new()
+	btn_saltar.text = "No tengo el celular a mano — continuar"
+	btn_saltar.position = Vector2(20, 270)
+	btn_saltar.size      = Vector2(200, 40)
+	btn_saltar.add_theme_font_size_override("font_size", 10)
+	panel.add_child(btn_saltar)
+
+	# Dictionary, no variables sueltas: las lambdas de GDScript capturan
+	# bool/Variant por valor, no por referencia (ya lo aprendí una vez
+	# con el bug de _cargar_misiones_con_timeout en SceneLogin.gd — un
+	# Dictionary sí se comparte por referencia).
+	var estado := {"listo": false, "escaneada": false, "saltado": false}
+	btn_saltar.pressed.connect(func():
+		estado["listo"]   = true
+		estado["saltado"] = true)
+
+	var on_estado := func(tok: String, escaneada: bool):
+		if tok != token: return
+		if escaneada:
+			estado["listo"]     = true
+			estado["escaneada"] = true
+	var on_fallo := func(tok: String):
+		if tok != token: return
+		# No se pudo registrar la solicitud (sin red, etc.) — no traba
+		# nada, el botón de saltar sigue disponible.
+		if is_instance_valid(estado_lbl):
+			estado_lbl.text = "No se pudo conectar —\npodés continuar sin escanear."
+
+	SupabaseManager.solicitud_qr_estado.connect(on_estado)
+	SupabaseManager.solicitud_qr_creada_fallida.connect(on_fallo)
+
+	SupabaseManager.crear_solicitud_qr(token, mision_id)
+	estado_lbl.text = "Esperando el escaneo..."
+
+	var limite : int = Time.get_ticks_msec() + 60000   # 60 s, nunca traba para siempre
+	while not estado["listo"] and Time.get_ticks_msec() < limite:
+		await get_tree().create_timer(1.5).timeout
+		if not estado["listo"]:
+			SupabaseManager.consultar_solicitud_qr(token)
+
+	SupabaseManager.solicitud_qr_estado.disconnect(on_estado)
+	SupabaseManager.solicitud_qr_creada_fallida.disconnect(on_fallo)
+
+	if is_instance_valid(estado_lbl):
+		if estado["escaneada"]:
+			estado_lbl.text = "✅ Escaneado — enviando solicitud..."
+			estado_lbl.add_theme_color_override("font_color", Color(0.30, 0.95, 0.40))
+		elif not estado["saltado"]:
+			estado_lbl.text = "⏱ Tiempo agotado —\ncontinuando de todas formas"
+	await get_tree().create_timer(0.6).timeout
+
+	canvas.queue_free()
+
+
+func _iniciar_trabajador() -> void:
+	# El modal del QR ocultó el prompt de texto — lo reactivamos para que
+	# siga mostrando "Servicio de limpieza en camino..." mientras camina,
+	# igual que antes de agregar el modal.
+	if _jugador_cerca and is_instance_valid(_prompt_panel):
+		_prompt_panel.visible = true
+
+	# Sale siempre del mismo punto del campus (un depósito/garita de
+	# servicios generales ficticio, no una zona real del juego) y camina
+	# hasta la papelera que lo llamó — antes aparecía de la nada a 120px
+	# de cada papelera, sin ningún origen en común.
+	var destino   : Vector2 = position + Vector2(-22, 10)
+	var distancia : float   = PUNTO_SERVICIO.distance_to(destino)
+	# Velocidad fija → la duración de la caminata escala con la distancia
+	# real hasta cada papelera, en vez de un tiempo fijo que haría lucir
+	# al trabajador demasiado lento en las papeleras cercanas o
+	# imposiblemente rápido en las lejanas.
+	var t_ida : float = clampf(distancia / 110.0, 1.5, 7.0)
+
 	var trabajador := TrabajadorVisual.new()
-	trabajador.position = position + Vector2(-120, 0)
+	trabajador.position = PUNTO_SERVICIO
 	trabajador.z_index  = 2
 	trabajador.fase     = 0
 	get_parent().add_child(trabajador)
 
 	var tw := get_tree().create_tween()
 
-	# ── Fase 0: caminar hasta la papelera (2.2 s) ─────────────
-	tw.tween_property(trabajador, "position", position + Vector2(-22, 10), 2.2)
+	# ── Fase 0: caminar desde el depósito hasta la papelera ───
+	tw.tween_property(trabajador, "position", destino, t_ida)
 
 	# ── Fase 1: agacharse suavemente (0.7 s) ──────────────────
 	tw.tween_callback(func(): trabajador.fase = 1)
@@ -379,9 +608,9 @@ func solicitar_servicio_limpieza() -> void:
 	tw.tween_callback(func(): trabajador.fase = 3)
 	tw.tween_interval(0.6)
 
-	# ── Fase 4: retirarse caminando (2.0 s) + desvanecer ──────
+	# ── Fase 4: volver caminando al depósito + desvanecer ─────
 	tw.tween_callback(func(): trabajador.fase = 4)
-	tw.tween_property(trabajador, "position", position + Vector2(-140, 0), 2.0)
+	tw.tween_property(trabajador, "position", PUNTO_SERVICIO, t_ida)
 	tw.tween_property(trabajador, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(func():
 		trabajador.queue_free()

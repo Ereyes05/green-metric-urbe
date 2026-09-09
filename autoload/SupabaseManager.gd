@@ -27,6 +27,9 @@ signal progreso_cargado(lista: Array)
 # lista: [{"modulo_id": int, "mision_id": String}, ...] — una fila por
 # misión ya registrada en misiones_estudiante para la cuenta logueada.
 signal misiones_estudiante_cargadas(lista: Array)
+signal solicitud_qr_creada(token: String)
+signal solicitud_qr_creada_fallida(token: String)
+signal solicitud_qr_estado(token: String, escaneada: bool)
 # xp_otorgada: lo que la RPC realmente sumó (0 si ya_registrada).
 # ya_registrada: true si esta mision_id ya estaba en misiones_estudiante —
 # la llamada contó como intento pero no otorgó XP de nuevo.
@@ -171,6 +174,34 @@ func cargar_ranking() -> void:
 	_encolar("cargar_ranking", url, HTTPClient.METHOD_GET, _headers_anon())
 
 
+# ── SOLICITUDES QR (servicio de limpieza, Nivel 3) ───────────
+# El QR que se muestra en zona_reciclaje.gd apunta a una Edge Function
+# pública (marcar_escaneado, sin login) que marca esta fila cuando
+# alguien la abre desde su teléfono real. crear_solicitud_qr() registra
+# el token al mostrar el QR; consultar_solicitud_qr() lo consulta
+# periódicamente para detectar el escaneo real. Ver sql/solicitudes_qr.sql
+# y supabase/functions/marcar_escaneado/index.ts.
+func crear_solicitud_qr(token: String, mision_id: String) -> void:
+	if jwt_token.is_empty():
+		push_error("SupabaseManager: Debes hacer login primero.")
+		return
+	var url  := SUPABASE_URL + "/rest/v1/solicitudes_qr"
+	var body := JSON.stringify({
+		"token"    : token,
+		"user_id"  : user_id,
+		"mision_id": mision_id
+	})
+	_encolar("crear_solicitud_qr", url, HTTPClient.METHOD_POST, _headers_auth(), body,
+			 {"token": token})
+
+
+func consultar_solicitud_qr(token: String) -> void:
+	if jwt_token.is_empty(): return
+	var url := SUPABASE_URL + "/rest/v1/solicitudes_qr?token=eq.%s&select=escaneado" % token.uri_encode()
+	_encolar("consultar_solicitud_qr", url, HTTPClient.METHOD_GET, _headers_auth(), "",
+			 {"token": token})
+
+
 func guardar_progreso(modulo_id: int, mision_id: String, puntaje: int, xp: int, completado: bool) -> void:
 	if jwt_token.is_empty():
 		push_error("SupabaseManager: Debes hacer login primero.")
@@ -272,6 +303,8 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"cargar_modulos"  : _procesar_modulos(code, datos)
 		"cargar_progreso" : _procesar_progreso(code, datos)
 		"cargar_misiones" : _procesar_misiones_estudiante(code, datos)
+		"crear_solicitud_qr"     : _procesar_crear_solicitud_qr(code, ctx)
+		"consultar_solicitud_qr" : _procesar_consultar_solicitud_qr(code, datos, ctx)
 		"guardar_progreso": _procesar_guardar(code, datos, ctx)
 		"cargar_ranking"  : _procesar_ranking(code, datos)
 		"registrar_evento": _procesar_evento(code)
@@ -387,6 +420,23 @@ func _procesar_misiones_estudiante(code: int, datos: Variant) -> void:
 		emit_signal("misiones_estudiante_cargadas", datos)
 	else:
 		emit_signal("error_red", "No se pudo cargar el progreso por misión.")
+
+
+func _procesar_crear_solicitud_qr(code: int, ctx: Dictionary) -> void:
+	var token := str(ctx.get("token", ""))
+	if code in [200, 201]:
+		emit_signal("solicitud_qr_creada", token)
+	else:
+		emit_signal("solicitud_qr_creada_fallida", token)
+
+
+func _procesar_consultar_solicitud_qr(code: int, datos: Variant, ctx: Dictionary) -> void:
+	var token := str(ctx.get("token", ""))
+	if code == 200 and datos is Array and datos.size() > 0:
+		var fila : Dictionary = datos[0]
+		emit_signal("solicitud_qr_estado", token, bool(fila.get("escaneado", false)))
+	else:
+		emit_signal("solicitud_qr_estado", token, false)
 
 
 func _procesar_guardar(code: int, datos: Variant, ctx: Dictionary) -> void:
