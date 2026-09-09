@@ -711,10 +711,7 @@ func _en_login_exitoso(_datos: Dictionary) -> void:
 	_set_cargando(false)
 	_login_es_post_registro = false
 	_msg(_msg_login, "¡Bienvenido al campus!", Color(0.28, 0.95, 0.45))
-	var tw := create_tween()
-	tw.tween_property(_center, "modulate:a", 0.0, 0.5)
-	tw.tween_callback(func():
-		get_tree().change_scene_to_file("res://scenes/mapa/scene_mapa_mundo.tscn"))
+	await _preparar_progreso_y_entrar(_msg_login)
 
 
 func _en_login_fallido(error: String, error_code: String) -> void:
@@ -733,7 +730,66 @@ func _en_registro_exitoso(_usuario: Dictionary) -> void:
 	_set_cargando(false)
 	_msg(_msg_reg, "¡Cuenta creada! Entrando al campus...", Color(0.28, 0.95, 0.45))
 	await get_tree().create_timer(1.0).timeout
-	get_tree().change_scene_to_file("res://scenes/mapa/scene_mapa_mundo.tscn")
+	await _preparar_progreso_y_entrar(_msg_reg)
+
+
+# Ata el guardado local de NivelManager a la cuenta que acaba de iniciar
+# sesión — antes era un único archivo global sin distinguir cuenta, así
+# que una cuenta nueva en una máquina con progreso previo arrancaba
+# viendo el campus como si todo estuviera completado. Después reconstruye
+# el estado real desde misiones_estudiante (la fuente de verdad del
+# servidor), necesario cuando el estudiante juega desde una máquina sin
+# save local. Con timeout y fail-open: si no hay red, entra igual con lo
+# que haya en el archivo local en vez de trabar al estudiante acá.
+func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
+	NivelManager.iniciar_sesion(SupabaseManager.user_id)
+	_msg(msg_lbl, "Cargando tu progreso...", Color(0.65, 0.90, 0.70))
+	var lista = await _cargar_misiones_con_timeout()
+	if lista is Array:
+		NivelManager.repoblar_desde_servidor(lista)
+
+	var tw := create_tween()
+	tw.tween_property(_center, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(func():
+		get_tree().change_scene_to_file("res://scenes/mapa/scene_mapa_mundo.tscn"))
+
+
+# Pide misiones_estudiante y espera su respuesta (o error_red, o 8s de
+# timeout) sin usar `await` directo sobre una señal — necesitamos poder
+# "ganar" con la que llegue primero entre dos señales distintas más un
+# límite de tiempo, y GDScript no tiene un await-de-varias-señales nativo.
+# Devuelve el Array de filas, o null si falló/no hubo respuesta a tiempo.
+func _cargar_misiones_con_timeout() -> Variant:
+	SupabaseManager.cargar_misiones_estudiante()
+
+	# Dictionary, no bool/Variant sueltos: las lambdas de GDScript capturan
+	# variables locales simples POR VALOR, no por referencia — escribir
+	# "resuelto = true" dentro de la lambda no se reflejaba afuera, así que
+	# el bucle de abajo nunca veía el cambio y siempre esperaba el timeout
+	# completo devolviendo null, aunque la respuesta ya hubiera llegado
+	# bien. Un Dictionary es un tipo por referencia: mutar sus claves desde
+	# la lambda sí es visible aquí afuera.
+	var estado := {"resuelto": false, "resultado": null}
+	var on_ok := func(lista: Array):
+		estado["resuelto"]  = true
+		estado["resultado"] = lista
+	var on_err := func(_msg: String):
+		estado["resuelto"]  = true
+		estado["resultado"] = null
+
+	SupabaseManager.misiones_estudiante_cargadas.connect(on_ok, CONNECT_ONE_SHOT)
+	SupabaseManager.error_red.connect(on_err, CONNECT_ONE_SHOT)
+
+	var limite := Time.get_ticks_msec() + 8000
+	while not estado["resuelto"] and Time.get_ticks_msec() < limite:
+		await get_tree().process_frame
+
+	if SupabaseManager.misiones_estudiante_cargadas.is_connected(on_ok):
+		SupabaseManager.misiones_estudiante_cargadas.disconnect(on_ok)
+	if SupabaseManager.error_red.is_connected(on_err):
+		SupabaseManager.error_red.disconnect(on_err)
+
+	return estado["resultado"]
 
 
 # El signup respondió 200 pero sin sesión (con "user" legible o con el

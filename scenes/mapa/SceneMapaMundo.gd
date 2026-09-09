@@ -485,6 +485,19 @@ func _ready() -> void:
 	camara.limit_bottom = int(MAPA_ALTO)
 	camara.zoom         = Vector2(1.5, 1.5)
 
+	# _progreso_modulos (sidebar) y los índices del HUD (💧🌿📚) solo se
+	# actualizaban de forma reactiva, al completar una misión EN ESA
+	# sesión — nunca se sembraban desde NivelManager al entrar. Un jugador
+	# que vuelve a loguearse sin completar nada nuevo en esa sesión veía
+	# 0% en todos lados aunque NivelManager (ya repoblado desde el
+	# servidor en SceneLogin, ver iniciar_sesion()/repoblar_desde_servidor)
+	# tuviera el progreso real. Hay que sembrar ANTES de _construir_sidebar(),
+	# que pinta con lo que haya en _progreso_modulos en ese momento.
+	var nm_inicial = _nivel_mgr()
+	if nm_inicial:
+		for mod_id in _progreso_modulos.keys():
+			_progreso_modulos[mod_id] = nm_inicial.pct_nivel(mod_id)
+
 	_construir_hud()
 	_construir_sidebar()
 	_construir_notificacion_zona()
@@ -492,6 +505,11 @@ func _ready() -> void:
 	_construir_panel_zona_mejora()
 	_construir_panel_contenedor()
 	_actualizar_hud()
+	# Mismo motivo que el sembrado de _progreso_modulos de arriba: estos
+	# tres solo se actualizaban al completar una misión en vivo.
+	_actualizar_indicador_verde()
+	_actualizar_indicador_agua()
+	_actualizar_indicador_edu()
 
 	# Escena de interior de edificio (overlay sobre el campus)
 	_edificio_ui = EDIFICIO_ESCENA.new()

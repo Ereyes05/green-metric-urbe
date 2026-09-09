@@ -39,8 +39,7 @@ const XP_POR_MISION : Dictionary  = {1: 40, 2: 50, 3: 35, 4: 35, 5: 35, 6: 70}
 const EC_POR_MISION : Dictionary  = {1: 15, 2: 20, 3: 12, 4: 12, 5: 12, 6: 20}
 const XP_NIVEL_BONUS : Dictionary = {1: 150, 2: 250, 3: 180, 4: 180, 5: 180, 6: 200}
 
-const SAVE_PATH   : String = "user://nivel_progreso.json"
-const BACKUP_PATH : String = "user://nivel_progreso.json.bak"
+const SAVE_PATH_TPL : String = "user://nivel_progreso_%s.json"
 
 # ── Estado ───────────────────────────────────────────────────
 var nivel_actual : int = 1
@@ -51,21 +50,74 @@ var _misiones : Dictionary = {}
 # textualmente en el informe final. No confundir con _misiones (solo bool).
 var _detalles : Dictionary = {}
 
+# uid de Supabase de la cuenta activa. El save es POR CUENTA (ver
+# iniciar_sesion) — antes era un único archivo global
+# (user://nivel_progreso.json) cargado sin importar quién iniciara sesión,
+# así que una cuenta nueva en una máquina con progreso previo arrancaba
+# viendo todo como completado. Vacío significa "todavía sin cuenta
+# vinculada" (pantalla de login) — _cargar()/_guardar() no tocan disco
+# en ese estado.
+var _uid_activo : String = ""
+
 # Resultado de la carga inicial, consultable UNA vez por quien construya el
 # HUD ("ok" | "recuperado" | "nuevo_corrupto") — antes, si el JSON se
 # corrompía (cierre abrupto a mitad de escritura, disco lleno), _cargar()
 # fallaba en silencio y el jugador perdía todo el progreso sin aviso.
-# No es señal: NivelManager._ready() corre como autoload, antes de que
-# SceneMapaMundo pueda conectarse — se consulta con obtener_estado_carga().
+# No es señal: se consulta con obtener_estado_carga() después de
+# iniciar_sesion().
 var _estado_carga : String = "ok"
 
 
 func _ready() -> void:
 	add_to_group("nivel_manager")
-	_cargar()
+	# Ya no se autocarga acá: este autoload existe antes de que haya
+	# sesión (arranca con la pantalla de login). Ver iniciar_sesion().
 
 
 # ── API pública ───────────────────────────────────────────────
+
+# Ata el guardado local a la cuenta que acaba de loguear/registrarse y
+# carga (o crea) su archivo. Llamar SIEMPRE al entrar a la partida —
+# tanto en el primer login del proceso como al volver a "Salir al
+# Login" y entrar con otra cuenta sin reiniciar el juego — para no
+# arrastrar en memoria el estado de la cuenta anterior.
+func iniciar_sesion(uid: String) -> void:
+	_uid_activo  = uid
+	nivel_actual = 1
+	_misiones    = {}
+	_detalles    = {}
+	_estado_carga = "ok"
+	_cargar()
+
+
+# Mezcla (unión, nunca reemplaza) lo que el servidor reporta en
+# misiones_estudiante hacia el estado local — la fuente de verdad real
+# cuando el archivo local no existe (máquina nueva) o quedó atrás. Cada
+# fila es {"modulo_id": int, "mision_id": String}.
+#
+# A propósito NO emite mision_nivel_completada/nivel_completado (no es
+# "completar" nada, es reconstruir algo ya ganado — emitir esas señales
+# acá dispararía popups de misión y celebraciones de nivel fantasma en
+# cada login) ni vuelve a llamar guardar_progreso (la RPC lo tolera por
+# ser idempotente, pero es tráfico de red que no hace falta).
+func repoblar_desde_servidor(filas: Array) -> void:
+	for fila in filas:
+		if not (fila is Dictionary): continue
+		var modulo_id_raw = fila.get("modulo_id")
+		var mision_id := str(fila.get("mision_id", ""))
+		if modulo_id_raw == null or mision_id.is_empty(): continue
+		var s := str(int(modulo_id_raw))
+		if not _misiones.has(s):
+			_misiones[s] = {}
+		(_misiones[s] as Dictionary)[mision_id] = true
+	# Recalcula nivel_actual como el primer nivel, en orden, que todavía
+	# no está completo — mismo criterio que usa completar_mision().
+	var n := 1
+	while n < 6 and nivel_completo(n):
+		n += 1
+	nivel_actual = n
+	_guardar()
+
 
 func nivel_desbloqueado(n: int) -> bool:
 	if n == 1: return true
@@ -123,6 +175,15 @@ func obtener_estado_carga() -> String:
 	return _estado_carga
 
 
+func _ruta_save() -> String:
+	if _uid_activo.is_empty(): return ""
+	return SAVE_PATH_TPL % _uid_activo
+
+func _ruta_backup() -> String:
+	var s := _ruta_save()
+	return "" if s.is_empty() else (s + ".bak")
+
+
 # Intenta cargar y aplicar el JSON de `path`. Devuelve false ante cualquier
 # fallo (archivo ausente, vacío, JSON inválido, forma inesperada) sin tocar
 # el estado en memoria — así una lectura fallida del save principal no dañe
@@ -147,39 +208,45 @@ func _intentar_cargar_desde(path: String) -> bool:
 
 
 func _cargar() -> void:
-	if _intentar_cargar_desde(SAVE_PATH):
+	var save_path := _ruta_save()
+	if save_path.is_empty(): return   # sin cuenta vinculada todavía
+	var backup_path := _ruta_backup()
+	if _intentar_cargar_desde(save_path):
 		_estado_carga = "ok"
 		return
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(save_path):
 		_estado_carga = "ok"   # partida nueva de verdad, no es un fallo
 		return
 	# El save existía pero no se pudo leer/parsear — intenta el respaldo
 	# antes de resignarse a perder el progreso.
-	if _intentar_cargar_desde(BACKUP_PATH):
+	if _intentar_cargar_desde(backup_path):
 		_estado_carga = "recuperado"
-		push_warning("NivelManager: nivel_progreso.json corrupto, progreso recuperado desde backup.")
+		push_warning("NivelManager: %s corrupto, progreso recuperado desde backup." % save_path)
 		return
 	_estado_carga = "nuevo_corrupto"
-	push_warning("NivelManager: nivel_progreso.json y su backup están corruptos, se reinicia el progreso.")
+	push_warning("NivelManager: %s y su backup están corruptos, se reinicia el progreso." % save_path)
 
 
 func _guardar() -> void:
+	var save_path := _ruta_save()
+	if save_path.is_empty(): return   # sin cuenta vinculada todavía
+	var backup_path := _ruta_backup()
 	# Antes de sobrescribir, respalda el save actual (solo si es válido) para
 	# poder recuperarlo si ESTA escritura se corrompe a mitad de camino.
-	if FileAccess.file_exists(SAVE_PATH):
-		var actual := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if FileAccess.file_exists(save_path):
+		var actual := FileAccess.open(save_path, FileAccess.READ)
 		if actual:
 			var txt_actual := actual.get_as_text()
 			actual.close()
 			if not txt_actual.is_empty():
 				var chk := JSON.new()
 				if chk.parse(txt_actual) == OK:
-					var bak := FileAccess.open(BACKUP_PATH, FileAccess.WRITE)
+					var bak := FileAccess.open(backup_path, FileAccess.WRITE)
 					if bak:
 						bak.store_string(txt_actual)
 						bak.close()
 	var data := {"nivel_actual": nivel_actual, "misiones": _misiones, "detalles": _detalles}
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if not f: return
 	f.store_string(JSON.stringify(data, "\t"))
 	f.close()
@@ -191,5 +258,6 @@ func reset_progreso() -> void:
 	_detalles = {}
 	_estado_carga = "ok"
 	_guardar()
-	if FileAccess.file_exists(BACKUP_PATH):
-		DirAccess.remove_absolute(BACKUP_PATH)
+	var backup_path := _ruta_backup()
+	if not backup_path.is_empty() and FileAccess.file_exists(backup_path):
+		DirAccess.remove_absolute(backup_path)

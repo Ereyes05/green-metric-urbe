@@ -24,6 +24,9 @@ signal contrasena_actualizada()
 signal actualizar_contrasena_fallido(error: String)
 signal modulos_cargados(lista: Array)
 signal progreso_cargado(lista: Array)
+# lista: [{"modulo_id": int, "mision_id": String}, ...] — una fila por
+# misión ya registrada en misiones_estudiante para la cuenta logueada.
+signal misiones_estudiante_cargadas(lista: Array)
 # xp_otorgada: lo que la RPC realmente sumó (0 si ya_registrada).
 # ya_registrada: true si esta mision_id ya estaba en misiones_estudiante —
 # la llamada contó como intento pero no otorgó XP de nuevo.
@@ -152,6 +155,17 @@ func cargar_progreso() -> void:
 	_encolar("cargar_progreso", url, HTTPClient.METHOD_GET, _headers_auth())
 
 
+# Estado por misión (no por módulo) de la cuenta logueada — la fuente real
+# para repoblar NivelManager al entrar desde una máquina sin save local.
+# Ver NivelManager.repoblar_desde_servidor().
+func cargar_misiones_estudiante() -> void:
+	if jwt_token.is_empty():
+		push_error("SupabaseManager: Debes hacer login primero.")
+		return
+	var url := SUPABASE_URL + "/rest/v1/misiones_estudiante?select=modulo_id,mision_id"
+	_encolar("cargar_misiones", url, HTTPClient.METHOD_GET, _headers_auth())
+
+
 func cargar_ranking() -> void:
 	var url := SUPABASE_URL + "/rest/v1/progreso_estudiante?select=user_id,xp_ganada,completado&order=xp_ganada.desc"
 	_encolar("cargar_ranking", url, HTTPClient.METHOD_GET, _headers_anon())
@@ -257,6 +271,7 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"nueva_contrasena": _procesar_nueva_contrasena(code, datos)
 		"cargar_modulos"  : _procesar_modulos(code, datos)
 		"cargar_progreso" : _procesar_progreso(code, datos)
+		"cargar_misiones" : _procesar_misiones_estudiante(code, datos)
 		"guardar_progreso": _procesar_guardar(code, datos, ctx)
 		"cargar_ranking"  : _procesar_ranking(code, datos)
 		"registrar_evento": _procesar_evento(code)
@@ -365,6 +380,13 @@ func _procesar_progreso(code: int, datos: Variant) -> void:
 		emit_signal("progreso_cargado", datos)
 	else:
 		emit_signal("error_red", "No se pudo cargar el progreso.")
+
+
+func _procesar_misiones_estudiante(code: int, datos: Variant) -> void:
+	if code == 200 and datos is Array:
+		emit_signal("misiones_estudiante_cargadas", datos)
+	else:
+		emit_signal("error_red", "No se pudo cargar el progreso por misión.")
 
 
 func _procesar_guardar(code: int, datos: Variant, ctx: Dictionary) -> void:
