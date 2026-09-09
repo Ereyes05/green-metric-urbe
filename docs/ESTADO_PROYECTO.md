@@ -4,8 +4,9 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-09 (commit `eb0747f` + fix de estilo del botón
-del modal QR y actualización del remote de GitHub).
+Última actualización: 2026-09-09 (commit `35526a9` + merge a `main` +
+verificación geométrica de posiciones de Nivel 4/6, sin commitear todavía
+al momento de escribir esto).
 
 ---
 
@@ -151,17 +152,28 @@ espera que el cliente Godot logueado la llame, no hace falta esa flag).
   contra `EDIFICIOS` en `colision_tilemap.gd` en algún momento del
   desarrollo (ej. el fix de `reciclar_sur`, commit `ed8eea0`).
 - **Nivel 4 (Agua)**: las 8 posiciones (`DATOS_LLAVES_AGUA`,
-  `DATOS_PUNTOS_CAPTACION`) se calcularon como punto medio entre pares de
-  puntos ya verificados, **nunca confirmadas visualmente en el editor**.
-  Probablemente estén bien, pero es una suposición, no un hecho verificado.
+  `DATOS_PUNTOS_CAPTACION`) se verificaron por geometría el 2026-09-09
+  (comparadas contra `EDIFICIOS` en `colision_tilemap.gd`): ninguna cae
+  dentro de un edificio, y el jugador (cápsula de 16px de ancho) tiene
+  margen de sobra incluso en los pasillos más angostos (~40px). **No
+  verificado a simple vista todavía** — ver el desajuste de nombres abajo.
 - **Nivel 5 (Transporte)**: probado en vivo al menos una vez (sesión del
   2026-09-02, confirmó que el guardado funciona).
-- **Nivel 6 (Educación)**: igual que Nivel 4 — **nunca verificado
-  visualmente**. Es el nivel más nuevo del proyecto.
+- **Nivel 6 (Educación)**: mismo chequeo geométrico que Nivel 4, mismo
+  resultado (sin colisiones). **No verificado a simple vista todavía.**
 
-Si alguien va a tocar posiciones de Nivel 4 o 6, verificarlas en el editor
-antes de asumir que están bien — no repetir el error de asumirlo por
-geometría sola.
+**Desajuste encontrado (2026-09-09, por geometría, no por vista):**
+`captacion_bloque_c` ("Techo del Bloque C", Nivel 4) y `captacion_biblioteca`
+("Techo de la Biblioteca", Nivel 4) no están cerca de ningún edificio con
+ese nombre — de hecho **no existe ningún edificio "Biblioteca" en el mapa**
+(comparado contra `mapa_campus.gd`, que solo dibuja los mismos 10 edificios
+de `EDIFICIOS`). Lo mismo con `malla_verde` e `informe_final` (Nivel 6, "el
+Decanato" — tampoco existe). Estos 4 puntos caen en pasillos abiertos, sin
+ningún edificio visualmente asociado al nombre de la misión. No bloquea al
+jugador, pero probablemente se vea raro (el prompt dice "techo de la
+biblioteca" parado en un pasillo vacío). Pendiente: alguien con el editor
+abierto confirme a simple vista si estos 4 puntos quedan bien ambientados o
+si conviene reubicarlos cerca de un edificio real / darles otro nombre.
 
 ## 6. Decisiones de diseño importantes (y por qué)
 
@@ -259,8 +271,10 @@ mecanismo técnico de escaneo → activación a distancia.
 - [ ] **Tweens sin guard** en `interior_bloque.gd` y `mision_solar.gd` —
   causan llamadas de red duplicadas (inofensivas gracias a la RPC
   idempotente, pero innecesarias). No arreglado a propósito, ver sección 6.
-- [ ] **Posiciones de Nivel 4 y 6 nunca verificadas visualmente** — ver
-  sección 5.
+- [ ] **Posiciones de Nivel 4 y 6 verificadas por geometría, no a simple
+  vista** — sin colisiones, pero 4 puntos con nombre de edificio que no
+  existe en el mapa (`captacion_bloque_c`, `captacion_biblioteca`,
+  `malla_verde`, `informe_final`). Ver sección 5.
 - [ ] **Cobertura de `registrar_evento()`** — solo Nivel 5 (movilidad) y
   Nivel 6. Si se quiere el log de proceso completo para la tesis, falta
   instrumentar Niveles 1-4.
