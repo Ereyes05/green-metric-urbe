@@ -505,10 +505,29 @@ func _mostrar_modal_qr() -> void:
 	panel.add_child(estado_lbl)
 
 	var btn_saltar := Button.new()
-	btn_saltar.text = "No tengo el celular a mano — continuar"
-	btn_saltar.position = Vector2(20, 270)
-	btn_saltar.size      = Vector2(200, 40)
-	btn_saltar.add_theme_font_size_override("font_size", 10)
+	# Texto partido a mano (mismo motivo que el título: el autowrap de
+	# Godot no siempre respeta el ancho real del control) + estilo propio
+	# — el Button default es gris plano y desentonaba con el panel oscuro.
+	btn_saltar.text = "No tengo el celular a mano\ncontinuar sin escanear"
+	btn_saltar.position = Vector2(16, 264)
+	btn_saltar.size      = Vector2(208, 48)
+	btn_saltar.add_theme_font_size_override("font_size", 11)
+	var bs_normal := StyleBoxFlat.new()
+	bs_normal.bg_color = Color(0.10, 0.16, 0.19)
+	bs_normal.border_color = Color(0.20, 0.85, 0.95, 0.5)
+	bs_normal.set_border_width_all(1)
+	bs_normal.set_corner_radius_all(8)
+	var bs_hover := bs_normal.duplicate()
+	bs_hover.bg_color = Color(0.14, 0.22, 0.26)
+	bs_hover.border_color = Color(0.20, 0.85, 0.95, 0.9)
+	var bs_pressed := bs_normal.duplicate()
+	bs_pressed.bg_color = Color(0.07, 0.11, 0.13)
+	btn_saltar.add_theme_stylebox_override("normal", bs_normal)
+	btn_saltar.add_theme_stylebox_override("hover", bs_hover)
+	btn_saltar.add_theme_stylebox_override("pressed", bs_pressed)
+	btn_saltar.add_theme_stylebox_override("focus", bs_hover)
+	btn_saltar.add_theme_color_override("font_color", Color(0.75, 0.90, 0.95))
+	btn_saltar.add_theme_color_override("font_hover_color", Color(0.90, 0.98, 1.0))
 	panel.add_child(btn_saltar)
 
 	# Dictionary, no variables sueltas: las lambdas de GDScript capturan

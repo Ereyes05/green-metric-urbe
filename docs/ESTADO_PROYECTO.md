@@ -4,9 +4,8 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-09 (commit `d87787a` + cambios posteriores de
-la mecánica de QR en Nivel 3, sin commitear todavía al momento de escribir
-esto).
+Última actualización: 2026-09-09 (commit `eb0747f` + fix de estilo del botón
+del modal QR y actualización del remote de GitHub).
 
 ---
 
@@ -274,11 +273,10 @@ mecanismo técnico de escaneo → activación a distancia.
   matemática.
 - [ ] **Export Web/HTML5** — no configurado. Decisión consciente: no hace
   falta mientras las pruebas se hagan desde el editor (F5).
-- [ ] **El remoto de GitHub avisa que el repo se movió** — `git push` a
-  `thewasiii123/green-metric-urbe` funciona por redirect, pero la URL real
-  ahora es `Ereyes05/green-metric-urbe`. Confirmar si es un cambio de
-  cuenta intencional y, si es así, actualizar el remote (`git remote
-  set-url origin ...`) antes de que el redirect deje de funcionar.
+- [x] **El remoto de GitHub avisaba que el repo se movió** — resuelto
+  2026-09-09: fue un cambio de username en GitHub (`thewasiii123` →
+  `Ereyes05`), no un cambio de dueño. `origin` actualizado a
+  `https://github.com/Ereyes05/green-metric-urbe.git`.
 - [ ] **`sql/guardar_progreso_modulo.sql` y `sql/solicitudes_qr.sql`** son
   copias fieles de lo aplicado en Supabase — si se edita el esquema desde
   el dashboard sin actualizar estos archivos, quedan desincronizados.
