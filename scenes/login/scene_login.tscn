@@ -48,7 +48,7 @@ theme_override_constants/separation = 12
 [node name="GreenMetric" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1867588416]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "🌿 GreenMetric URBE"
+text = "GreenMetric URBE"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1444262706]
@@ -63,12 +63,12 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-placeholder_text = "Correo electrónico"
+placeholder_text = "CORREO ELECTRÓNICO"
 
 [node name="PasswordInput" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1307754041]
 unique_name_in_owner = true
 layout_mode = 2
-placeholder_text = "Contraseña"
+placeholder_text = "CONTRASEÑA"
 
 [node name="BotonLogin" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1317287354]
 unique_name_in_owner = true

@@ -44,6 +44,7 @@ var _msg_rec           : Label    = null
 # La base rechaza dominios no permitidos, pero Supabase enmascara ese
 # error con un mensaje genérico e inútil — así que el formulario valida
 # lo mismo ANTES de llamar a /auth/v1/signup, para dar un mensaje claro.
+const FONDO_ILUSTRADO_PATH : String = "res://assets/sprites/login_fondo.png"
 const EMAIL_REGEX          : String = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
 const DOMINIOS_PERMITIDOS  : Array  = ["urbe.edu", "gmail.com", "outlook.com",
 										"hotmail.com", "yahoo.com", "icloud.com"]
@@ -174,9 +175,23 @@ func _ready() -> void:
 
 	# Fondo oscuro y partículas
 	_bg_rect.color = Color(0.030, 0.065, 0.033, 1.0)
+
+	# Fondo ilustrado (opcional) — hueco listo para cuando exista el arte.
+	# Sin textura asignada acá no se ve nada, y queda debajo del ColorRect
+	# de partículas: asignar FONDO_ILUSTRADO_PATH y listo, no hace falta
+	# tocar más código.
+	if FONDO_ILUSTRADO_PATH != "" and ResourceLoader.exists(FONDO_ILUSTRADO_PATH):
+		var fondo_tex := TextureRect.new()
+		fondo_tex.texture = load(FONDO_ILUSTRADO_PATH)
+		fondo_tex.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
+		fondo_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		fondo_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(fondo_tex)
+		move_child(fondo_tex, 1)   # justo encima del ColorRect
+
 	var bg := BackgroundNode.new()
 	add_child(bg)
-	move_child(bg, 1)   # entre ColorRect y CenterContainer
+	move_child(bg, 2)   # entre el fondo ilustrado (si existe) y CenterContainer
 
 	# Señales Supabase
 	SupabaseManager.login_exitoso.connect(_en_login_exitoso)
@@ -259,7 +274,16 @@ func _aplicar_estilo_panel_tscn() -> void:
 	# Título original del .tscn (index 1 ahora, porque logo va al 0)
 	var titulo := vlogin.get_child(1) as Label
 	if titulo:
-		titulo.add_theme_font_size_override("font_size", 22)
+		# El emoji 🌿 no existe en la fuente pixel-art (Press Start 2P no
+		# trae glifos de emoji, se vería como un cuadrado vacío) — de
+		# todos modos ya sobra, el logo animado de arriba (LogoNode) es
+		# la misma hoja pero dibujada, así que el emoji del texto es
+		# redundante.
+		titulo.text = "GreenMetric URBE"
+		var fuente_pixel := _fuente_pixel()
+		if fuente_pixel:
+			titulo.add_theme_font_override("font", fuente_pixel)
+		titulo.add_theme_font_size_override("font_size", 16)
 		titulo.add_theme_color_override("font_color", Color(0.35, 0.95, 0.50))
 
 	# Subtítulo "Inicia sesión..." (index 3)
@@ -271,10 +295,7 @@ func _aplicar_estilo_panel_tscn() -> void:
 	_estilizar_input(_email_in)
 	_estilizar_input(_pass_in)
 	_estilizar_btn_primario(_btn_login)
-
-	_btn_reg.flat = true
-	_btn_reg.add_theme_color_override("font_color", Color(0.40, 0.85, 0.52))
-	_btn_reg.add_theme_font_size_override("font_size", 11)
+	_estilizar_btn_secundario(_btn_reg)
 
 	_msg_login.add_theme_font_size_override("font_size", 12)
 	_msg_login.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -292,14 +313,25 @@ func _crear_logo_widget() -> Control:
 	return c
 
 
+func _fuente_pixel() -> Font:
+	const RUTA : String = "res://assets/fonts/PressStart2P-Regular.ttf"
+	if not ResourceLoader.exists(RUTA):
+		return null
+	return load(RUTA) as Font
+
+
 func _style_panel() -> StyleBoxFlat:
+	# Azul-pizarra oscuro con borde cian — pedido explícito del usuario
+	# (referencia: panel de login con look de terminal azul/cian, en vez
+	# del verde que tenía el panel antes). El verde se conserva como
+	# color de marca en el botón LOGIN, ver _estilizar_btn_primario.
 	var sb := StyleBoxFlat.new()
-	sb.bg_color     = Color(0.055, 0.105, 0.062, 0.93)
-	sb.border_color = Color(0.22, 0.70, 0.30, 0.80)
+	sb.bg_color     = Color(0.075, 0.095, 0.125, 0.92)
+	sb.border_color = Color(0.30, 0.65, 0.85, 0.85)
 	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(16)
-	sb.shadow_color  = Color(0.08, 0.50, 0.16, 0.50)
-	sb.shadow_size   = 14
+	sb.set_corner_radius_all(14)
+	sb.shadow_color  = Color(0.20, 0.55, 0.78, 0.35)
+	sb.shadow_size   = 12
 	sb.shadow_offset = Vector2(0, 5)
 	sb.content_margin_left   = 26
 	sb.content_margin_right  = 26
@@ -312,10 +344,10 @@ func _estilizar_input(le: LineEdit) -> void:
 	le.custom_minimum_size = Vector2(290, 40)
 
 	var sb_n := StyleBoxFlat.new()
-	sb_n.bg_color     = Color(0.075, 0.130, 0.082, 0.96)
-	sb_n.border_color = Color(0.18, 0.42, 0.22, 0.65)
+	sb_n.bg_color     = Color(0.055, 0.075, 0.100, 0.96)
+	sb_n.border_color = Color(0.24, 0.34, 0.44, 0.70)
 	sb_n.set_border_width_all(1)
-	sb_n.set_corner_radius_all(9)
+	sb_n.set_corner_radius_all(8)
 	sb_n.content_margin_left   = 12
 	sb_n.content_margin_right  = 12
 	sb_n.content_margin_top    = 8
@@ -323,39 +355,56 @@ func _estilizar_input(le: LineEdit) -> void:
 	le.add_theme_stylebox_override("normal", sb_n)
 
 	var sb_f := sb_n.duplicate() as StyleBoxFlat
-	sb_f.border_color = Color(0.28, 0.85, 0.42, 1.0)
+	sb_f.border_color = Color(0.35, 0.75, 0.95, 1.0)
 	sb_f.set_border_width_all(2)
-	sb_f.shadow_color = Color(0.18, 0.72, 0.32, 0.30)
+	sb_f.shadow_color = Color(0.25, 0.65, 0.90, 0.30)
 	sb_f.shadow_size  = 7
 	le.add_theme_stylebox_override("focus", sb_f)
 
-	le.add_theme_color_override("font_color",             Color(0.90, 0.97, 0.92))
-	le.add_theme_color_override("font_placeholder_color", Color(0.38, 0.52, 0.41))
-	le.add_theme_color_override("caret_color",            Color(0.35, 0.92, 0.46))
+	le.add_theme_color_override("font_color",             Color(0.90, 0.95, 0.98))
+	le.add_theme_color_override("font_placeholder_color", Color(0.42, 0.52, 0.62))
+	le.add_theme_color_override("caret_color",            Color(0.45, 0.85, 0.98))
 	le.add_theme_font_size_override("font_size", 13)
 
 
 func _estilizar_btn_primario(btn: Button) -> void:
+	# Botón de contorno (fondo oscuro + borde brillante), no relleno
+	# sólido — pedido explícito del usuario mostrando una referencia con
+	# ese estilo. Verde: es el botón principal (LOGIN), mantiene el color
+	# de marca de GreenMetric.
+	_estilizar_btn_contorno(btn, Color(0.30, 0.90, 0.45))
+	btn.add_theme_font_size_override("font_size", 14)
+
+
+func _estilizar_btn_secundario(btn: Button) -> void:
+	# Mismo tratamiento de contorno que el primario, pero en cian — el
+	# botón secundario (ej. "Crear cuenta") de la referencia del usuario.
+	_estilizar_btn_contorno(btn, Color(0.35, 0.80, 0.95))
+	btn.add_theme_font_size_override("font_size", 13)
+
+
+func _estilizar_btn_contorno(btn: Button, col: Color) -> void:
 	btn.custom_minimum_size = Vector2(290, 44)
 	btn.pivot_offset = btn.size * 0.5
+	btn.flat = false
 
-	var mk := func(bg: Color) -> StyleBoxFlat:
+	var mk := func(bg_a: float, border_a: float) -> StyleBoxFlat:
 		var s := StyleBoxFlat.new()
-		s.bg_color     = bg
-		s.border_color = Color(0.28, 0.80, 0.38, 0.75)
-		s.set_border_width_all(1)
+		s.bg_color     = Color(0.06, 0.09, 0.10, bg_a)
+		s.border_color = Color(col.r, col.g, col.b, border_a)
+		s.set_border_width_all(2)
 		s.set_corner_radius_all(11)
-		s.shadow_color  = Color(0.10, 0.50, 0.18, 0.45)
-		s.shadow_size   = 7
+		s.shadow_color  = Color(col.r, col.g, col.b, 0.30)
+		s.shadow_size   = 6
 		s.content_margin_top    = 10
 		s.content_margin_bottom = 10
 		return s
 
-	btn.add_theme_stylebox_override("normal",  mk.call(Color(0.12, 0.50, 0.21)))
-	btn.add_theme_stylebox_override("hover",   mk.call(Color(0.17, 0.64, 0.27)))
-	btn.add_theme_stylebox_override("pressed", mk.call(Color(0.08, 0.36, 0.14)))
-	btn.add_theme_color_override("font_color", Color.WHITE)
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_stylebox_override("normal",  mk.call(0.55, 0.75))
+	btn.add_theme_stylebox_override("hover",   mk.call(0.75, 1.0))
+	btn.add_theme_stylebox_override("pressed", mk.call(0.85, 0.55))
+	btn.add_theme_color_override("font_color",       col.lightened(0.15))
+	btn.add_theme_color_override("font_hover_color", col.lightened(0.35))
 
 
 func _estilizar_option(ob: OptionButton) -> void:

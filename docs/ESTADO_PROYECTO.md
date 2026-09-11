@@ -4,9 +4,15 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-09 (commit `35526a9` + merge a `main` +
-verificación geométrica de posiciones de Nivel 4/6, sin commitear todavía
-al momento de escribir esto).
+Última actualización: 2026-09-11 (rediseño del login + lectura de los
+capítulos de la tesis y análisis de brechas — ver sección 9).
+
+> ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
+> [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
+> El juego no es un proyecto libre: responde a una tesis con variables,
+> objetivos e historias de usuario ya escritas y aprobadas. Varias
+> decisiones que parecen inocentes (el estilo visual, por ejemplo) ya
+> están comprometidas por escrito ahí.
 
 ---
 
@@ -275,9 +281,13 @@ mecanismo técnico de escaneo → activación a distancia.
   vista** — sin colisiones, pero 4 puntos con nombre de edificio que no
   existe en el mapa (`captacion_bloque_c`, `captacion_biblioteca`,
   `malla_verde`, `informe_final`). Ver sección 5.
-- [ ] **Cobertura de `registrar_evento()`** — solo Nivel 5 (movilidad) y
-  Nivel 6. Si se quiere el log de proceso completo para la tesis, falta
-  instrumentar Niveles 1-4.
+- [ ] 🔴 **Cobertura de `registrar_evento()`** — solo Nivel 5 (movilidad) y
+  Nivel 6; faltan los Niveles 1-4. **Esto subió de prioridad el 2026-09-11:**
+  la definición operacional de la tesis mide el empoderamiento estudiantil
+  "mediante el monitoreo de la interacción del usuario con las dinámicas y
+  componentes del juego" — o sea, con esta misma tabla. La variable que da
+  nombre a la tesis se está midiendo con un instrumento a un tercio de
+  cobertura. Ver sección 9.
 - [ ] **XP validado solo del lado del cliente en su primer envío** — ver
   sección 6, "Modelo de confianza".
 - [ ] **Migración a TileMaps** — evaluado (2026-09-09), no iniciado. Hace
@@ -285,8 +295,27 @@ mecanismo técnico de escaneo → activación a distancia.
   no depende del mapa visual, pero reubicar las ~40 posiciones de misiones/
   NPCs sobre la nueva grilla va a necesitar verificación visual, no solo
   matemática.
-- [ ] **Export Web/HTML5** — no configurado. Decisión consciente: no hace
-  falta mientras las pruebas se hagan desde el editor (F5).
+- [ ] 🔴 **Export Web/HTML5 — NO es opcional.** Estaba anotado acá como
+  "decisión consciente, no hace falta", pero al leer la tesis (2026-09-11)
+  resultó que el Cap. 4 **afirma que ya está hecho**. Ver brecha 1 de la
+  sección 9. Pendiente: instalar plantillas de exportación de Godot 4.7,
+  exportar sin hilos (GitHub Pages no permite cabeceras COOP/COEP),
+  publicar, y verificar que Supabase responda desde el navegador.
+- [ ] 🔴 **HU-012 "Tienda del Conocimiento" no existe** — única historia de
+  usuario de la tesis sin implementar. Requiere primero **persistir los
+  EcoCredits** (`EconomiaManager` hoy no guarda nada, arrancan en 0 cada
+  sesión). Criterios de aceptación ya escritos en el Cap. 4, ver sección 9.
+- [ ] **El tutorial de onboarding casi nadie lo ve** — el flag
+  `user://tutorial_visto.dat` es por máquina y no por cuenta (mismo bug que
+  tenía el guardado antes del Plan B). Igual para `hints_vistas.dat`. Ver
+  sección 9.
+- [ ] **Al volver, el juego no dice "dónde quedaste"** — HU-002 pide
+  devolver al estudiante "al punto exacto donde lo dejó"; hoy se restaura el
+  progreso pero no la posición ni se le comunica nada.
+- [ ] **Decidir qué hacer con el conflicto pixel art vs Flat Design** — ver
+  brecha 4 de la sección 9. Es una decisión del equipo, no un bug: o se
+  ajusta el juego, o se justifica el desvío en la tesis. **Mientras no se
+  decida, no invertir más en arte pixel.**
 - [x] **El remoto de GitHub avisaba que el repo se movió** — resuelto
   2026-09-09: fue un cambio de username en GitHub (`thewasiii123` →
   `Ereyes05`), no un cambio de dueño. `origin` actualizado a
@@ -295,7 +324,108 @@ mecanismo técnico de escaneo → activación a distancia.
   copias fieles de lo aplicado en Supabase — si se edita el esquema desde
   el dashboard sin actualizar estos archivos, quedan desincronizados.
 
-## 9. Cómo mantener este documento
+## 9. El marco académico (la tesis) — leer antes de decidir diseño
+
+Todo lo de esta sección sale de leer los capítulos de la tesis el
+2026-09-11. Los documentos **no están en el repo** (viven fuera, en la
+carpeta personal del autor) y **no deben commitearse**. Acá queda solo lo
+que hace falta para tomar decisiones técnicas correctas.
+
+### Título y objetivos
+
+**Título:** *"Estrategias de gamificación aplicadas al aprendizaje de
+indicadores GreenMetric para el empoderamiento estudiantil en la gestión
+ambiental."*
+
+Objetivos específicos (Cap. 1): (1) analizar conocimiento previo de los
+estudiantes, (2) determinar requerimientos funcionales, (3) diseñar
+lógicamente el entorno virtual, (4) construir el diseño físico, (5)
+validar mediante pruebas técnicas, (6) **explicar el funcionamiento a
+través del manual de usuarios**.
+
+### Las dos variables (Cap. 2)
+
+- **Estrategias de gamificación** (Deterding, 2022): usar elementos de
+  diseño de juegos fuera de contextos lúdicos para satisfacer necesidades
+  psicológicas de **competencia** y **autonomía**.
+- **Empoderamiento estudiantil** (Zimmerman, 2015): **conciencia crítica**
+  + **autoeficacia** + **participación** + **toma de decisiones**; el
+  estudiante pasa de pasivo a proactivo.
+
+**Definición operacional:** se mide *"mediante el monitoreo de la
+interacción del usuario con las dinámicas y componentes del juego"* y la
+evaluación del *"incremento en la autoeficacia y conciencia crítica"*.
+👉 Ese monitoreo es la tabla `eventos_aprendizaje` — que hoy está
+instrumentada solo en Nivel 5 (parcial) y Nivel 6. **La variable que da
+nombre a la tesis se mide con una tubería a un tercio de cobertura.**
+
+### Marco de diseño comprometido
+
+La tesis se compromete con el **modelo DMC** (Werbach y Hunter, 2012) y el
+**modelo MDA** (Hunicke, 2004). El Cap. 4 ya tiene escritas las 4
+dinámicas (motivación por avanzar, aprendizaje por ensayo, sentido de
+logro, curiosidad por explorar), las mecánicas, y 6 componentes: avatar,
+puntos/XP, niveles, barra de progreso, insignias y mapa. Metodología:
+Kendall y Kendall (ciclo de vida clásico) + Scrum.
+
+### Historias de usuario (Cap. 4) y su estado real
+
+| ID | Historia | Estado en el código |
+|----|----------|---------------------|
+| HU-001 | Registrarse | ✅ |
+| HU-002 | Iniciar sesión | ⚠️ parcial — ver brecha 3 |
+| HU-003 | Explorar la universidad | ✅ |
+| HU-004 | Dialogar con NPC | ✅ |
+| HU-005 | Consultar indicador GreenMetric | ✅ |
+| HU-006 | Completar misión | ✅ |
+| HU-007 | Clasificar residuos | ✅ |
+| HU-008 | Responder a crisis ambiental | ✅ `crisis_evento.gd` |
+| HU-009 | Subir de nivel | ✅ |
+| HU-010 | Consultar mapa y estado de zonas | ✅ |
+| HU-011 | Consultar progreso y ranking | ✅ |
+| HU-012 | Gestionar EcoCredits en la tienda | ❌ **no existe** |
+
+### Brechas detectadas entre lo que la tesis afirma y lo que el juego hace
+
+1. 🔴 **El Cap. 4 afirma que el juego se exportó para la web.** La Tabla 33
+   dice textual *"Godot 4 | Motor con el que se creó el juego y se exportó
+   para la web"*, y justifica la elección de Godot por poder abrirse *"desde
+   el navegador sin necesidad de instalar nada"*. **No está exportado.** Es
+   la brecha más verificable por un jurado (basta pedir la URL).
+2. 🔴 **HU-012 "Tienda del Conocimiento" no existe.** Tiene criterios de
+   aceptación escritos (compra exitosa/fallida, saldo nunca negativo, costo
+   fijo, sin recompra, *"ciertas herramientas son requisito para completar
+   misiones"*). **Bloqueante previo:** `EconomiaManager` no persiste nada —
+   los EcoCredits arrancan en 0 cada sesión, así que primero hay que
+   persistirlos por cuenta (mismo patrón que el Plan B de la sección 6).
+3. 🟡 **HU-002 pide devolver al estudiante *"al punto exacto donde lo
+   dejó"*.** Hoy se restaura el progreso (Plan B) pero no la posición en el
+   mapa, y no se le comunica nada al estudiante al volver.
+4. 🟡 **Conflicto de estilo visual.** La Tabla 2 del Cap. 4 reporta que el
+   **65% de los encuestados eligió "diseño plano y minimalista"** y solo el
+   **10% "estilo videojuego clásico (pixel art)"**; la conclusión escrita es
+   que *"se debe implementar una interfaz basada en Flat Design y
+   minimalista... evitando la saturación cognitiva"*. El juego es pixel art,
+   y el login (2026-09-11) suma fondo pixel-art y fuente Press Start 2P.
+   **Decisión pendiente y consciente del equipo**, no un descuido: o se
+   ajusta el juego, o se justifica el desvío en la tesis.
+5. 🟡 **Requisito responsive/móvil.** La Tabla 1 concluye que es
+   *"mandatorio adoptar un enfoque multi-plataforma"* (70% de la muestra usa
+   móvil parcial o totalmente). Existe `touch_controls.gd` y está conectado,
+   pero el juego es 1280x720 de escritorio y no hay export web.
+
+### Bug encontrado el 2026-09-11: el tutorial casi nadie lo ve
+
+`scenes/ui/tutorial_onboarding.gd` **existe, está conectado y su contenido
+es bueno** (4 pantallas: rol de Eco-Ranger, qué es GreenMetric con los 6
+módulos, controles de teclado y móvil, y la primera misión concreta). El
+problema es que se marca como visto en `user://tutorial_visto.dat`, que es
+**por máquina, no por cuenta** — exactamente el mismo bug que tenía el
+guardado antes del Plan B. En una sala de computación compartida, solo el
+primer estudiante que se siente ve el tutorial; el resto entra sin ninguna
+explicación. Lo mismo aplica a `hints_vistas.dat`.
+
+## 10. Cómo mantener este documento
 
 **Regla:** cualquier cambio que agregue una tabla, una función/RPC, una
 decisión de diseño no obvia, o que resuelva/agregue un pendiente de la

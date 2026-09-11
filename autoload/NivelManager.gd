@@ -175,6 +175,22 @@ func obtener_estado_carga() -> String:
 	return _estado_carga
 
 
+# Ruta de un archivo de estado local ligado a la cuenta activa, para
+# cosas como "ya vio el tutorial" o "ya vio esta pista". Son preferencias
+# POR ESTUDIANTE, no por computadora: en una sala de computación
+# compartida, un archivo global hace que solo el primer estudiante que se
+# siente vea el tutorial y todos los demás entren sin ninguna explicación
+# (es el mismo bug que tenía el progreso antes del guardado por cuenta).
+func ruta_usuario(nombre: String) -> String:
+	if _uid_activo.is_empty():
+		# Sin sesión — pasa al correr la escena del mapa directo desde el
+		# editor. En uso real siempre hay login antes de llegar acá, así
+		# que este caso es solo comodidad de desarrollo: se usa el archivo
+		# global de siempre.
+		return "user://%s.dat" % nombre
+	return "user://%s_%s.dat" % [nombre, _uid_activo]
+
+
 func _ruta_save() -> String:
 	if _uid_activo.is_empty(): return ""
 	return SAVE_PATH_TPL % _uid_activo

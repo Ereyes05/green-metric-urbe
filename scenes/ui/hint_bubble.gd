@@ -9,7 +9,6 @@ extends CanvasLayer
 
 const DURACION     : float = 5.2
 const CHARS_SEG    : float = 45.0
-const SAVE_PATH    : String = "user://hints_vistas.dat"
 const SLIDE_DIST   : float = 280.0
 
 var _vistas        : Dictionary = {}   # id -> true
@@ -198,9 +197,17 @@ func _crear_ui() -> void:
 
 
 # ── Persistencia ─────────────────────────────────────────────
+# Por cuenta, no por máquina: las pistas son "lo que ya vio ESTE
+# estudiante". Con un archivo global, en una computadora compartida el
+# segundo estudiante en adelante nunca vería ninguna pista.
+func _ruta_vistas() -> String:
+	return NivelManager.ruta_usuario("hints_vistas")
+
+
 func _cargar_vistas() -> void:
-	if not FileAccess.file_exists(SAVE_PATH): return
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var ruta := _ruta_vistas()
+	if not FileAccess.file_exists(ruta): return
+	var f := FileAccess.open(ruta, FileAccess.READ)
 	if not f: return
 	while not f.eof_reached():
 		var linea := f.get_line().strip_edges()
@@ -210,7 +217,7 @@ func _cargar_vistas() -> void:
 
 
 func _guardar_vistas() -> void:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var f := FileAccess.open(_ruta_vistas(), FileAccess.WRITE)
 	if not f: return
 	for k in _vistas.keys():
 		f.store_line(k)

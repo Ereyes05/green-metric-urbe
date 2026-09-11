@@ -1731,8 +1731,11 @@ func _init_sistemas_eva() -> void:
 
 	_actualizar_hud_economia()
 
-	# Tutorial solo la primera vez que el usuario abre el juego
-	const _TUTORIAL_FLAG := "user://tutorial_visto.dat"
+	# Tutorial la primera vez que ESTA CUENTA entra al juego. La ruta va
+	# por cuenta (no por máquina) a propósito: con un archivo global, en
+	# una sala de computación compartida solo el primer estudiante vería
+	# el tutorial — ver NivelManager.ruta_usuario().
+	var _TUTORIAL_FLAG := NivelManager.ruta_usuario("tutorial_visto")
 	if not FileAccess.file_exists(_TUTORIAL_FLAG):
 		var _tf := FileAccess.open(_TUTORIAL_FLAG, FileAccess.WRITE)
 		if _tf: _tf.store_string("1"); _tf.close()
