@@ -307,9 +307,10 @@ mecanismo técnico de escaneo → activación a distancia.
   no depende del mapa visual, pero reubicar las ~40 posiciones de misiones/
   NPCs sobre la nueva grilla va a necesitar verificación visual, no solo
   matemática.
-- [x] **Export Web/HTML5** — hecho el 2026-09-11. Ver sección 10.
-  **Falta un paso manual que solo puede hacer el dueño del repo:** activar
-  GitHub Pages en *Settings → Pages → Source: `main` / carpeta `/docs`*.
+- [x] **Export Web/HTML5 — publicado y funcionando** (2026-09-11):
+  **https://ereyes05.github.io/green-metric-urbe/juego/** — verificado que
+  carga el motor, el `.pck` y la pantalla de login en un navegador real.
+  Ver sección 10.
 - [ ] 🔴 **HU-012 "Tienda del Conocimiento" no existe** — única historia de
   usuario de la tesis sin implementar. Requiere primero **persistir los
   EcoCredits** (`EconomiaManager` hoy no guarda nada, arrancan en 0 cada
@@ -499,21 +500,22 @@ crear y mantener una rama aparte).
 `docs/juego/.nojekyll` existe para que Pages no procese la carpeta con
 Jekyll y descarte archivos.
 
-**Paso manual pendiente (requiere ser dueño del repo):** activar Pages en
-*Settings → Pages → Source: Deploy from a branch → `main` / `/docs`*. La
-URL queda en `https://ereyes05.github.io/green-metric-urbe/juego/`.
+Pages quedó activo el 2026-09-11 (*Settings → Pages → Deploy from a branch
+→ `main` / `/docs`*). **URL pública:**
+**https://ereyes05.github.io/green-metric-urbe/juego/**
 
 ### Qué quedó verificado y qué no
 
-- ✅ Exporta sin errores; el motor arranca en un navegador headless, carga
-  el `.pck` completo y renderiza por WebGL (la barra de carga llega al
-  100%).
-- ✅ Supabase responde al preflight CORS desde un origen web
-  (`Access-Control-Allow-Origin: *`), así que login y progreso pueden
-  funcionar desde el navegador.
-- ❌ **Sin verificar: jugar de verdad en un navegador real** — login
-  completo, guardado de progreso, audio, y controles táctiles en móvil.
-  Eso hay que probarlo a mano una vez que Pages esté activo.
+- ✅ **El juego carga y muestra la pantalla de login en la URL pública**,
+  verificado con un navegador headless contra el sitio real.
+- ✅ Pages sirve los tipos MIME correctos, que es lo que más suele romper:
+  `index.wasm` → `application/wasm` (si viniera como texto, el navegador
+  rechaza el módulo y no arranca nada), `.pck` → `application/octet-stream`.
+- ✅ Supabase responde al preflight CORS desde el origen de Pages
+  (`Access-Control-Allow-Origin: *`).
+- ❌ **Sin verificar: iniciar sesión de verdad y jugar** — login con
+  credenciales reales, guardado de progreso, audio, y controles táctiles en
+  móvil. Requiere una cuenta real, así que lo tiene que probar una persona.
 
 ## 11. Cómo mantener este documento
 

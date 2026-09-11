@@ -5,6 +5,8 @@ y resuelve misiones de campo mapeadas 1:1 a los 6 módulos del ranking
 [UI GreenMetric World University Ranking](https://greenmetric.ui.ac.id/):
 Infraestructura, Energía, Residuos, Agua, Transporte, y Educación e Investigación.
 
+🎮 **Jugar en el navegador:** https://ereyes05.github.io/green-metric-urbe/juego/ — no hace falta instalar nada.
+
 📄 **[docs/ESTADO_PROYECTO.md](docs/ESTADO_PROYECTO.md)** — contexto completo del proyecto para el equipo: qué hay hecho, decisiones de diseño, pendientes conocidos. Se mantiene actualizado en cada cambio importante — léelo antes de empezar a trabajar acá.
 
 ## Requisitos
