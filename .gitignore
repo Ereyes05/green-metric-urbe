@@ -6,6 +6,3 @@
 # Estado local del Supabase CLI (link al proyecto, versiones) — no es
 # secreto, pero es específico de esta máquina, no del repo.
 supabase/.temp/
-
-# Salida del export web (se publica en la rama gh-pages, no en main).
-build/
