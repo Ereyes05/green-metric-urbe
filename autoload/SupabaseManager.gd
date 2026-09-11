@@ -419,7 +419,12 @@ func _procesar_misiones_estudiante(code: int, datos: Variant) -> void:
 	if code == 200 and datos is Array:
 		emit_signal("misiones_estudiante_cargadas", datos)
 	else:
-		emit_signal("error_red", "No se pudo cargar el progreso por misión.")
+		# El código HTTP importa para diagnosticar y antes se perdía: 401 es
+		# sesión inválida, 403 suele ser un permiso que falta en la tabla
+		# (ya pasó con misiones_estudiante), 0 es que la petición ni salió.
+		push_error("SupabaseManager: falló cargar_misiones (HTTP %d). Respuesta: %s"
+			% [code, str(datos).substr(0, 300)])
+		emit_signal("error_red", "No se pudo cargar el progreso por misión (HTTP %d)." % code)
 
 
 func _procesar_crear_solicitud_qr(code: int, ctx: Dictionary) -> void:

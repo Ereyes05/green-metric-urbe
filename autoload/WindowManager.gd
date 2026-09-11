@@ -104,9 +104,18 @@ func _crear_fps() -> void:
 
 func _process(_delta: float) -> void:
 	if _fps_lbl == null: return
-	_fps_lbl.text = "%d FPS   %s" % [
+	# Cada métrica apunta a un culpable distinto:
+	#   proceso alto  -> cuesta el GDScript de los _process()
+	#   dibujadas alto-> cuesta la cantidad de draw calls (en WebGL cada una
+	#                    es mucho más cara que en nativo)
+	#   nodos alto    -> hay demasiadas cosas vivas en la escena
+	_fps_lbl.text = "%d FPS  (%s)\ndibujadas/frame: %d\nproceso: %.1f ms\nfísica: %.1f ms\nnodos: %d" % [
 		Engine.get_frames_per_second(),
 		"web" if OS.has_feature("web") else "escritorio",
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 	]
 
 

@@ -791,11 +791,24 @@ func _en_registro_exitoso(_usuario: Dictionary) -> void:
 # save local. Con timeout y fail-open: si no hay red, entra igual con lo
 # que haya en el archivo local en vez de trabar al estudiante acá.
 func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
+	# Estas trazas son permanentes a propósito: en el export web no hay
+	# panel de Salida del editor al que recurrir, y cuando el progreso no
+	# aparece esto es lo único que distingue "el servidor no contestó" de
+	# "contestó vacío" de "ni siquiera hay sesión". Salen en la consola del
+	# navegador (F12).
+	print("SceneLogin: user_id='%s' jwt=%s" % [
+		SupabaseManager.user_id,
+		"si" if not SupabaseManager.jwt_token.is_empty() else "NO",
+	])
 	NivelManager.iniciar_sesion(SupabaseManager.user_id)
 	_msg(msg_lbl, "Cargando tu progreso...", Color(0.65, 0.90, 0.70))
 	var lista = await _cargar_misiones_con_timeout()
 	if lista is Array:
+		print("SceneLogin: el servidor devolvió %d misiones completadas" % lista.size())
 		NivelManager.repoblar_desde_servidor(lista)
+	else:
+		push_warning("SceneLogin: no se pudo recuperar el progreso del servidor "
+			+ "(sin red o tardó más de 8 s). Se entra con el guardado local.")
 
 	var tw := create_tween()
 	tw.tween_property(_center, "modulate:a", 0.0, 0.5)
