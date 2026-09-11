@@ -11,7 +11,13 @@ const FUENTE_EMOJI : String = "res://assets/fonts/NotoColorEmoji-subset.ttf"
 
 
 func _ready() -> void:
+	set_process(false)   # solo corre mientras el contador de FPS esté visible
 	_registrar_fuente_emoji()
+
+	# En el navegador la "ventana" es el canvas: maximizar no aporta nada y
+	# puede pelearse con la política de tamaño del canvas del export.
+	if OS.has_feature("web"):
+		return
 
 	# Forzar ventana maximizada al arrancar si no está ya en fullscreen
 	var modo := DisplayServer.window_get_mode()
@@ -53,7 +59,11 @@ func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey): return
 	if not event.pressed or event.echo: return
 
-	if event.keycode == KEY_F11:
+	if event.keycode == KEY_F3:
+		get_viewport().set_input_as_handled()
+		_toggle_fps()
+
+	elif event.keycode == KEY_F11:
 		get_viewport().set_input_as_handled()
 		_toggle_fullscreen()
 
@@ -61,6 +71,43 @@ func _input(event: InputEvent) -> void:
 			and event.alt_pressed:
 		get_viewport().set_input_as_handled()
 		_toggle_fullscreen()
+
+
+# ── Contador de FPS (F3) ─────────────────────────────────────
+# Existe para poder diagnosticar rendimiento con un número en vez de "se
+# siente lento", sobre todo en el export web, donde todo corre en un solo
+# hilo y no hay forma de abrir el profiler del editor.
+var _fps_capa : CanvasLayer = null
+var _fps_lbl  : Label       = null
+
+
+func _toggle_fps() -> void:
+	if _fps_capa == null:
+		_crear_fps()
+	_fps_capa.visible = not _fps_capa.visible
+	set_process(_fps_capa.visible)
+
+
+func _crear_fps() -> void:
+	_fps_capa = CanvasLayer.new()
+	_fps_capa.layer = 128        # por encima de todo, incluido el modal del QR
+	add_child(_fps_capa)
+
+	_fps_lbl = Label.new()
+	_fps_lbl.position = Vector2(8, 8)
+	_fps_lbl.add_theme_font_size_override("font_size", 13)
+	_fps_lbl.add_theme_color_override("font_color", Color(0.55, 1.0, 0.65))
+	_fps_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_fps_lbl.add_theme_constant_override("outline_size", 4)
+	_fps_capa.add_child(_fps_lbl)
+
+
+func _process(_delta: float) -> void:
+	if _fps_lbl == null: return
+	_fps_lbl.text = "%d FPS   %s" % [
+		Engine.get_frames_per_second(),
+		"web" if OS.has_feature("web") else "escritorio",
+	]
 
 
 func _toggle_fullscreen() -> void:
