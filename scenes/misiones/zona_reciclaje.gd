@@ -566,6 +566,16 @@ func _mostrar_modal_qr() -> void:
 	SupabaseManager.solicitud_qr_estado.disconnect(on_estado)
 	SupabaseManager.solicitud_qr_creada_fallida.disconnect(on_fallo)
 
+	# Cómo se resolvió la llamada al servicio. El caso "escaneado" es el más
+	# interesante para la tesis: el estudiante salió del juego, usó su
+	# teléfono en el mundo real y volvió — acción concreta, no solo
+	# respuesta a un quiz.
+	var via : String = "escaneado" if estado["escaneada"] \
+		else ("omitido" if estado["saltado"] else "timeout")
+	SupabaseManager.registrar_evento(3, mision_id, "servicio_solicitado",
+		{"via": via, "llenado_pct": int(round(nivel_llenado * 100.0))},
+		estado["escaneada"])
+
 	if is_instance_valid(estado_lbl):
 		if estado["escaneada"]:
 			estado_lbl.text = "✅ Escaneado — enviando solicitud..."

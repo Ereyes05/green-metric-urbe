@@ -986,7 +986,12 @@ func _on_dialogo_terminado(mision_id: String) -> void:
 		if d["mision_id"] == mision_id:
 			nombre = d["nombre"]
 			break
-	_quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre)
+	# Se le pasa el nivel/misión para que el quiz pueda registrar telemetría
+	# atribuible a un indicador GreenMetric (ver eventos_aprendizaje).
+	# maxi(..., 0) porque _modulo_activo vale -1 fuera de una zona; el quiz
+	# siempre arranca dentro de una, pero un 0 es más honesto que un -1 si
+	# alguna vez no lo está.
+	_quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre, maxi(_modulo_activo, 0), mision_id)
 
 
 # ── Callbacks de completado ───────────────────────────────────

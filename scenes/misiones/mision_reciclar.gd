@@ -110,6 +110,8 @@ func iniciar(mision_id: String, zona_nombre: String, zona_ref: Node2D) -> void:
 	_zona_ref    = zona_ref
 	_drag_idx    = -1
 	_correctos   = 0
+	SupabaseManager.registrar_evento(3, _mision_id, "mision_iniciada",
+		{"zona": zona_nombre})
 
 	_title_lbl.text = "♻  Punto de Donación — %s" % zona_nombre
 
@@ -413,6 +415,8 @@ func _actualizar_progress() -> void:
 
 # ── Completar misión ──────────────────────────────────────────
 func _completar_mision() -> void:
+	SupabaseManager.registrar_evento(3, _mision_id, "mision_completada",
+		{"correctos": _correctos})
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(3, _mision_id)

@@ -21,7 +21,20 @@ create table eventos_aprendizaje (
   session_id   text not null,        -- una por cada vez que se abre el juego
   nivel        int  not null,
   mision_id    text not null,
-  tipo_evento  text not null,        -- 'mision_iniciada' | 'opcion_elegida' | 'opcion_quitada' | 'mision_completada'
+  -- Sin CHECK a propósito: la lista crece y no vale la pena migrar la
+  -- tabla cada vez. Valores en uso al 2026-09-11:
+  --   'mision_iniciada'    — el estudiante abre una misión
+  --   'mision_completada'  — la termina
+  --   'respuesta_quiz'     — responde una pregunta (correcto + intento_num
+  --                          + segundos que tardó + racha)
+  --   'tiempo_agotado'     — se le venció el tiempo de una pregunta
+  --                          (distinto de responder mal)
+  --   'opcion_elegida'     — elige una opción en un simulador de decisión
+  --   'opcion_quitada'     — deshace una elección
+  --   'crisis_resuelta'    — responde a un evento de crisis ambiental
+  --   'servicio_solicitado'— llama al servicio de limpieza por QR
+  --                          (detalle.via: escaneado | omitido | timeout)
+  tipo_evento  text not null,
   correcto     boolean,              -- null si no aplica (ej. mision_iniciada)
   intento_num  int,                  -- 1er intento, 2do, etc. (para medir aprendizaje por repetición)
   detalle      jsonb,                -- texto de la opción elegida, costo, alcance, etc.
@@ -37,6 +50,15 @@ create policy "insertar_propios_eventos" on eventos_aprendizaje
 
 create policy "leer_propios_eventos" on eventos_aprendizaje
   for select using (auth.uid() = user_id);
+
+-- Las políticas RLS dicen QUIÉN puede hacer qué, pero no otorgan el
+-- privilegio de base: una tabla creada con SQL crudo no lo hereda solo.
+-- Sin esto, el juego inserta y recibe un error de permisos, y los eventos
+-- se quedan únicamente en el log local (user://eventos_aprendizaje.jsonl)
+-- sin que nadie se entere. Es exactamente lo que pasó con
+-- misiones_estudiante el 2026-09-02. Es idempotente: correrlo de nuevo no
+-- rompe nada.
+grant select, insert on public.eventos_aprendizaje to authenticated;
 
 -- índice para consultas típicas de análisis ("evolución de X por usuario/misión")
 create index idx_eventos_user_mision on eventos_aprendizaje (user_id, mision_id, creado_en);

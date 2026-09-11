@@ -68,6 +68,10 @@ func _ready() -> void:
 
 # ── API pública ───────────────────────────────────────────────
 func iniciar() -> void:
+	# mision_residuos_minijuego, no mision_residuos: son cosas distintas
+	# (ver el comentario de _on_minijuego_completado en SceneMapaMundo.gd).
+	SupabaseManager.registrar_evento(3, "mision_residuos_minijuego",
+		"mision_iniciada")
 	# Mezclar residuos y tomar los primeros TOTAL_RESIDUOS
 	_residuos_mezclados = RESIDUOS.duplicate()
 	_residuos_mezclados.shuffle()
@@ -160,6 +164,14 @@ func _clasificar(tipo_elegido: int) -> void:
 
 func _terminar() -> void:
 	_activo = false
+	SupabaseManager.registrar_evento(3, "mision_residuos_minijuego",
+		"mision_completada",
+		{
+			"aciertos" : _aciertos,
+			"total"    : _residuos_mezclados.size(),
+			"xp_total" : _xp_total,
+			"por_tiempo": _tiempo_restante <= 0,
+		})
 	_mostrar_resultado()
 
 

@@ -461,6 +461,8 @@ func iniciar(bloque_idx: int, zona_node: Area2D) -> void:
 	_zona_ref    = zona_node
 	var b : Dictionary = BLOQUES[_bloque_idx]
 	_mision_id   = b["id"]
+	SupabaseManager.registrar_evento(2, _mision_id, "mision_iniciada",
+		{"luminarias": (b["spots"] as Array).size()})
 	_player_pos  = Vector2(ROOM_W * 0.5, ROOM_H - 40)
 	_spots_done  = []
 	for _i in (b["spots"] as Array).size():
@@ -621,6 +623,7 @@ func _nivel_mgr():
 
 
 func _completar_mision() -> void:
+	SupabaseManager.registrar_evento(2, _mision_id, "mision_completada")
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(2, _mision_id)

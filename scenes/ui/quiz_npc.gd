@@ -39,6 +39,13 @@ var _tiempo_inicio_preg: float = 0.0
 var _cronometro_activo : bool  = false
 var _xp_offset         : int   = 0   # offset vertical para labels flotantes
 
+# Contexto para la telemetría (eventos_aprendizaje). Lo pasa quien llama a
+# iniciar(): el quiz por sí solo no sabe a qué nivel/misión pertenece.
+# Con nivel 0 los eventos igual se registran, pero sin poder atribuirse a
+# un indicador GreenMetric — por eso conviene siempre pasarlo.
+var _nivel     : int    = 0
+var _mision_id : String = ""
+
 
 func _ready() -> void:
 	layer = 15
@@ -340,12 +347,17 @@ func _on_cancelar_salida() -> void:
 # ════════════════════════════════════════════════════════
 # API PÚBLICA
 # ════════════════════════════════════════════════════════
-func iniciar(preguntas: Array, nombre_npc: String) -> void:
+func iniciar(preguntas: Array, nombre_npc: String,
+			 nivel: int = 0, mision_id: String = "") -> void:
 	_preguntas = preguntas
 	_indice    = 0
 	_xp_total  = 0
 	_racha     = 0
 	_xp_offset = 0
+	_nivel     = nivel
+	_mision_id = mision_id if mision_id != "" else "quiz_%s" % nombre_npc.to_lower()
+	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_iniciada",
+		{"npc": nombre_npc, "preguntas": preguntas.size()})
 	_titulo_lbl.text = "QUIZ  ─  " + nombre_npc
 	_xp_lbl.text     = "XP ganada: 0"
 	_racha_lbl.visible = false
@@ -445,6 +457,20 @@ func _responder(idx: int) -> void:
 
 	_actualizar_dots(idx if acerto else -2)
 
+	# Telemetría: es el evento más valioso del juego para la tesis — registra
+	# el proceso (qué eligió, cuánto tardó, si venía en racha), no solo el
+	# resultado final.
+	SupabaseManager.registrar_evento(_nivel, _mision_id, "respuesta_quiz",
+		{
+			"pregunta"      : str(q.get("pregunta", "")),
+			"opcion_elegida": str(q["opciones"][idx]) if idx < q["opciones"].size() else "",
+			"opcion_correcta": str(q["opciones"][correcta]),
+			"segundos"      : snappedf(Time.get_ticks_msec() / 1000.0 - _tiempo_inicio_preg, 0.01),
+			"racha"         : _racha,
+			"xp_ganado"     : xp_ganado,
+		},
+		acerto, _indice + 1)
+
 	# Feedback visual
 	if acerto:
 		_xp_total += xp_ganado
@@ -494,6 +520,12 @@ func _tiempo_se_acabo() -> void:
 	_feedback_txt(_feedback_lbl, "⏱ ¡Tiempo agotado!", Color(0.95, 0.65, 0.10))
 	_disparar_flash(Color(0.80, 0.52, 0.04, 0.16))
 	_actualizar_dots(-2)
+
+	# Se registra aparte de respuesta_quiz: "no contestó a tiempo" no es lo
+	# mismo que "contestó mal", y para el análisis pedagógico conviene poder
+	# distinguirlos.
+	SupabaseManager.registrar_evento(_nivel, _mision_id, "tiempo_agotado",
+		{"pregunta": str(q.get("pregunta", ""))}, false, _indice + 1)
 	await get_tree().create_timer(1.8).timeout
 	if not is_instance_valid(self): return
 	_indice += 1
@@ -502,6 +534,8 @@ func _tiempo_se_acabo() -> void:
 
 
 func _finalizar() -> void:
+	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_completada",
+		{"xp_total": _xp_total, "preguntas": _preguntas.size()})
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
 	if hb:
 		hb.push("primer_quiz_done",

@@ -218,6 +218,8 @@ func _completar_mision() -> void:
 		_visual_node.modulate.a = 0.5
 	_actualizar_prompt_texto()
 
+	SupabaseManager.registrar_evento(4, mision_id, "mision_completada",
+		{"nombre": nombre_llave})
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(4, mision_id)

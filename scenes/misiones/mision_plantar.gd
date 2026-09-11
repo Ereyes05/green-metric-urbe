@@ -640,6 +640,8 @@ func iniciar(indice: int, zona_node: Area2D, modo: String = "click") -> void:
 	_paso_progreso  = 0
 	_drag_pressed   = false
 	_drag_acum      = 0.0
+	SupabaseManager.registrar_evento(1, str(MISIONES[_mision_idx].get("id", "")),
+		"mision_iniciada", {"modo": modo})
 	_feedback_panel.visible = false
 	if is_instance_valid(_plant_panel):
 		_plant_panel.visible = false
@@ -1419,6 +1421,8 @@ func _nivel_mgr():
 
 
 func _completar_mision() -> void:
+	SupabaseManager.registrar_evento(1, _mision_id, "mision_completada",
+		{"planta": _planta_elegida, "modo": _modo})
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(1, _mision_id)

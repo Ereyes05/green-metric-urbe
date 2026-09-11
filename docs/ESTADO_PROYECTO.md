@@ -103,12 +103,14 @@ La anon key es pública por diseño (protegida por RLS, no por estar oculta).
   escaneado_en)`, PK `token`. Ver `sql/solicitudes_qr.sql`.
 - **`eventos_aprendizaje`** — log de eventos de proceso (no solo resultado
   final): cada elección, acierto, intento. Ver `sql/eventos_aprendizaje.sql`.
-  **Cobertura incompleta:** solo la escriben `mision_movilidad.gd`,
-  `mision_comite_ambiental.gd`, `mision_malla_verde.gd` y
-  `mision_semana_verde.gd` — es decir, Nivel 5 (solo la parte de movilidad)
-  y todo Nivel 6. Niveles 1-4 nunca llaman `registrar_evento()`. No es un
-  bug de red, es que nadie instrumentó esas misiones — pendiente si se
-  quiere el log de proceso completo para la tesis.
+  **Cobertura (actualizada el 2026-09-11): los 6 niveles.** La escriben 14
+  scripts. El evento más valioso es `respuesta_quiz` (en `quiz_npc.gd`), que
+  registra por cada pregunta si acertó, cuál eligió, cuántos segundos tardó
+  y en qué racha venía — es decir, el proceso, no solo el resultado.
+  `quiz_npc.iniciar()` recibe el nivel y la misión justamente para poder
+  atribuir esos eventos a un indicador GreenMetric.
+  ⚠️ Falta confirmar que los eventos llegan al servidor y no solo al log
+  local — ver el pendiente correspondiente en la sección 8.
 - **`estudiantes`** — perfil del estudiante (`xp_total`, etc.), creada por
   un trigger `on_auth_user_created`. El cliente Godot **nunca** la toca
   directo — solo la RPC (`security definer`) le suma XP.
@@ -281,13 +283,23 @@ mecanismo técnico de escaneo → activación a distancia.
   vista** — sin colisiones, pero 4 puntos con nombre de edificio que no
   existe en el mapa (`captacion_bloque_c`, `captacion_biblioteca`,
   `malla_verde`, `informe_final`). Ver sección 5.
-- [ ] 🔴 **Cobertura de `registrar_evento()`** — solo Nivel 5 (movilidad) y
-  Nivel 6; faltan los Niveles 1-4. **Esto subió de prioridad el 2026-09-11:**
-  la definición operacional de la tesis mide el empoderamiento estudiantil
-  "mediante el monitoreo de la interacción del usuario con las dinámicas y
-  componentes del juego" — o sea, con esta misma tabla. La variable que da
-  nombre a la tesis se está midiendo con un instrumento a un tercio de
-  cobertura. Ver sección 9.
+- [x] **Cobertura de `registrar_evento()`** — resuelto el 2026-09-11: pasó
+  de 4 scripts (Niveles 5 y 6) a 14, cubriendo los 6 niveles. Se agregaron
+  los tipos `respuesta_quiz`, `tiempo_agotado`, `crisis_resuelta` y
+  `servicio_solicitado`. **Pendiente de verificar en el servidor:** correr
+  el `grant` de `sql/eventos_aprendizaje.sql` y confirmar que los eventos
+  están llegando de verdad (ver abajo).
+- [ ] ⚠️ **Verificar que `eventos_aprendizaje` recibe los eventos.** El
+  archivo `sql/eventos_aprendizaje.sql` no tenía `grant` — el mismo
+  descuido que dejó `misiones_estudiante` sin permisos el 2026-09-02, donde
+  las peticiones fallaban en silencio. Si falta, los eventos de Niveles 5 y
+  6 de todo este tiempo podrían existir **solo** en el log local
+  (`user://eventos_aprendizaje.jsonl`) y no en Supabase. Cómo comprobarlo,
+  en el SQL Editor:
+  ```sql
+  select tipo_evento, count(*) from eventos_aprendizaje group by tipo_evento;
+  ```
+  Si devuelve 0 filas, correr el `grant` del archivo y volver a probar.
 - [ ] **XP validado solo del lado del cliente en su primer envío** — ver
   sección 6, "Modelo de confianza".
 - [ ] **Migración a TileMaps** — evaluado (2026-09-09), no iniciado. Hace

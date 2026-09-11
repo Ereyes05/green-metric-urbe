@@ -144,6 +144,23 @@ func _process(delta: float) -> void:
 
 func _resolver(correcto: bool, idx_btn: int) -> void:
 	_activa = false
+
+	# Las crisis son decisiones bajo presión de tiempo: para la tesis son
+	# evidencia directa de "toma de decisiones" (empoderamiento), no solo
+	# de conocimiento.
+	# El id sale de "tipo" (no hay campo "id" en las crisis): se normaliza a
+	# minúsculas con guiones bajos para que sea estable como identificador.
+	var tipo : String = str(_crisis_actual.get("tipo", "sin_tipo"))
+	SupabaseManager.registrar_evento(
+		int(_crisis_actual["modulo"]),
+		"crisis_%s" % tipo.to_lower().replace(" ", "_"),
+		"crisis_resuelta",
+		{
+			"tipo"            : tipo,
+			"opcion_elegida"  : idx_btn,
+			"opcion_correcta" : int(_crisis_actual["correcta"]),
+		},
+		correcto)
 	for i in _btn_ops.size():
 		_btn_ops[i].disabled = true
 		if i == _crisis_actual["correcta"]:

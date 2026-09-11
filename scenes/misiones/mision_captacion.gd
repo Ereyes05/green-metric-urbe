@@ -264,6 +264,7 @@ func _nivel_mgr():
 
 
 func _completar_mision() -> void:
+	SupabaseManager.registrar_evento(4, _mision_id, "mision_completada")
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(4, _mision_id)
@@ -519,6 +520,7 @@ func iniciar(mision_idx: int, punto_node: Area2D) -> void:
 	_todos_puestos = false
 	var m : Dictionary = MISIONES_CAPTACION[_mision_idx]
 	_mision_id   = m["id"]
+	SupabaseManager.registrar_evento(4, _mision_id, "mision_iniciada")
 	_tanques_col = []
 	var num_tanques := int(m["cols"]) * int(m["rows"])
 	for _i in num_tanques:
