@@ -5,7 +5,7 @@ sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actuali
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
 Última actualización: 2026-09-11 (rediseño del login + lectura de los
-capítulos de la tesis y análisis de brechas — ver sección 9).
+capítulos de la tesis, análisis de brechas y export web — ver secciones 9 y 10).
 
 > ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
 > [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
@@ -295,20 +295,18 @@ mecanismo técnico de escaneo → activación a distancia.
   no depende del mapa visual, pero reubicar las ~40 posiciones de misiones/
   NPCs sobre la nueva grilla va a necesitar verificación visual, no solo
   matemática.
-- [ ] 🔴 **Export Web/HTML5 — NO es opcional.** Estaba anotado acá como
-  "decisión consciente, no hace falta", pero al leer la tesis (2026-09-11)
-  resultó que el Cap. 4 **afirma que ya está hecho**. Ver brecha 1 de la
-  sección 9. Pendiente: instalar plantillas de exportación de Godot 4.7,
-  exportar sin hilos (GitHub Pages no permite cabeceras COOP/COEP),
-  publicar, y verificar que Supabase responda desde el navegador.
+- [x] **Export Web/HTML5** — hecho el 2026-09-11. Ver sección 10.
+  **Falta un paso manual que solo puede hacer el dueño del repo:** activar
+  GitHub Pages en *Settings → Pages → Source: `main` / carpeta `/docs`*.
 - [ ] 🔴 **HU-012 "Tienda del Conocimiento" no existe** — única historia de
   usuario de la tesis sin implementar. Requiere primero **persistir los
   EcoCredits** (`EconomiaManager` hoy no guarda nada, arrancan en 0 cada
   sesión). Criterios de aceptación ya escritos en el Cap. 4, ver sección 9.
-- [ ] **El tutorial de onboarding casi nadie lo ve** — el flag
-  `user://tutorial_visto.dat` es por máquina y no por cuenta (mismo bug que
-  tenía el guardado antes del Plan B). Igual para `hints_vistas.dat`. Ver
-  sección 9.
+- [x] **El tutorial de onboarding casi nadie lo ve** — resuelto el
+  2026-09-11: `NivelManager.ruta_usuario()` centraliza los archivos de
+  estado local por cuenta, y `tutorial_visto`/`hints_vistas` ahora lo usan.
+  Efecto secundario buscado: quien ya lo había visto lo vuelve a ver una
+  vez por cuenta.
 - [ ] **Al volver, el juego no dice "dónde quedaste"** — HU-002 pide
   devolver al estudiante "al punto exacto donde lo dejó"; hoy se restaura el
   progreso pero no la posición ni se le comunica nada.
@@ -425,7 +423,87 @@ guardado antes del Plan B. En una sala de computación compartida, solo el
 primer estudiante que se siente ve el tutorial; el resto entra sin ninguna
 explicación. Lo mismo aplica a `hints_vistas.dat`.
 
-## 10. Cómo mantener este documento
+## 10. Export web y publicación
+
+Hecho el 2026-09-11, para cerrar la brecha 1 de la sección 9 (el Cap. 4
+afirmaba que el juego ya estaba exportado a la web).
+
+### Cómo regenerar el build
+
+```
+godot --headless --path . --export-release "Web" docs/juego/index.html
+```
+
+El preset vive en `export_presets.cfg` (versionado). Dos cosas de ahí que
+**no hay que cambiar sin entender por qué están**:
+
+- **`variant/thread_support=false`** — la variante con hilos de Godot 4
+  exige las cabeceras COOP/COEP, y GitHub Pages no permite enviar
+  cabeceras propias. Con hilos activados el juego no carga en Pages.
+- **`exclude_filter`** — ver la advertencia de seguridad de abajo.
+
+Las plantillas de exportación (~41 MB, solo las web) van en
+`%APPDATA%\Godot\export_templates\4.7.stable\`. El paquete oficial
+completo pesa 1.28 GB; alcanza con los cuatro `web_*.zip` y `version.txt`.
+
+### ⚠️ Por qué `exclude_filter` no es opcional
+
+El primer export empaquetó **`.mcp.json` dentro del `.pck`**, y ese archivo
+contiene el **Personal Access Token de Supabase** (`sbp_...`, token de
+administración de la cuenta). Godot 4 trata los `.json` como recursos, así
+que `export_filter="all_resources"` se lo llevó puesto — aunque el archivo
+esté en `.gitignore`, porque el `.gitignore` no tiene nada que ver con lo
+que Godot exporta.
+
+Lo detuvo **GitHub Push Protection** al intentar publicarlo; el token nunca
+llegó a GitHub y el commit contaminado se deshizo antes de subirse. Pero el
+riesgo real es claro: **cualquiera que descargue el juego exportado puede
+abrir el `.pck` y leer lo que haya adentro.**
+
+Regla a partir de ahora: **antes de publicar un build, verificar qué se
+empaquetó.** El índice de archivos del `.pck` se guarda en texto plano, así
+que basta con buscar rutas sospechosas:
+
+```python
+import re, pathlib
+data = pathlib.Path('docs/juego/index.pck').read_bytes()
+rutas = sorted(set(m.decode('latin1') for m in re.findall(rb'res://[A-Za-z0-9_./\-]{3,80}', data)))
+print([r for r in rutas if r.endswith('.json') or 'mcp' in r or 'supabase' in r])
+```
+
+(Buscar el token como texto **no** sirve para descartar: el contenido de los
+archivos va comprimido dentro del `.pck`. El índice de rutas sí es fiable.)
+
+La anon key de Supabase sí está en el build y está bien que esté: es
+pública por diseño y el cliente la necesita (la protección real es RLS).
+
+### Publicación
+
+Se publica desde **`docs/juego/` en la rama `main`**. No se usa una rama
+`gh-pages` porque el push de esa rama fue rechazado por el mismo problema
+del token (y una vez resuelto, publicar desde `docs/` evita tener que
+crear y mantener una rama aparte).
+
+`docs/juego/.nojekyll` existe para que Pages no procese la carpeta con
+Jekyll y descarte archivos.
+
+**Paso manual pendiente (requiere ser dueño del repo):** activar Pages en
+*Settings → Pages → Source: Deploy from a branch → `main` / `/docs`*. La
+URL queda en `https://ereyes05.github.io/green-metric-urbe/juego/`.
+
+### Qué quedó verificado y qué no
+
+- ✅ Exporta sin errores; el motor arranca en un navegador headless, carga
+  el `.pck` completo y renderiza por WebGL (la barra de carga llega al
+  100%).
+- ✅ Supabase responde al preflight CORS desde un origen web
+  (`Access-Control-Allow-Origin: *`), así que login y progreso pueden
+  funcionar desde el navegador.
+- ❌ **Sin verificar: jugar de verdad en un navegador real** — login
+  completo, guardado de progreso, audio, y controles táctiles en móvil.
+  Eso hay que probarlo a mano una vez que Pages esté activo.
+
+## 11. Cómo mantener este documento
 
 **Regla:** cualquier cambio que agregue una tabla, una función/RPC, una
 decisión de diseño no obvia, o que resuelva/agregue un pendiente de la
