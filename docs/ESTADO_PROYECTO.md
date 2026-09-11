@@ -444,8 +444,21 @@ afirmaba que el juego ya estaba exportado a la web).
 ### Cómo regenerar el build
 
 ```
-godot --headless --path . --export-release "Web" docs/juego/index.html
+python scripts/exportar_web.py
 ```
+
+**Usar el script, no el comando de Godot pelado.** Además de exportar, hace
+dos cosas imprescindibles:
+
+- **Le pone versión al `.pck`** (`index.pck?v=<hash>`). GitHub Pages manda
+  `Cache-Control: max-age=600`, y como el archivo siempre se llama igual, el
+  navegador se queda con el `.pck` viejo aunque el `index.html` sea nuevo.
+  El resultado es un juego a medio actualizar — HTML nuevo, código viejo —
+  que **parece un bug del juego y no lo es**. Ya nos pasó el 2026-09-11: se
+  publicó el arreglo de los emoji y seguían viéndose cuadraditos. El `.wasm`
+  no se versiona a propósito: pesa 39 MB y solo cambia al actualizar Godot.
+- **Revisa que no se hayan empaquetado archivos sensibles** antes de
+  publicar (ver la advertencia de abajo).
 
 El preset vive en `export_presets.cfg` (versionado). Dos cosas de ahí que
 **no hay que cambiar sin entender por qué están**:
