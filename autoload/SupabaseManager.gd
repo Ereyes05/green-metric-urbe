@@ -88,7 +88,30 @@ func _despachar() -> void:
 	var p : Dictionary = _cola.pop_front()
 	_accion_actual = p["accion"]
 	_ctx_actual    = p.get("ctx", {})
-	_http.request(p["url"], p["hdrs"], p["metodo"], p["body"])
+	# Diferido a propósito: _despachar() se llama desde adentro de
+	# _on_respuesta_http(), o sea desde el callback de request_completed del
+	# propio HTTPRequest. Lanzar una petición nueva mientras el nodo todavía
+	# está cerrando la anterior es frágil, y en el export web la capa HTTP es
+	# bastante menos tolerante que en escritorio. Con call_deferred la
+	# petición sale ya fuera del callback.
+	_lanzar.call_deferred(p)
+
+
+func _lanzar(p: Dictionary) -> void:
+	var err := _http.request(p["url"], p["hdrs"], p["metodo"], p["body"])
+	if err == OK:
+		return
+	# Si request() falla, request_completed NO se emite nunca: sin esto la
+	# cola queda trabada para siempre y todas las peticiones siguientes
+	# desaparecen en silencio (el síntoma sería "no carga el progreso" sin
+	# ningún error visible).
+	push_error("SupabaseManager: no se pudo lanzar '%s' (error %d)" % [_accion_actual, err])
+	var accion := _accion_actual
+	_accion_actual = ""
+	_ctx_actual    = {}
+	_ocupado       = false
+	emit_signal("error_red", "No se pudo enviar la petición '%s' (error %d)." % [accion, err])
+	_despachar()
 
 
 # ── LOGIN ─────────────────────────────────────────────────────
@@ -285,7 +308,18 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 	_ocupado       = false
 
 	if result != HTTPRequest.RESULT_SUCCESS:
-		emit_signal("error_red", "Sin conexión. Código: " + str(result))
+		# El número solo no dice nada; el nombre sí orienta de entrada
+		# (no resuelve el dominio, no conecta, TLS, se cortó a la mitad...).
+		var nombres := {
+			1: "cuerpo truncado", 2: "no pudo conectar", 3: "no resuelve el dominio",
+			4: "error de conexión", 5: "error TLS", 6: "sin respuesta",
+			7: "respuesta demasiado grande", 8: "no pudo descomprimir",
+			9: "la petición falló", 12: "demasiados redirects", 13: "timeout",
+		}
+		var detalle : String = nombres.get(result, "desconocido")
+		push_error("SupabaseManager: '%s' falló en red -> %s (result=%d)"
+			% [accion, detalle, result])
+		emit_signal("error_red", "Sin conexión: %s (%d)" % [detalle, result])
 		if accion == "guardar_progreso":
 			emit_signal("progreso_guardado_fallido", str(ctx.get("mision_id", "")), int(ctx.get("xp_local", 0)))
 		_despachar()

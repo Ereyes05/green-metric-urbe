@@ -946,7 +946,12 @@ func _en_actualizar_contrasena_fallido(error: String) -> void:
 
 func _en_error_red(mensaje: String) -> void:
 	_set_cargando(false)
-	_msg(_msg_login, "Sin conexión.", Color(0.95, 0.30, 0.30))
+	# Se muestra el mensaje completo, no un "Sin conexión." pelado: el código
+	# que trae adentro es lo único que distingue un problema de red real de
+	# un 401/403 del servidor, y sin él no hay forma de diagnosticar nada en
+	# el export web.
+	push_error("SceneLogin: error de red -> " + mensaje)
+	_msg(_msg_login, mensaje, Color(0.95, 0.30, 0.30))
 	if is_instance_valid(_msg_reg): _msg_reg.text = "Sin conexión: " + mensaje
 	if is_instance_valid(_msg_rec): _msg_rec.text = "Sin conexión."
 
