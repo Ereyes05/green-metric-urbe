@@ -55,6 +55,15 @@ signal compra_resuelta(respuesta: Dictionary, item_id: String)
 # titulos: {user_id: "nombre del título"}
 signal titulos_ranking_cargados(titulos: Dictionary)
 
+# ── Puntaje GreenMetric (ver sql/puntaje_greenmetric.sql) ────
+# datos: {"categorias": {"1": {"avance","comprension","decisiones","sinergias","total"}, ...},
+#         "total": float, "quizzes_hechos": [mision_id...]}
+signal puntaje_recibido(datos: Dictionary)
+# Respuesta de registrar_quiz/decision/sinergia. ctx.tipo: "quiz"|"decision"|"sinergia".
+signal calidad_respuesta(respuesta: Dictionary, ctx: Dictionary)
+# detalles: {clave: detalle}. {} si falló (el llamador tiene su propio timeout).
+signal detalles_recibidos(detalles: Dictionary)
+
 # ── Estado interno ───────────────────────────────────────────
 var jwt_token      : String = ""
 var user_id        : String = ""
@@ -294,6 +303,33 @@ func cargar_titulos_ranking() -> void:
 			 HTTPClient.METHOD_POST, _headers_anon(), "{}")
 
 
+func obtener_puntaje() -> void:
+	_rpc("puntaje", "puntaje_greenmetric", {})
+
+
+func registrar_quiz(mision_id: String, aciertos: int) -> void:
+	_rpc("calidad", "registrar_quiz", {"p_mision_id": mision_id, "p_aciertos": aciertos},
+		 {"tipo": "quiz", "mision_id": mision_id})
+
+
+func registrar_decision(decision_id: String, opcion_id: String) -> void:
+	_rpc("calidad", "registrar_decision", {"p_decision_id": decision_id, "p_opcion_id": opcion_id},
+		 {"tipo": "decision", "decision_id": decision_id, "opcion_id": opcion_id})
+
+
+func registrar_sinergia(accion_id: String) -> void:
+	_rpc("calidad", "registrar_sinergia", {"p_accion_id": accion_id},
+		 {"tipo": "sinergia", "accion_id": accion_id})
+
+
+func guardar_detalle(clave: String, detalle: Dictionary) -> void:
+	_rpc("detalle", "guardar_detalle", {"p_clave": clave, "p_detalle": detalle}, {"clave": clave})
+
+
+func obtener_detalles() -> void:
+	_rpc("detalles", "obtener_detalles", {})
+
+
 # ── SOLICITUDES QR (servicio de limpieza, Nivel 3) ───────────
 # El QR que se muestra en zona_reciclaje.gd apunta a una Edge Function
 # pública (marcar_escaneado, sin login) que marca esta fila cuando
@@ -426,6 +462,10 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 			emit_signal("billetera_actualizada", {"ok": false, "error": "red"}, ctx)
 		elif accion == "comprar":
 			emit_signal("compra_resuelta", {"ok": false, "error": "red"}, str(ctx.get("item_id", "")))
+		elif accion == "calidad":
+			emit_signal("calidad_respuesta", {"ok": false, "error": "red"}, ctx)
+		elif accion == "detalles":
+			emit_signal("detalles_recibidos", {})
 		_despachar()
 		return
 
@@ -451,6 +491,10 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"billetera_mov"   : _procesar_billetera_mov(code, datos, ctx)
 		"comprar"         : _procesar_compra(code, datos, ctx)
 		"titulos_ranking" : _procesar_titulos(code, datos)
+		"puntaje"         : _procesar_puntaje(code, datos)
+		"calidad"         : _procesar_calidad(code, datos, ctx)
+		"detalle"         : _procesar_detalle(code, datos, ctx)
+		"detalles"        : _procesar_detalles(code, datos)
 		"diag_red"        : print("AUTOPRUEBA RED: OK — HTTP %d, %d bytes, JSON %s, Content-Encoding=%s"
 			% [code, body.size(), "valido" if datos != null else "INVALIDO",
 			   _valor_cabecera(hdrs, "content-encoding")])
@@ -674,6 +718,39 @@ func _procesar_titulos(code: int, datos: Variant) -> void:
 			if fila is Dictionary:
 				titulos[str(fila.get("user_id", ""))] = str(fila.get("titulo", ""))
 	emit_signal("titulos_ranking_cargados", titulos)
+
+
+func _procesar_puntaje(code: int, datos: Variant) -> void:
+	if code == 200 and datos is Dictionary:
+		emit_signal("puntaje_recibido", datos)
+	else:
+		push_error("SupabaseManager: falló puntaje_greenmetric (HTTP %d): %s"
+			% [code, str(datos).substr(0, 200)])
+
+
+func _procesar_calidad(code: int, datos: Variant, ctx: Dictionary) -> void:
+	if code == 200 and datos is Dictionary:
+		emit_signal("calidad_respuesta", datos, ctx)
+	else:
+		push_error("SupabaseManager: falló registro de calidad %s (HTTP %d): %s"
+			% [str(ctx), code, str(datos).substr(0, 200)])
+		emit_signal("calidad_respuesta", {"ok": false, "error": "http_%d" % code}, ctx)
+
+
+# Un detalle que no se guardó no se pierde: queda en el archivo local de
+# NivelManager y se vuelve a subir al iniciar sesión (ver PuntajeManager).
+func _procesar_detalle(code: int, datos: Variant, ctx: Dictionary) -> void:
+	if code != 200 or not (datos is Dictionary) or not bool(datos.get("ok", false)):
+		push_warning("SupabaseManager: no se guardó el detalle '%s' (HTTP %d): %s"
+			% [str(ctx.get("clave", "")), code, str(datos).substr(0, 200)])
+
+
+func _procesar_detalles(code: int, datos: Variant) -> void:
+	if code == 200 and datos is Dictionary:
+		emit_signal("detalles_recibidos", datos)
+	else:
+		push_warning("SupabaseManager: falló obtener_detalles (HTTP %d)" % code)
+		emit_signal("detalles_recibidos", {})
 
 
 # ── Headers ───────────────────────────────────────────────────
