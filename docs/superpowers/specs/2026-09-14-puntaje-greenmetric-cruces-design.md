@@ -225,7 +225,8 @@ B y C agregan o reemplazan misiones en niveles que algunos ya completaron.
 
 ### 6.5 Telemetría (`eventos_aprendizaje`)
 
-- `respuesta_quiz` ya existe; se agrega `intento_num` real (1 = primer intento).
+- `respuesta_quiz` y `tiempo_agotado` ya existen; se agrega `detalle.intento_quiz` (1 = primer intento, 2 = repetición). `intento_num` no cambia: ya guarda el número de pregunta.
+- `decision_tomada` lo emiten B y C (necesita costo y presupuesto del llamador); A deja lista la función `registrar_decision`.
 - `sinergia_obtenida`: `{accion_id, categorias}`.
 - `decision_tomada`: `{decision_id, opcion_id, contraproducente, costo, presupuesto_restante, ms_hasta_elegir}`, con `correcto = not contraproducente`.
 
