@@ -123,3 +123,218 @@ insert into public.catalogo_misiones (mision_id, categoria, tipo, preguntas) val
   ('mision_agua', 4, 'quiz', 3), ('mision_transporte', 5, 'quiz', 3),
   ('mision_rector', 6, 'quiz', 3), ('mision_educacion', 6, 'quiz', 3)
 on conflict (mision_id) do nothing;
+
+-- ── Cálculo (interno, no expuesto) ───────────────────────────
+create or replace function public._puntaje_greenmetric(p_user uuid)
+returns jsonb language sql stable security definer set search_path to 'public' as $$
+  with cats(categoria, peso) as (
+    values (1, 15), (2, 21), (3, 18), (4, 10), (5, 18), (6, 18)
+  ),
+  av as (
+    select c.categoria,
+           count(*)           filter (where c.tipo in ('mision', 'minijuego')) as total,
+           count(m.mision_id) filter (where c.tipo in ('mision', 'minijuego')) as hechas,
+           coalesce(sum(c.preguntas) filter (where c.tipo = 'quiz'), 0)       as preguntas
+      from catalogo_misiones c
+      left join misiones_estudiante m
+        on m.mision_id = c.mision_id and m.user_id = p_user
+     group by c.categoria
+  ),
+  pq as (
+    select categoria,
+           coalesce(sum(puntos) filter (where componente = 'comprension'), 0) as aciertos,
+           coalesce(sum(puntos) filter (where componente = 'decision'), 0)    as dec,
+           coalesce(sum(puntos) filter (where componente = 'sinergia'), 0)    as sin
+      from puntos_calidad where user_id = p_user
+     group by categoria
+  ),
+  calc as (
+    select k.categoria, k.peso,
+           case when coalesce(a.total, 0) = 0 then 0
+                else round(80.0 * a.hechas / a.total, 2) end                          as avance,
+           case when coalesce(a.preguntas, 0) = 0 then 0
+                else round(10.0 * least(coalesce(q.aciertos, 0), a.preguntas) / a.preguntas, 2) end as comprension,
+           round(greatest(0, least(5, coalesce(q.dec, 0))), 2)                        as decisiones,
+           round(greatest(0, least(5, coalesce(q.sin, 0))), 2)                        as sinergias
+      from cats k
+      left join av a using (categoria)
+      left join pq q using (categoria)
+  )
+  select jsonb_build_object(
+    'categorias', jsonb_object_agg(categoria::text, jsonb_build_object(
+        'avance', avance, 'comprension', comprension,
+        'decisiones', decisiones, 'sinergias', sinergias,
+        'total', avance + comprension + decisiones + sinergias)),
+    'total', round(sum((avance + comprension + decisiones + sinergias) * peso / 100.0), 2),
+    'quizzes_hechos', coalesce((
+        select jsonb_agg(substr(ref, 6)) from puntos_calidad
+         where user_id = p_user and componente = 'comprension'), '[]'::jsonb))
+  from calc;
+$$;
+
+-- ── Público ──────────────────────────────────────────────────
+create or replace function public.puntaje_greenmetric()
+returns jsonb language plpgsql stable security definer set search_path to 'public' as $$
+declare v_user uuid := auth.uid();
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  return _puntaje_greenmetric(v_user);
+end;
+$$;
+
+create or replace function public.guardar_detalle(p_clave text, p_detalle jsonb)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare v_user uuid := auth.uid();
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  if p_clave is null or p_clave !~ '^[a-z0-9_:.-]{1,80}$' then
+    return jsonb_build_object('ok', false, 'error', 'clave_invalida');
+  end if;
+  if p_detalle is null or jsonb_typeof(p_detalle) <> 'object' then
+    return jsonb_build_object('ok', false, 'error', 'detalle_invalido');
+  end if;
+  if pg_column_size(p_detalle) > 8192 then
+    return jsonb_build_object('ok', false, 'error', 'detalle_muy_grande');
+  end if;
+  insert into detalles_estudiante (user_id, clave, detalle, actualizado_en)
+  values (v_user, p_clave, p_detalle, now())
+  on conflict (user_id, clave)
+  do update set detalle = excluded.detalle, actualizado_en = now();
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+create or replace function public.obtener_detalles()
+returns jsonb language plpgsql stable security definer set search_path to 'public' as $$
+declare v_user uuid := auth.uid();
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  return coalesce((select jsonb_object_agg(clave, detalle)
+                     from detalles_estudiante where user_id = v_user), '{}'::jsonb);
+end;
+$$;
+
+-- Primer intento: si el quiz ya estaba registrado no cambia nada, así
+-- repetirlo no sube la Comprensión.
+create or replace function public.registrar_quiz(p_mision_id text, p_aciertos int)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare
+  v_user  uuid := auth.uid();
+  v_cat   int;
+  v_preg  int;
+  v_filas int;
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  select categoria, preguntas into v_cat, v_preg
+    from catalogo_misiones where mision_id = p_mision_id and tipo = 'quiz';
+  if v_cat is null then
+    return jsonb_build_object('ok', false, 'error', 'quiz_inexistente');
+  end if;
+  if p_aciertos is null or p_aciertos < 0 or p_aciertos > v_preg then
+    return jsonb_build_object('ok', false, 'error', 'aciertos_fuera_de_rango');
+  end if;
+  insert into puntos_calidad (user_id, categoria, componente, puntos, ref)
+  values (v_user, v_cat, 'comprension', p_aciertos, 'quiz:' || p_mision_id)
+  on conflict (user_id, ref, categoria) do nothing;
+  get diagnostics v_filas = row_count;
+  return jsonb_build_object('ok', true, 'registrado', v_filas > 0,
+                            'puntaje', _puntaje_greenmetric(v_user));
+end;
+$$;
+
+-- Regla Mixta (Tabla 15 del Cap. 4): la opción contraproducente penaliza −1
+-- (máximo 3 veces por decisión) y el cliente ofrece reintento; una opción
+-- válida reemplaza los puntos anteriores de esa decisión.
+create or replace function public.registrar_decision(p_decision_id text, p_opcion_id text)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare
+  v_user   uuid := auth.uid();
+  v_cat    int;
+  v_puntos numeric;
+  v_contra boolean;
+  v_prefijo text;
+  v_n      int;
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  select categoria, puntos, contraproducente into v_cat, v_puntos, v_contra
+    from catalogo_decisiones where decision_id = p_decision_id and opcion_id = p_opcion_id;
+  if v_cat is null then
+    return jsonb_build_object('ok', false, 'error', 'opcion_inexistente');
+  end if;
+  perform pg_advisory_xact_lock(hashtext('calidad:' || v_user::text));
+  if v_contra then
+    v_prefijo := 'penal:' || p_decision_id || ':';
+    select count(*) into v_n from puntos_calidad
+     where user_id = v_user and left(ref, length(v_prefijo)) = v_prefijo;
+    if v_n < 3 then
+      insert into puntos_calidad (user_id, categoria, componente, puntos, ref)
+      values (v_user, v_cat, 'decision', -1, v_prefijo || (v_n + 1));
+    end if;
+    return jsonb_build_object('ok', true, 'contraproducente', true, 'penalizado', v_n < 3,
+                              'puntaje', _puntaje_greenmetric(v_user));
+  end if;
+  insert into puntos_calidad (user_id, categoria, componente, puntos, ref)
+  values (v_user, v_cat, 'decision', v_puntos, 'decision:' || p_decision_id)
+  on conflict (user_id, ref, categoria)
+  do update set puntos = excluded.puntos, creado_en = now();
+  return jsonb_build_object('ok', true, 'contraproducente', false,
+                            'puntaje', _puntaje_greenmetric(v_user));
+end;
+$$;
+
+create or replace function public.registrar_sinergia(p_accion_id text)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare
+  v_user  uuid := auth.uid();
+  v_filas int;
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  if not exists (select 1 from catalogo_sinergias where accion_id = p_accion_id) then
+    return jsonb_build_object('ok', false, 'error', 'sinergia_inexistente');
+  end if;
+  if exists (
+    select 1 from catalogo_sinergias s
+     where s.accion_id = p_accion_id and s.requisito_mision is not null
+       and not exists (select 1 from misiones_estudiante m
+                        where m.user_id = v_user and m.mision_id = s.requisito_mision)
+  ) then
+    return jsonb_build_object('ok', false, 'error', 'requisito_incumplido');
+  end if;
+  insert into puntos_calidad (user_id, categoria, componente, puntos, ref)
+  select v_user, categoria, 'sinergia', puntos, 'sinergia:' || p_accion_id
+    from catalogo_sinergias where accion_id = p_accion_id
+  on conflict (user_id, ref, categoria) do nothing;
+  get diagnostics v_filas = row_count;
+  return jsonb_build_object(
+    'ok', true, 'nuevo', v_filas > 0,
+    'categorias', (select jsonb_agg(jsonb_build_object('categoria', categoria, 'puntos', puntos))
+                     from catalogo_sinergias where accion_id = p_accion_id),
+    'puntaje', _puntaje_greenmetric(v_user));
+end;
+$$;
+
+revoke execute on function public._puntaje_greenmetric(uuid) from public, anon, authenticated;
+revoke execute on function public.puntaje_greenmetric()               from public, anon;
+revoke execute on function public.guardar_detalle(text, jsonb)        from public, anon;
+revoke execute on function public.obtener_detalles()                  from public, anon;
+revoke execute on function public.registrar_quiz(text, int)           from public, anon;
+revoke execute on function public.registrar_decision(text, text)      from public, anon;
+revoke execute on function public.registrar_sinergia(text)            from public, anon;
+grant  execute on function public.puntaje_greenmetric()               to authenticated;
+grant  execute on function public.guardar_detalle(text, jsonb)        to authenticated;
+grant  execute on function public.obtener_detalles()                  to authenticated;
+grant  execute on function public.registrar_quiz(text, int)           to authenticated;
+grant  execute on function public.registrar_decision(text, text)      to authenticated;
+grant  execute on function public.registrar_sinergia(text)            to authenticated;
