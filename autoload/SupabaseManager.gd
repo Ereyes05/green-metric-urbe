@@ -59,6 +59,10 @@ signal titulos_ranking_cargados(titulos: Dictionary)
 # datos: {"categorias": {"1": {"avance","comprension","decisiones","sinergias","total"}, ...},
 #         "total": float, "quizzes_hechos": [mision_id...]}
 signal puntaje_recibido(datos: Dictionary)
+# El pedido de puntaje falló (red o HTTP). Quien espera la respuesta debe
+# poder volver a pedirlo; no se emite un puntaje vacío porque borraría el
+# desglose que ya se muestra.
+signal puntaje_fallido()
 # Respuesta de registrar_quiz/decision/sinergia. ctx.tipo: "quiz"|"decision"|"sinergia".
 signal calidad_respuesta(respuesta: Dictionary, ctx: Dictionary)
 # detalles: {clave: detalle}. {} si falló (el llamador tiene su propio timeout).
@@ -466,6 +470,8 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 			emit_signal("calidad_respuesta", {"ok": false, "error": "red"}, ctx)
 		elif accion == "detalles":
 			emit_signal("detalles_recibidos", {})
+		elif accion == "puntaje":
+			emit_signal("puntaje_fallido")
 		_despachar()
 		return
 
@@ -726,6 +732,7 @@ func _procesar_puntaje(code: int, datos: Variant) -> void:
 	else:
 		push_error("SupabaseManager: falló puntaje_greenmetric (HTTP %d): %s"
 			% [code, str(datos).substr(0, 200)])
+		emit_signal("puntaje_fallido")
 
 
 func _procesar_calidad(code: int, datos: Variant, ctx: Dictionary) -> void:

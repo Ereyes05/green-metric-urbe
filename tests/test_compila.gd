@@ -21,7 +21,7 @@ func _ready() -> void:
 		for f in ["obtener_puntaje", "registrar_quiz", "registrar_decision",
 				  "registrar_sinergia", "guardar_detalle", "obtener_detalles"]:
 			_check(sm.has_method(f), "SupabaseManager.%s existe" % f)
-		for s in ["puntaje_recibido", "calidad_respuesta", "detalles_recibidos"]:
+		for s in ["puntaje_recibido", "puntaje_fallido", "calidad_respuesta", "detalles_recibidos"]:
 			_check(sm.has_signal(s), "SupabaseManager señal %s existe" % s)
 	print("test_compila: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)
