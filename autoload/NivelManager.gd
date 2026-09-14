@@ -35,6 +35,35 @@ const TOTAL_MISIONES : Dictionary = {
 	6: 4,   # malla_verde + comite_ambiental + semana_verde + informe_final
 }
 
+# IDs válidos de cada nivel. nivel_completo()/pct_nivel() cuentan SOLO estos:
+# antes contaban cualquier misión guardada del nivel, así que al reemplazar
+# misiones (Nivel 5 nuevo, minijuegos) las viejas seguirían contando.
+# ESPEJO de public.catalogo_misiones (sql/puntaje_greenmetric.sql): si cambia
+# uno, cambiar el otro, y también TOTAL_MISIONES.
+const MISIONES_NIVEL : Dictionary = {
+	1: ["plantar_rectorado", "plantar_patio", "plantar_este",
+		"plantar_corredores", "plantar_norte", "plantar_oeste"],
+	2: ["led_bloque_a", "led_bloque_b", "led_bloque_c", "led_bloque_d",
+		"led_bloque_e", "led_bloque_f", "solar_rectorado", "solar_estacionamiento"],
+	3: ["reciclar_corredor_n", "reciclar_patio_e", "reciclar_bloque_e",
+		"reciclar_oeste", "reciclar_sur", "reciclar_este"],
+	4: ["llave_bloque_c", "llave_bloque_a", "llave_corredor_n", "llave_patio_e",
+		"llave_este", "llave_bloque_b", "captacion_biblioteca", "captacion_bloque_c"],
+	5: ["mov_parqueo", "mov_shuttle", "mov_ciclovia", "mov_dia_sin_carros",
+		"mov_zev", "mov_carpool", "bicicletero_bloque_e", "bicicletero_cafetin"],
+	6: ["malla_verde", "comite_ambiental", "semana_verde", "informe_final"],
+}
+
+# Conjunto con el que cada nivel se consideraba completo ANTES de cambiarle
+# las misiones. Quien ya lo había superado no pierde el desbloqueo del
+# siguiente nivel aunque el nivel se reabra. Hoy es igual a MISIONES_NIVEL;
+# el Nivel 5 nuevo y los minijuegos lo harán distinto.
+const MISIONES_LEGADO : Dictionary = MISIONES_NIVEL
+
+# Copias editables (las pruebas las reemplazan; el juego no las toca).
+var misiones_nivel  : Dictionary = MISIONES_NIVEL.duplicate(true)
+var misiones_legado : Dictionary = MISIONES_LEGADO.duplicate(true)
+
 const XP_POR_MISION : Dictionary  = {1: 40, 2: 50, 3: 35, 4: 35, 5: 35, 6: 70}
 const EC_POR_MISION : Dictionary  = {1: 15, 2: 20, 3: 12, 4: 12, 5: 12, 6: 20}
 const XP_NIVEL_BONUS : Dictionary = {1: 150, 2: 250, 3: 180, 4: 180, 5: 180, 6: 200}
@@ -121,27 +150,36 @@ func repoblar_desde_servidor(filas: Array) -> void:
 
 func nivel_desbloqueado(n: int) -> bool:
 	if n == 1: return true
-	return nivel_completo(n - 1)
+	return nivel_superado(n - 1)
 
+# Completo = todas las misiones ACTUALES del nivel. Se usa para nivel_actual
+# y la celebración de "nivel completado".
 func nivel_completo(n: int) -> bool:
-	var s := str(n)
-	var total : int = TOTAL_MISIONES.get(n, 0)
-	if total == 0: return false
-	if not _misiones.has(s): return false
-	var completadas := 0
-	for v in (_misiones[s] as Dictionary).values():
-		if v: completadas += 1
-	return completadas >= total
+	var ids : Array = misiones_nivel.get(n, [])
+	if ids.is_empty(): return false
+	return _contar_hechas(n, ids) >= ids.size()
+
+# Superado = completo, o completo con el conjunto anterior (legado). Se usa
+# SOLO para desbloquear el nivel siguiente.
+func nivel_superado(n: int) -> bool:
+	if nivel_completo(n): return true
+	var legado : Array = misiones_legado.get(n, [])
+	return not legado.is_empty() and _contar_hechas(n, legado) >= legado.size()
 
 func pct_nivel(n: int) -> float:
+	var ids : Array = misiones_nivel.get(n, [])
+	if ids.is_empty(): return 0.0
+	return float(_contar_hechas(n, ids)) / float(ids.size())
+
+func _contar_hechas(n: int, ids: Array) -> int:
 	var s := str(n)
-	var total : int = TOTAL_MISIONES.get(n, 0)
-	if total == 0: return 0.0
-	if not _misiones.has(s): return 0.0
-	var completadas := 0
-	for v in (_misiones[s] as Dictionary).values():
-		if v: completadas += 1
-	return float(completadas) / float(total)
+	if not _misiones.has(s): return 0
+	var hechas := 0
+	var del_nivel : Dictionary = _misiones[s]
+	for id in ids:
+		if del_nivel.get(id, false):
+			hechas += 1
+	return hechas
 
 func mision_completada_q(nivel: int, mision_id: String) -> bool:
 	var s := str(nivel)
