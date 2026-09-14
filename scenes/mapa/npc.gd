@@ -19,6 +19,16 @@ var _tween_bounce : Tween    = null
 var _char_visual  : NpcChar  = null
 
 
+# Brillo que aparece cuando el jugador se acerca. Se dibuja una vez con la
+# transparencia máxima y NpcChar lo hace latir con modulate.a.
+class GlowNpc extends Node2D:
+	const ALFA_MAX : float = 0.14   # 0.09 + 0.05, el pico del latido original
+	var col : Color = Color.WHITE
+
+	func _draw() -> void:
+		draw_circle(Vector2(0, -18), 20.0, Color(col.r, col.g, col.b, ALFA_MAX))
+
+
 # ════════════════════════════════════════════════════════════
 # INNER CLASS — personaje procedural con tipos:
 # rector | prof_h | prof_m | est_h | est_m
@@ -27,19 +37,37 @@ var _char_visual  : NpcChar  = null
 class NpcChar extends Node2D:
 	var col     : Color  = Color(0.5, 0.5, 0.5)
 	var tipo    : String = "prof_h"
-	var glow_on : bool   = false
+	var glow_on : bool   = false:
+		set(v):
+			glow_on = v
+			if _glow: _glow.visible = v
 	var _t      : float  = 0.0
+	var _glow   : GlowNpc = null
+
+	# Rendimiento (medido 2026-09-14): antes _process() llamaba queue_redraw()
+	# en cada frame y el personaje entero (cara, ojos, pelo con arcos, cuerpo)
+	# se volvía a dibujar 60 veces por segundo solo para un balanceo de ±0,6 px
+	# y el latido del brillo. Los 12 NPCs eran ~30-39% del tiempo de frame.
+	#
+	# Ahora el personaje se dibuja UNA vez y se animan cosas que no obligan a
+	# redibujar: la posición (balanceo) y la transparencia del brillo, que va
+	# en un nodo hijo aparte. Única diferencia visual: la sombra de los pies
+	# acompaña el balanceo de 0,6 px (imperceptible).
+	func _ready() -> void:
+		_glow = GlowNpc.new()
+		_glow.col = col
+		_glow.show_behind_parent = true   # detrás del cuerpo, como antes
+		_glow.visible = glow_on
+		add_child(_glow)
 
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
+		position.y = sin(_t * 1.6) * 0.6
+		if glow_on:
+			_glow.modulate.a = (0.09 + 0.05 * sin(_t * 2.5)) / GlowNpc.ALFA_MAX
 
 	func _draw() -> void:
-		var bob := sin(_t * 1.6) * 0.6
-
-		if glow_on:
-			var ga := 0.09 + 0.05 * sin(_t * 2.5)
-			draw_circle(Vector2(0, bob - 18), 20.0, Color(col.r, col.g, col.b, ga))
+		var bob := 0.0   # el balanceo lo hace position.y en _process()
 
 		draw_arc(Vector2(0, 1.5), 7.0, 0.0, PI, 14, Color(0, 0, 0, 0.24), 5.0)
 

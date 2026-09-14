@@ -585,8 +585,23 @@ comprobar la capa HTTP del export web sin usar una cuenta real.
   - 2026-09-14: `mapa_campus.gd` redibujaba el campus entero en cada frame
     solo para mover 6 pájaros y 12 reflejos del lago. Ahora el campus se
     dibuja una vez y se anima una capa aparte → **11 → 14-15 FPS**.
-  - Pendiente: ~40 nodos del mapa (NPCs, puntos de misión, papeleras)
-    siguen llamando `queue_redraw()` en cada frame sin condición.
+  - 2026-09-14: perfilado por FPS (escritorio sin vsync, congelando un tipo
+    de script a la vez, 3 repeticiones) mostró dos culpables claros:
+    **NPCs (`npc.gd`, 30-39% del frame)** y **zonas de plantar
+    (`zona_tierra.gd`, ~26%)**. Ambos redibujaban figuras complejas en cada
+    frame para animar un balanceo de menos de 1 px, un brillo o un hoyo que
+    late. Ahora se dibujan una vez y se anima posición/escala/transparencia
+    (que no obliga a redibujar). Escritorio: **89 → 124-132 FPS**. Verificado
+    por captura con todos los estados forzados (brillo de NPCs, hoyo, árbol
+    adulto con cartel, indicador de agua).
+  - Descartados por la medición (eran ruido): `mision_bicicletero`,
+    `mision_comite_ambiental`.
+  - Todavía redibujan en cada frame: puntos de misión de los niveles 2-6,
+    papeleras, llaves de agua. Medidos como costo menor; atacarlos solo si
+    los FPS en web siguen bajos.
+  - **Patrón a evitar en código nuevo:** `_process(): queue_redraw()` para
+    animar algo que se puede animar moviendo, escalando o cambiando
+    `modulate` del nodo. Redibujar solo cuando cambia lo que se dibuja.
 
 ### Cómo medir rendimiento sin engañarse (lecciones del 2026-09-14)
 

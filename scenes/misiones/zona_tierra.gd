@@ -36,21 +36,68 @@ var _agua_node      : Node2D = null        # indicador visual de gota
 var _eco_badge      : Node2D = null        # badge flotante de impacto ambiental
 
 
+# Piezas del hoyo que late, dibujadas una sola vez. TierraVisual las anima
+# con scale (el latido) y modulate.a (el brillo del aro).
+class HoyoTierra extends Node2D:
+	func _draw() -> void:
+		draw_circle(Vector2.ZERO, 7.0, Color(0.20, 0.11, 0.04))
+
+class AroTierra extends Node2D:
+	func _draw() -> void:
+		draw_arc(Vector2.ZERO, 7.5, 0.0, TAU, 16, Color(0.55, 0.88, 0.25, 1.0), 1.5)
+
+
 class TierraVisual extends Node2D:
 	const RADIO_TIERRA = 34.0
-	var completada  : bool   = false
+	var completada  : bool   = false:
+		set(v):
+			completada = v
+			_actualizar_hoyo()
+			queue_redraw()
 	var tipo_planta : String = ""
 	var _t          : float  = 0.0
-	var _growth_t   : float  = 1.0   # 0=recién plantado → 1=árbol adulto
+	# 0=recién plantado → 1=árbol adulto. Lo anima un tween con
+	# tween_property, que pasa por este setter: redibuja solo mientras crece.
+	var _growth_t   : float  = 1.0:
+		set(v):
+			_growth_t = v
+			queue_redraw()
 	var _riego_t    : float  = -1.0  # ≥0 → animación de agua activa
+	var _hoyo       : Node2D = null
+	var _aro        : Node2D = null
+
+	# Rendimiento (medido 2026-09-14): antes se redibujaba TODO en cada frame
+	# — un polígono de 28 puntos con senos y cosenos, un generador de números
+	# aleatorios nuevo para 14 motas que siempre quedan en el mismo lugar, dos
+	# arcos — cuando lo único animado era el hoyo que late. Las 6 zonas eran
+	# ~26% del tiempo de frame.
+	#
+	# Ahora el parche se dibuja una vez; el hoyo que late son dos nodos hijos
+	# animados con scale/modulate (no redibujan); y el nodo solo se redibuja
+	# cuando cambia de estado o mientras dura el crecimiento o el riego.
+	func _ready() -> void:
+		_hoyo = HoyoTierra.new()
+		add_child(_hoyo)
+		_aro = AroTierra.new()
+		add_child(_aro)
+		_actualizar_hoyo()
+
+	func _actualizar_hoyo() -> void:
+		if _hoyo: _hoyo.visible = not completada
+		if _aro:  _aro.visible  = not completada
 
 	func _process(delta: float) -> void:
 		_t += delta
+		if not completada and _hoyo:
+			var puls := 1.0 + 0.12 * sin(_t * 3.0)
+			_hoyo.scale = Vector2(puls, puls)
+			_aro.scale  = Vector2(puls, puls)
+			_aro.modulate.a = 0.6 + 0.3 * sin(_t * 2.5)
 		if _riego_t >= 0.0:
 			_riego_t += delta
 			if _riego_t > 1.0:
 				_riego_t = -1.0
-		queue_redraw()
+			queue_redraw()   # también el frame en que termina, para borrar los aros
 
 	func _draw() -> void:
 		if completada:
@@ -82,11 +129,8 @@ class TierraVisual extends Node2D:
 			var py := rng.randf_range(-RADIO_TIERRA * 0.28, RADIO_TIERRA * 0.25)
 			draw_circle(Vector2(px, py), rng.randf_range(1.5, 3.5),
 						Color(0.28, 0.16, 0.06, 0.55))
-		# Hoyo central pulsante (indica dónde plantar)
-		var puls := 1.0 + 0.12 * sin(_t * 3.0)
-		draw_circle(Vector2(0, 0), 7.0 * puls, Color(0.20, 0.11, 0.04))
-		draw_arc(Vector2(0, 0), 7.5 * puls, 0.0, TAU, 16,
-				 Color(0.55, 0.88, 0.25, 0.6 + 0.3 * sin(_t * 2.5)), 1.5)
+		# (El hoyo central que late lo dibujan HoyoTierra/AroTierra, hijos de
+		# este nodo, animados sin redibujar.)
 
 	func _draw_completada() -> void:
 		var sc := clampf(_growth_t, 0.001, 1.0)
@@ -110,22 +154,33 @@ class TierraVisual extends Node2D:
 		draw_circle(Vector2( 9, -12), 11.0, Color(0.18, 0.68, 0.20))
 		draw_circle(Vector2(0, -26), 12.0, Color(0.22, 0.72, 0.22))
 
+class AroAgua extends Node2D:
+	func _draw() -> void:
+		draw_arc(Vector2(0, -70.0), 16.0, 0.0, TAU, 20, Color(0.22, 0.60, 0.96, 1.0), 2.0)
+
+# Mismo arreglo que TierraVisual: se dibuja una vez y se anima moviendo el
+# nodo (balanceo) y la transparencia del aro, en vez de redibujar cada frame.
 class AguaIndicador extends Node2D:
-	var _t : float = 0.0
+	var _t      : float  = 0.0
+	var _base_y : float  = 0.0
+	var _aro    : Node2D = null
+	func _ready() -> void:
+		_base_y = position.y
+		_aro = AroAgua.new()
+		add_child(_aro)
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
+		position.y = _base_y + sin(_t * 4.5) * 5.0
+		_aro.modulate.a = 0.45 + 0.3 * sin(_t * 5.0)
 	func _draw() -> void:
-		var bob := sin(_t * 4.5) * 5.0
-		var cy  := -70.0 + bob
+		var cy  := -70.0   # el balanceo lo hace position.y
 		var pts := PackedVector2Array([
 			Vector2(0, cy - 16), Vector2(-8, cy),
 			Vector2(0, cy + 9),  Vector2(8, cy)
 		])
 		draw_colored_polygon(pts, Color(0.22, 0.60, 0.96, 0.92))
 		draw_circle(Vector2(-2, cy - 6), 2.5, Color(0.85, 0.93, 1.0, 0.75))
-		var a := 0.45 + 0.3 * sin(_t * 5.0)
-		draw_arc(Vector2(0, cy), 16.0, 0.0, TAU, 20, Color(0.22, 0.60, 0.96, a), 2.0)
+		# (El aro que late lo dibuja AroAgua, hijo de este nodo.)
 
 
 # ── Jardinero animado (5 fases) ───────────────────────────────
@@ -216,15 +271,21 @@ class GardeneroVisual extends Node2D:
 
 
 # ── Badge flotante de impacto ambiental ───────────────────────
+# Se redibujaba en cada frame para un balanceo de ±1,5 px, incluso cuando
+# estaba invisible (modulate.a = 0 mientras el jugador no está cerca). Ahora
+# se dibuja una vez y el balanceo mueve el nodo.
 class EcoBadge extends Node2D:
-	var _t : float = 0.0
+	var _t      : float = 0.0
+	var _base_y : float = 0.0
+	func _ready() -> void:
+		_base_y = position.y   # zona_tierra le asigna (0, -52) antes de agregarlo
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
+		position.y = _base_y + sin(_t * 1.8) * 1.5
 	func _draw() -> void:
 		var font := ThemeDB.fallback_font
 		if not font: return
-		var bob := sin(_t * 1.8) * 1.5
+		var bob := 0.0   # el balanceo lo hace position.y
 		# Fondo pill (2 líneas de texto)
 		draw_rect(Rect2(-46, -24 + bob, 94, 30), Color(0.03, 0.10, 0.05, 0.88))
 		draw_rect(Rect2(-46, -24 + bob, 94, 30), Color(0.22, 0.88, 0.30, 0.55), false, 1.5)
