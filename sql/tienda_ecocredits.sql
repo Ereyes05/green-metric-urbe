@@ -366,3 +366,93 @@ on conflict (user_id, ref) do nothing;
 alter function public._ec_por_modulo(int)         set search_path to 'public';
 alter function public._saldo_ecocredits(uuid)      set search_path to 'public';
 alter function public._asegurar_bono_inicial(uuid) set search_path to 'public';
+
+-- ── Tercera migración: tienda_ecocredits_fuentes_faltantes ───
+-- Al adaptar el cliente aparecieron fuentes de EC que no estaban en las
+-- listas cerradas de motivos, y que el servidor habría rechazado:
+--   ganancias: bonus por completar un nivel (XP_NIVEL_BONUS / 5, máx. 50),
+--              regar una planta (+8), quizzes (XP / 5)
+--   gastos:    el evento de la misión Semana Verde (hasta 264 EC)
+create or replace function public.sumar_ecocredits(p_delta int, p_motivo text, p_ref text)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare
+  v_user  uuid := auth.uid();
+  v_nuevo boolean := false;
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  if p_motivo is null or p_motivo not in
+     ('minijuego', 'decision', 'adopcion_zona', 'contenedor', 'nivel', 'riego', 'quiz') then
+    return jsonb_build_object('ok', false, 'error', 'motivo_invalido', 'saldo', _saldo_ecocredits(v_user));
+  end if;
+  if p_delta is null or p_delta < 1 or p_delta > 50 then
+    return jsonb_build_object('ok', false, 'error', 'monto_invalido', 'saldo', _saldo_ecocredits(v_user));
+  end if;
+  if p_ref is null or trim(p_ref) = '' then
+    return jsonb_build_object('ok', false, 'error', 'ref_requerida', 'saldo', _saldo_ecocredits(v_user));
+  end if;
+
+  perform _asegurar_bono_inicial(v_user);
+  insert into movimientos_ecocredits (user_id, delta, motivo, ref)
+  values (v_user, p_delta, p_motivo, p_motivo || ':' || trim(p_ref))
+  on conflict (user_id, ref) do nothing;
+  get diagnostics v_nuevo = row_count;
+
+  return jsonb_build_object('ok', true,
+                            'acreditado', case when v_nuevo then p_delta else 0 end,
+                            'saldo', _saldo_ecocredits(v_user));
+end;
+$$;
+
+create or replace function public.gastar_ecocredits(p_monto int, p_motivo text, p_ref text)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare
+  v_user  uuid := auth.uid();
+  v_saldo int;
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  if p_motivo is null or p_motivo not in ('energia', 'mejora_zona', 'semana_verde') then
+    return jsonb_build_object('ok', false, 'error', 'motivo_invalido', 'saldo', _saldo_ecocredits(v_user));
+  end if;
+  if p_monto is null or p_monto < 1 or p_monto > 500 then
+    return jsonb_build_object('ok', false, 'error', 'monto_invalido', 'saldo', _saldo_ecocredits(v_user));
+  end if;
+  if p_ref is null or trim(p_ref) = '' then
+    return jsonb_build_object('ok', false, 'error', 'ref_requerida', 'saldo', _saldo_ecocredits(v_user));
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('billetera:' || v_user::text));
+  perform _asegurar_bono_inicial(v_user);
+  v_saldo := _saldo_ecocredits(v_user);
+  if v_saldo < p_monto then
+    return jsonb_build_object('ok', false, 'error', 'saldo_insuficiente', 'saldo', v_saldo);
+  end if;
+
+  insert into movimientos_ecocredits (user_id, delta, motivo, ref)
+  values (v_user, -p_monto, p_motivo, p_motivo || ':' || trim(p_ref))
+  on conflict (user_id, ref) do nothing;
+
+  return jsonb_build_object('ok', true, 'saldo', _saldo_ecocredits(v_user));
+end;
+$$;
+
+-- Retroactivo del bonus por nivel completado (aprobado junto con el resto
+-- del retroactivo: "calcularlos del progreso"). Un nivel cuenta como
+-- completo si el estudiante tiene todas sus misiones de campo registradas.
+-- Los montos son XP_NIVEL_BONUS / 5 de NivelManager; la cantidad de
+-- misiones es TOTAL_MISIONES. Verificado el 2026-09-14 que todas las filas
+-- de misiones_estudiante son misiones de campo, así que contar filas es
+-- correcto. El ref 'nivel:N' coincide con el que usa el cliente.
+insert into public.movimientos_ecocredits (user_id, delta, motivo, ref)
+select m.user_id,
+       case m.modulo_id when 1 then 30 when 2 then 50 when 3 then 36
+                        when 4 then 36 when 5 then 36 when 6 then 40 end,
+       'nivel', 'nivel:' || m.modulo_id
+from public.misiones_estudiante m
+group by m.user_id, m.modulo_id
+having count(*) >= case m.modulo_id when 1 then 6 when 2 then 8 when 3 then 6
+                                     when 4 then 8 when 5 then 8 when 6 then 4 end
+on conflict (user_id, ref) do nothing;
