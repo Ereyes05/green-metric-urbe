@@ -23,5 +23,20 @@ func _ready() -> void:
 			_check(sm.has_method(f), "SupabaseManager.%s existe" % f)
 		for s in ["puntaje_recibido", "puntaje_fallido", "calidad_respuesta", "detalles_recibidos"]:
 			_check(sm.has_signal(s), "SupabaseManager señal %s existe" % s)
+	var pm = get_node_or_null("/root/PuntajeManager")
+	_check(pm != null, "PuntajeManager cargado como autoload")
+	if pm:
+		for f in ["iniciar_sesion", "valor", "fraccion", "quiz_hecho", "registrar_quiz",
+				  "registrar_decision", "registrar_sinergia", "restaurar_detalles"]:
+			_check(pm.has_method(f), "PuntajeManager.%s existe" % f)
+		_check(pm.categorias.size() == 6, "PuntajeManager arranca con 6 categorías")
+		_check(is_equal_approx(pm.valor(3), 0.0), "sin sesión el valor es 0")
+	if sm:
+		# Sin este enganche, una petición de puntaje fallida (red caída) deja
+		# _pidiendo en true para siempre y bloquea todo refresco futuro.
+		_check(sm.puntaje_fallido.get_connections().size() > 0,
+			"algo escucha SupabaseManager.puntaje_fallido")
+	var nm = get_node_or_null("/root/NivelManager")
+	_check(nm != null and nm.has_signal("detalle_guardado"), "NivelManager emite detalle_guardado")
 	print("test_compila: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

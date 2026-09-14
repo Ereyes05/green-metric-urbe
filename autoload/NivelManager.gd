@@ -9,6 +9,8 @@ extends Node
 
 signal nivel_completado(nivel: int)
 signal mision_nivel_completada(nivel: int, mision_id: String)
+# Un detalle cambió localmente; PuntajeManager lo sube al servidor.
+signal detalle_guardado(clave: String, detalle: Dictionary)
 
 # ── Configuración por nivel ──────────────────────────────────
 const NOMBRES_NIVEL : Array[String] = [
@@ -189,9 +191,18 @@ func mision_completada_q(nivel: int, mision_id: String) -> bool:
 func guardar_detalle(mision_id: String, detalle: Dictionary) -> void:
 	_detalles[mision_id] = detalle
 	_guardar()
+	detalle_guardado.emit(mision_id, detalle)
 
 func obtener_detalle(mision_id: String) -> Dictionary:
 	return _detalles.get(mision_id, {})
+
+func detalles_todos() -> Dictionary:
+	return _detalles.duplicate(true)
+
+# Aplica un detalle que vino del servidor SIN volver a subirlo.
+func aplicar_detalle_servidor(clave: String, detalle: Dictionary) -> void:
+	_detalles[clave] = detalle
+	_guardar()
 
 func completar_mision(nivel: int, mision_id: String) -> void:
 	if mision_completada_q(nivel, mision_id): return

@@ -24,6 +24,7 @@ EconomiaManager="*res://autoload/EconomiaManager.gd"
 AudioManager="*res://autoload/AudioManager.gd"
 WindowManager="*res://autoload/WindowManager.gd"
 NivelManager="*res://autoload/NivelManager.gd"
+PuntajeManager="*res://autoload/PuntajeManager.gd"
 
 [display]
 
