@@ -568,9 +568,18 @@ comprobar la capa HTTP del export web sin usar una cuenta real.
   rechaza el módulo y no arranca nada), `.pck` → `application/octet-stream`.
 - ✅ Supabase responde al preflight CORS desde el origen de Pages
   (`Access-Control-Allow-Origin: *`).
-- ❌ **Sin verificar: iniciar sesión de verdad y jugar** — login con
-  credenciales reales, guardado de progreso, audio, y controles táctiles en
-  móvil. Requiere una cuenta real, así que lo tiene que probar una persona.
+- ✅ **Login con cuenta real y recuperación del progreso** — verificado por
+  el usuario el 2026-09-14 en la URL pública (Nv.2, 1130 XP y los cuatro
+  módulos completados aparecen igual que en escritorio), después del
+  arreglo de `accept_gzip`.
+- ✅ Iconos (emoji) y canvas a pantalla completa en 16:9 — verificados el
+  mismo día.
+- ❌ **Rendimiento: ~6 FPS en el navegador** (en escritorio va fluido).
+  WebGL está acelerado por hardware, así que no es renderizado por software.
+  Pendiente de medir con el panel F3 (draw calls, tiempo de proceso) antes
+  de optimizar.
+- ❌ Sin verificar: audio, guardado de misiones nuevas desde la web, y
+  controles táctiles en móvil.
 
 ## 11. Cómo mantener este documento
 
