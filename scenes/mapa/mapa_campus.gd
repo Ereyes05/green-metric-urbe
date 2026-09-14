@@ -26,6 +26,53 @@ func _ready() -> void:
 			"f": randf_range(0.0, TAU),
 		})
 
+	_capa_ambiente = CapaAmbiente.new()
+	_capa_ambiente.mapa = self
+	add_child(_capa_ambiente)
+
+
+# ── Capa animada, separada del campus fijo ───────────────────
+# Antes _process() llamaba queue_redraw() sobre ESTE nodo en cada frame para
+# mover 6 pájaros y 12 reflejos, y eso obligaba a volver a dibujar el campus
+# entero (céspedes, edificios, caminos, árboles, textos) 60 veces por
+# segundo. Medido en el export web: congelar ese redibujado subió el mapa de
+# 8-10 a 12-13 FPS.
+#
+# Ahora el campus se dibuja una sola vez (Godot guarda los comandos de
+# dibujo hasta el próximo queue_redraw, que solo ocurre cuando cambia el
+# progreso o el mapa de calor) y lo único que se redibuja por frame es esta
+# capa, que son 18 líneas.
+#
+# Diferencia visual aceptada: al ser hija, la capa queda por encima del mapa
+# de calor; solo se nota si un pájaro pasa por la franja y=120-140 con el
+# mapa de calor activo.
+var _capa_ambiente : Node2D = null
+
+class CapaAmbiente extends Node2D:
+	var mapa : Node2D = null
+
+	func _draw() -> void:
+		if mapa == null: return
+		var t : float = mapa._t_mapa
+		# ── PÁJAROS AMBIENTALES ──────────────────────────────
+		for p in mapa._pajaros:
+			var bx   : float = float(p["x"])
+			var by   : float = float(p["y"]) + sin(t * float(p["wf"]) * 0.5 + float(p["f"])) * 2.5
+			var wing : float = 4.5 + sin(t * float(p["wf"]) + float(p["f"])) * 3.0
+			var bird_col := Color(0.08, 0.08, 0.10, 0.70)
+			draw_line(Vector2(bx - wing, by - wing * 0.5), Vector2(bx, by), bird_col, 1.3)
+			draw_line(Vector2(bx, by), Vector2(bx + wing, by - wing * 0.5), bird_col, 1.3)
+		# ── REFLEJOS DEL LAGO ────────────────────────────────
+		for d in mapa._destellos:
+			var dx  : float = float(d["x"])
+			var dy  : float = float(d["y"])
+			var df  : float = float(d["f"])
+			var a   : float = 0.08 + 0.07 * sin(t * 1.3 + df)
+			var len : float = 12.0 + 6.0 * sin(t * 0.9 + df * 1.7)
+			draw_line(Vector2(dx - len, dy), Vector2(dx + len, dy),
+					  Color(0.75, 0.92, 1.0, a), 1.5)
+
+
 func _process(delta: float) -> void:
 	_t_mapa += delta
 	for p in _pajaros:
@@ -33,7 +80,8 @@ func _process(delta: float) -> void:
 		if float(p["x"]) > 1430.0:
 			p["x"] = -15.0
 			p["y"] = randf_range(18.0, 135.0)
-	queue_redraw()
+	if _capa_ambiente:
+		_capa_ambiente.queue_redraw()   # solo la capa animada, no el campus
 
 var impacto : Dictionary = {
 	1: 0.35,   # Entorno e Infraestructura
@@ -303,24 +351,7 @@ func _draw() -> void:
 	# ── CONTENEDORES DE RECICLAJE (ahora gestionados como nodos interactivos zona_reciclaje.gd) ──
 	# _dibujar_contenedores(font)
 
-	# ── PÁJAROS AMBIENTALES ──────────────────────────────────
-	for p in _pajaros:
-		var bx   : float = float(p["x"])
-		var by   : float = float(p["y"]) + sin(_t_mapa * float(p["wf"]) * 0.5 + float(p["f"])) * 2.5
-		var wing : float = 4.5 + sin(_t_mapa * float(p["wf"]) + float(p["f"])) * 3.0
-		var bird_col := Color(0.08, 0.08, 0.10, 0.70)
-		draw_line(Vector2(bx - wing, by - wing * 0.5), Vector2(bx, by), bird_col, 1.3)
-		draw_line(Vector2(bx, by), Vector2(bx + wing, by - wing * 0.5), bird_col, 1.3)
-
-	# ── REFLEJOS DEL LAGO ────────────────────────────────────
-	for d in _destellos:
-		var dx  : float = float(d["x"])
-		var dy  : float = float(d["y"])
-		var df  : float = float(d["f"])
-		var a   : float = 0.08 + 0.07 * sin(_t_mapa * 1.3 + df)
-		var len : float = 12.0 + 6.0 * sin(_t_mapa * 0.9 + df * 1.7)
-		draw_line(Vector2(dx - len, dy), Vector2(dx + len, dy),
-				  Color(0.75, 0.92, 1.0, a), 1.5)
+	# (Pájaros y reflejos del lago: los dibuja CapaAmbiente, ver arriba.)
 
 	# ── SEÑAL DE ENTRADA ─────────────────────────────────────
 	draw_rect(Rect2(380, 744, 140, 20), C_TECHO)

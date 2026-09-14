@@ -104,17 +104,20 @@ func _crear_fps() -> void:
 
 func _process(_delta: float) -> void:
 	if _fps_lbl == null: return
-	# Cada métrica apunta a un culpable distinto:
-	#   proceso alto  -> cuesta el GDScript de los _process()
-	#   dibujadas alto-> cuesta la cantidad de draw calls (en WebGL cada una
-	#                    es mucho más cara que en nativo)
-	#   nodos alto    -> hay demasiadas cosas vivas en la escena
-	_fps_lbl.text = "%d FPS  (%s)\ndibujadas/frame: %d\nproceso: %.1f ms\nfísica: %.1f ms\nnodos: %d" % [
-		Engine.get_frames_per_second(),
+	# Ojo con TIME_PROCESS, que es fácil de malinterpretar (nos pasó el
+	# 2026-09-14): según main.cpp de Godot 4.7 NO es el tiempo del GDScript,
+	# sino el PEOR frame del último segundo, incluyendo el dibujo y la
+	# presentación en pantalla (con vsync, la espera también cuenta). Sirve
+	# para ver tirones, no para atribuir costos. La métrica confiable para
+	# comparar un cambio contra otro es FPS / frame promedio.
+	var fps : float = Engine.get_frames_per_second()
+	_fps_lbl.text = "%d FPS  (%s)\nframe promedio: %.1f ms\npeor frame (último seg): %.1f ms\ndraw calls: %d   primitivas: %d\nnodos: %d" % [
+		fps,
 		"web" if OS.has_feature("web") else "escritorio",
-		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		1000.0 / maxf(fps, 1.0),
 		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
-		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 		Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
 	]
 

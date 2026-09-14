@@ -579,10 +579,27 @@ comprobar la capa HTTP del export web sin usar una cuenta real.
   arreglo de `accept_gzip`.
 - ✅ Iconos (emoji) y canvas a pantalla completa en 16:9 — verificados el
   mismo día.
-- ❌ **Rendimiento: ~6 FPS en el navegador** (en escritorio va fluido).
-  WebGL está acelerado por hardware, así que no es renderizado por software.
-  Pendiente de medir con el panel F3 (draw calls, tiempo de proceso) antes
-  de optimizar.
+- 🟡 **Rendimiento en el navegador: mejorando, todavía bajo.** En escritorio
+  va fluido. WebGL está acelerado por hardware (no es renderizado por
+  software). Arreglos medidos en el Chrome del usuario, en el mapa:
+  - 2026-09-14: `mapa_campus.gd` redibujaba el campus entero en cada frame
+    solo para mover 6 pájaros y 12 reflejos del lago. Ahora el campus se
+    dibuja una vez y se anima una capa aparte → **11 → 14-15 FPS**.
+  - Pendiente: ~40 nodos del mapa (NPCs, puntos de misión, papeleras)
+    siguen llamando `queue_redraw()` en cada frame sin condición.
+
+### Cómo medir rendimiento sin engañarse (lecciones del 2026-09-14)
+
+- **Usar FPS, no `TIME_PROCESS`.** Según `main.cpp` de Godot 4.7,
+  `Performance.TIME_PROCESS` es el **peor** frame del último segundo e
+  **incluye el dibujo y la presentación** (con vsync, también la espera).
+  Sirve para ver tirones; para atribuir costos da resultados sin sentido.
+- **No medir FPS en una ventana tapada.** Chrome frena a ~1 FPS las
+  ventanas que otras tapan. Un navegador automatizado que se abre detrás
+  del editor mide eso, no el juego. Un "1,0 FPS" clavado es la señal.
+- **Comparar builds antes/después** en el mismo navegador, con la ventana
+  adelante, sin tocar nada durante ~10 s. Es la única medición en la que
+  se basaron las decisiones de arriba.
 - ❌ Sin verificar: audio, guardado de misiones nuevas desde la web, y
   controles táctiles en móvil.
 
