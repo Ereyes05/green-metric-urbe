@@ -44,6 +44,17 @@ signal progreso_guardado_fallido(mision_id: String, xp_local: int)
 signal ranking_cargado(lista: Array)
 signal error_red(mensaje: String)
 
+# ── Tienda / EcoCredits (HU-012, ver sql/tienda_ecocredits.sql) ──
+# datos: {"saldo": int, "inventario": [item_id...], "refs_zonas": [ref...]}
+signal billetera_cargada(datos: Dictionary)
+signal catalogo_cargado(items: Array)
+# Respuesta de acreditar/sumar/gastar. `respuesta` es el JSON del servidor
+# ({"ok", "saldo", "acreditado"?, "error"?}); `ctx` el contexto del pedido.
+signal billetera_actualizada(respuesta: Dictionary, ctx: Dictionary)
+signal compra_resuelta(respuesta: Dictionary, item_id: String)
+# titulos: {user_id: "nombre del título"}
+signal titulos_ranking_cargados(titulos: Dictionary)
+
 # ── Estado interno ───────────────────────────────────────────
 var jwt_token      : String = ""
 var user_id        : String = ""
@@ -234,6 +245,55 @@ func cargar_ranking() -> void:
 	_encolar("cargar_ranking", url, HTTPClient.METHOD_GET, _headers_anon())
 
 
+# ── TIENDA / ECOCREDITS (HU-012) ─────────────────────────────
+# El saldo y el inventario viven en el servidor (sql/tienda_ecocredits.sql).
+# Todas estas funciones son RPCs que validan del lado del servidor; el
+# cliente no puede escribir las tablas directamente.
+func _rpc(accion: String, funcion: String, params: Dictionary, ctx: Dictionary = {}) -> void:
+	if jwt_token.is_empty():
+		push_error("SupabaseManager: '%s' requiere sesión iniciada." % funcion)
+		return
+	_encolar(accion, SUPABASE_URL + "/rest/v1/rpc/" + funcion,
+			 HTTPClient.METHOD_POST, _headers_auth(), JSON.stringify(params), ctx)
+
+
+func obtener_billetera() -> void:
+	_rpc("billetera", "obtener_billetera", {})
+
+
+func cargar_catalogo() -> void:
+	var url := SUPABASE_URL + "/rest/v1/catalogo_tienda?select=*&order=orden.asc"
+	_encolar("catalogo", url, HTTPClient.METHOD_GET, _headers_anon())
+
+
+# El monto lo decide el servidor según el módulo (y el Termo reutilizable).
+func acreditar_mision(mision_id: String) -> void:
+	_rpc("billetera_mov", "acreditar_mision", {"p_mision_id": mision_id},
+		 {"tipo": "mision", "mision_id": mision_id})
+
+
+func sumar_ecocredits(delta: int, motivo: String, ref: String) -> void:
+	_rpc("billetera_mov", "sumar_ecocredits",
+		 {"p_delta": delta, "p_motivo": motivo, "p_ref": ref},
+		 {"tipo": "sumar", "motivo": motivo, "monto": delta})
+
+
+func gastar_ecocredits(monto: int, motivo: String, ref: String) -> void:
+	_rpc("billetera_mov", "gastar_ecocredits",
+		 {"p_monto": monto, "p_motivo": motivo, "p_ref": ref},
+		 {"tipo": "gastar", "motivo": motivo, "monto": monto})
+
+
+func comprar_item(item_id: String) -> void:
+	_rpc("comprar", "comprar_item", {"p_item_id": item_id}, {"item_id": item_id})
+
+
+# Pública: el ranking se carga sin sesión. Solo devuelve user_id + título.
+func cargar_titulos_ranking() -> void:
+	_encolar("titulos_ranking", SUPABASE_URL + "/rest/v1/rpc/titulos_ranking",
+			 HTTPClient.METHOD_POST, _headers_anon(), "{}")
+
+
 # ── SOLICITUDES QR (servicio de limpieza, Nivel 3) ───────────
 # El QR que se muestra en zona_reciclaje.gd apunta a una Edge Function
 # pública (marcar_escaneado, sin login) que marca esta fila cuando
@@ -359,6 +419,13 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		emit_signal("error_red", "Sin conexión: %s (%d)" % [detalle, result])
 		if accion == "guardar_progreso":
 			emit_signal("progreso_guardado_fallido", str(ctx.get("mision_id", "")), int(ctx.get("xp_local", 0)))
+		# Las operaciones de EcoCredits también tienen que enterarse del
+		# fallo: EconomiaManager lleva la cuenta de las que están en vuelo y
+		# sin esto se quedaría esperando una respuesta que nunca llega.
+		elif accion == "billetera_mov":
+			emit_signal("billetera_actualizada", {"ok": false, "error": "red"}, ctx)
+		elif accion == "comprar":
+			emit_signal("compra_resuelta", {"ok": false, "error": "red"}, str(ctx.get("item_id", "")))
 		_despachar()
 		return
 
@@ -379,6 +446,11 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"guardar_progreso": _procesar_guardar(code, datos, ctx)
 		"cargar_ranking"  : _procesar_ranking(code, datos)
 		"registrar_evento": _procesar_evento(code)
+		"billetera"       : _procesar_billetera(code, datos)
+		"catalogo"        : _procesar_catalogo(code, datos)
+		"billetera_mov"   : _procesar_billetera_mov(code, datos, ctx)
+		"comprar"         : _procesar_compra(code, datos, ctx)
+		"titulos_ranking" : _procesar_titulos(code, datos)
 		"diag_red"        : print("AUTOPRUEBA RED: OK — HTTP %d, %d bytes, JSON %s, Content-Encoding=%s"
 			% [code, body.size(), "valido" if datos != null else "INVALIDO",
 			   _valor_cabecera(hdrs, "content-encoding")])
@@ -560,6 +632,48 @@ func _procesar_ranking(code: int, datos: Variant) -> void:
 		emit_signal("ranking_cargado", lista)
 	else:
 		emit_signal("error_red", "No se pudo cargar el ranking.")
+
+
+func _procesar_billetera(code: int, datos: Variant) -> void:
+	if code == 200 and datos is Dictionary:
+		emit_signal("billetera_cargada", datos)
+	else:
+		push_error("SupabaseManager: falló obtener_billetera (HTTP %d): %s"
+			% [code, str(datos).substr(0, 200)])
+
+
+func _procesar_catalogo(code: int, datos: Variant) -> void:
+	if code == 200 and datos is Array:
+		emit_signal("catalogo_cargado", datos)
+	else:
+		push_error("SupabaseManager: falló cargar_catalogo (HTTP %d)" % code)
+
+
+func _procesar_billetera_mov(code: int, datos: Variant, ctx: Dictionary) -> void:
+	if code == 200 and datos is Dictionary:
+		emit_signal("billetera_actualizada", datos, ctx)
+	else:
+		push_error("SupabaseManager: falló movimiento de EC %s (HTTP %d): %s"
+			% [str(ctx), code, str(datos).substr(0, 200)])
+		emit_signal("billetera_actualizada", {"ok": false, "error": "http_%d" % code}, ctx)
+
+
+func _procesar_compra(code: int, datos: Variant, ctx: Dictionary) -> void:
+	var item_id := str(ctx.get("item_id", ""))
+	if code == 200 and datos is Dictionary:
+		emit_signal("compra_resuelta", datos, item_id)
+	else:
+		push_error("SupabaseManager: falló comprar_item %s (HTTP %d)" % [item_id, code])
+		emit_signal("compra_resuelta", {"ok": false, "error": "http_%d" % code}, item_id)
+
+
+func _procesar_titulos(code: int, datos: Variant) -> void:
+	var titulos : Dictionary = {}
+	if code == 200 and datos is Array:
+		for fila in datos:
+			if fila is Dictionary:
+				titulos[str(fila.get("user_id", ""))] = str(fila.get("titulo", ""))
+	emit_signal("titulos_ranking_cargados", titulos)
 
 
 # ── Headers ───────────────────────────────────────────────────

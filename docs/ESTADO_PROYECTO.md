@@ -4,8 +4,9 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-11 (rediseño del login + lectura de los
-capítulos de la tesis, análisis de brechas y export web — ver secciones 9 y 10).
+Última actualización: 2026-09-14 (Tienda del Conocimiento / HU-012 con
+EcoCredits en el servidor, rendimiento web, arreglos del export — ver
+secciones 4, 8, 9 y 10).
 
 > ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
 > [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
@@ -50,8 +51,16 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
     campo están completas). **Guardado por cuenta** desde el 2026-09-02: ver
     sección 6.
   - `EconomiaManager.gd`, `AudioManager.gd`, `WindowManager.gd` — EcoCredits,
-    audio, utilidades de ventana. `EconomiaManager` es puramente en memoria,
-    no persiste a disco (arranca en 0 cada vez que se abre el juego).
+    audio, utilidades de ventana. **Desde el 2026-09-14 los EcoCredits y el
+    inventario de la tienda viven en el servidor** (antes estaban solo en
+    memoria y volvían a 50 en cada sesión). `EconomiaManager` muestra los
+    cambios al instante y se alinea con el saldo del servidor cuando no
+    quedan operaciones en vuelo. Energía, insignias e impacto siguen solo en
+    memoria.
+- **`scenes/ui/tienda_conocimiento.gd`** — pantalla de la Tienda del
+  Conocimiento (HU-012). Se abre con el botón 🛒 del HUD o sola, cuando una
+  misión exige una herramienta que el estudiante no tiene
+  (`SceneMapaMundo._verificar_herramienta`).
 - **`scenes/mapa/SceneMapaMundo.gd`** — el archivo más grande del proyecto
   (~2900 líneas). Mapa, HUD, sidebar, spawns de las 40 misiones, panel de
   resultados, leaderboard, y el sistema legacy de NPCs/quiz (`ZONA_A_MISION`,
@@ -115,6 +124,46 @@ La anon key es pública por diseño (protegida por RLS, no por estar oculta).
 - **`estudiantes`** — perfil del estudiante (`xp_total`, etc.), creada por
   un trigger `on_auth_user_created`. El cliente Godot **nunca** la toca
   directo — solo la RPC (`security definer`) le suma XP.
+- **`catalogo_tienda`**, **`movimientos_ecocredits`**, **`inventario_estudiante`**
+  (nuevas, 2026-09-14) — la Tienda del Conocimiento. Ver
+  `sql/tienda_ecocredits.sql` y la subsección de abajo.
+
+### EcoCredits y tienda (HU-012)
+
+- **El saldo es la suma de `movimientos_ecocredits`**, no un número suelto.
+  Cada ganancia y gasto queda con su motivo (evidencia de "toma de
+  decisiones" para la tesis). Cada movimiento tiene un `ref` único por
+  estudiante: reintentar nunca paga ni cobra dos veces.
+- **El cliente no puede escribir estas tablas.** Todo pasa por funciones
+  `SECURITY DEFINER`: `obtener_billetera`, `acreditar_mision`,
+  `sumar_ecocredits`, `gastar_ecocredits`, `comprar_item` y la pública
+  `titulos_ranking`.
+- `acreditar_mision` solo paga misiones que `misiones_estudiante` ya tiene
+  registradas, con el monto que decide el servidor (`_ec_por_modulo`, espejo
+  de `NivelManager.EC_POR_MISION`: **si cambia uno hay que cambiar el
+  otro**). El cliente la llama recién cuando llega la confirmación de
+  `guardar_progreso`, porque en los callbacks el cobro ocurre antes que el
+  guardado.
+- `sumar_ecocredits` / `gastar_ecocredits` aceptan una **lista cerrada de
+  motivos** y un monto máximo por evento. Si se agrega una fuente o un
+  gasto nuevo de EC en el juego, **hay que agregar su motivo en el
+  servidor**, o se rechaza (ya pasó: faltaban nivel, riego, quiz y
+  semana_verde).
+- **Catálogo** (aprobado 2026-09-14): 3 herramientas obligatorias
+  (`kit_solar` 100, `kit_captacion` 60, `kit_bicicletero` 60), 2
+  bonificaciones (`termo_reutilizable` +10% EC, `credencial_voluntario` +10%
+  XP) y 2 de avatar (`estela_hojas`, `titulo_embajador`). Regla de precio:
+  cada herramienta obligatoria cuesta menos que lo que dan las misiones del
+  mismo nivel que no la necesitan, así nadie queda trabado.
+- **Probado en el servidor** (2026-09-14, dentro de bloques que terminan en
+  excepción para no dejar datos): compra sin saldo rechazada sin tocar el
+  saldo, compra válida, recompra, ítem inexistente, doble pago, misión
+  inventada, montos y motivos inválidos, Termo 20→22 EC, saldo nunca
+  negativo, y todas las funciones con 401 sin sesión.
+- **EC retroactivos:** 50 iniciales + EC de cada misión de campo ya
+  completada + bonus de cada nivel completo. Los EC que se ganaron antes
+  por minijuegos, decisiones, riego o quizzes no se pudieron recuperar
+  (nunca se guardaron).
 
 ### La RPC: `guardar_progreso_modulo`
 
@@ -316,10 +365,26 @@ mecanismo técnico de escaneo → activación a distancia.
   **https://ereyes05.github.io/green-metric-urbe/juego/** — verificado que
   carga el motor, el `.pck` y la pantalla de login en un navegador real.
   Ver sección 10.
-- [ ] 🔴 **HU-012 "Tienda del Conocimiento" no existe** — única historia de
-  usuario de la tesis sin implementar. Requiere primero **persistir los
-  EcoCredits** (`EconomiaManager` hoy no guarda nada, arrancan en 0 cada
-  sesión). Criterios de aceptación ya escritos en el Cap. 4, ver sección 9.
+- [x] **HU-012 "Tienda del Conocimiento"** — implementada el 2026-09-14
+  (ver "EcoCredits y tienda" en la sección 4). Servidor probado caso por
+  caso; pantalla verificada por captura con el catálogo real.
+  **Falta: una compra real de punta a punta con una cuenta** (no se pudo
+  hacer sin credenciales). Verificable consultando
+  `movimientos_ecocredits` e `inventario_estudiante` después de probar.
+- [ ] **Insignias, energía e impacto no se guardan** — siguen solo en
+  memoria. Existen tablas `insignias` e `insignias_estudiante` en Supabase
+  que el juego no usa.
+- [ ] **Zonas verdes mejorables: código muerto.** Están eliminadas del mapa
+  (`_spawn_zonas_verdes()` es un `pass`), pero su lógica de adopción y
+  mejora sigue en el código y ya cobra EC en el servidor. Si se reactivan,
+  hay que reconstruir su nivel desde `refs_zonas` al entrar (ver comentario
+  en `EconomiaManager`), o el estudiante pierde lo pagado.
+- [ ] **`leaderboard.gd`: restos de otro proyecto** — constantes
+  `SUPABASE_URL`/`SUPABASE_KEY` de un proyecto anterior
+  (`qjuiwnwqkfmmfsdacpgd`). No se usan (el ranking pasa por
+  `SupabaseManager`) y la clave es anónima (pública), pero conviene
+  borrarlas. Además, el "(Tú)" del ranking nunca se marca: compara el
+  nombre mostrado (prefijo del user_id) con `nombre_usuario`.
 - [x] **El tutorial de onboarding casi nadie lo ve** — resuelto el
   2026-09-11: `NivelManager.ruta_usuario()` centraliza los archivos de
   estado local por cuenta, y `tutorial_visto`/`hints_vistas` ahora lo usan.
@@ -399,7 +464,7 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
 | HU-009 | Subir de nivel | ✅ |
 | HU-010 | Consultar mapa y estado de zonas | ✅ |
 | HU-011 | Consultar progreso y ranking | ✅ |
-| HU-012 | Gestionar EcoCredits en la tienda | ❌ **no existe** |
+| HU-012 | Gestionar EcoCredits en la tienda | ✅ desde 2026-09-14 (falta prueba con cuenta real) |
 
 ### Brechas detectadas entre lo que la tesis afirma y lo que el juego hace
 
@@ -408,7 +473,8 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
    para la web"*, y justifica la elección de Godot por poder abrirse *"desde
    el navegador sin necesidad de instalar nada"*. **No está exportado.** Es
    la brecha más verificable por un jurado (basta pedir la URL).
-2. 🔴 **HU-012 "Tienda del Conocimiento" no existe.** Tiene criterios de
+2. ✅ ~~**HU-012 "Tienda del Conocimiento" no existe.**~~ Resuelta el
+   2026-09-14, ver sección 4. Texto original de la brecha: tiene criterios de
    aceptación escritos (compra exitosa/fallida, saldo nunca negativo, costo
    fijo, sin recompra, *"ciertas herramientas son requisito para completar
    misiones"*). **Bloqueante previo:** `EconomiaManager` no persiste nada —

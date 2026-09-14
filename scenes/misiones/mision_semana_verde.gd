@@ -109,7 +109,7 @@ func _on_click_actividad(aid: String) -> void:
 func _completar_mision() -> void:
 	var eco = _economia()
 	var costo := _costo_total()
-	if eco and not eco.gastar_creditos(costo):
+	if eco and not eco.gastar_creditos(costo, "semana_verde", "evento"):
 		_aviso_lbl.text = "No se pudo cobrar el evento — verifica tus EcoCredits."
 		return
 	var nm = _nivel_mgr()

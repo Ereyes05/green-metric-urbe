@@ -19,6 +19,7 @@ const TUTORIAL_ESCENA           := preload("res://scenes/ui/tutorial_onboarding.
 const TOUCH_ESCENA              := preload("res://scenes/ui/touch_controls.gd")
 const CRISIS_ESCENA             := preload("res://scenes/ui/crisis_evento.gd")
 const LEADERBOARD_ESCENA        := preload("res://scenes/ui/leaderboard.gd")
+const TIENDA_ESCENA             := preload("res://scenes/ui/tienda_conocimiento.gd")
 const SIMULADOR_ESCENA          := preload("res://scenes/ui/simulador_decision.gd")
 const RESULTADOS_ESCENA         := preload("res://scenes/ui/resultados_greenmetric.gd")
 const ZONA_VERDE_ESCENA         := preload("res://scenes/mapa/zona_verde.gd")
@@ -411,6 +412,7 @@ var _xp_float_offset : int = 0
 var _tutorial_ui      : CanvasLayer = null
 var _crisis_ui        : CanvasLayer = null
 var _leaderboard_ui   : CanvasLayer = null
+var _tienda_ui        : CanvasLayer = null
 var _sim_decision_ui  : CanvasLayer = null
 var _resultados_ui    : CanvasLayer = null
 var _edificio_ui      : CanvasLayer = null
@@ -1010,7 +1012,7 @@ func _on_minijuego_completado(xp: int) -> void:
 	# _aplicar_xp() (el loop de ZONA_A_MISION), que ya manda su propio
 	# guardar_progreso() — duplicaba la llamada de red en cada partida.
 	_aplicar_xp(xp, "mision_residuos_minijuego")
-	EconomiaManager.ganar_creditos(xp / 5)
+	EconomiaManager.ganar_creditos(xp / 5, "minijuego")
 	# Actualizar progreso M3 en sidebar (10 aciertos = 50 XP máx → 100%)
 	var pct  : float = clampf(float(xp) / 50.0, 0.0, 1.0)
 	var prev : float = float(_progreso_modulos.get(3, 0.0))
@@ -1558,7 +1560,7 @@ func _on_btn_mejorar_zona() -> void:
 		_mostrar_notificacion_zona("✗", "Faltan %d EC" % (costo - EconomiaManager.ecocredits),
 				Color(1.0, 0.35, 0.35))
 		return
-	EconomiaManager.gastar_creditos(costo)
+	EconomiaManager.gastar_creditos(costo, "mejora_zona", "%s:%d" % [zona.nombre_zona, zona.nivel + 1])
 	var lvl_antes : int = zona.nivel
 	zona.aplicar_mejora()
 	# Recompensas inmediatas
@@ -1670,6 +1672,8 @@ func _init_sistemas_eva() -> void:
 
 	_leaderboard_ui = LEADERBOARD_ESCENA.new()
 	add_child(_leaderboard_ui)
+	_tienda_ui = TIENDA_ESCENA.new()
+	add_child(_tienda_ui)
 
 	_sim_decision_ui = SIMULADOR_ESCENA.new()
 	add_child(_sim_decision_ui)
@@ -1806,7 +1810,7 @@ func _on_decision_tomada(modulo_id: int, delta: float) -> void:
 	if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
 		mapa_campus.actualizar_modulo(modulo_id, nuevo)
 	if delta > 0.0:
-		EconomiaManager.ganar_creditos(15)
+		EconomiaManager.ganar_creditos(15, "decision")
 
 
 # ════════════════════════════════════════════════════════════
@@ -1848,7 +1852,7 @@ func _on_zona_verde_adoptada(nombre_zona: String, modulo_id: int) -> void:
 	_aplicar_xp(15, "adopcion_%s" % nombre_zona.to_lower().replace(" ", "_"))
 	_mostrar_notificacion_zona("♥", "Adoptaste: " + nombre_zona, Color(0.28, 0.90, 0.40))
 	_sfx("adoptar")
-	EconomiaManager.ganar_creditos(10)
+	EconomiaManager.ganar_creditos(10, "adopcion_zona", nombre_zona)
 
 
 func _verificar_zona_verde_cercana() -> void:
@@ -1920,6 +1924,8 @@ func _crear_btn_mapa_calor() -> void:
 		 "accion": func(): _leaderboard_ui.mostrar()},
 		{"emoji": "🔬", "tip": "Simulador de decisiones",    "borde": Color(0.55, 0.22, 0.90),
 		 "accion": func(): _abrir_simulador()},
+		{"emoji": "🛒", "tip": "Tienda del Conocimiento",    "borde": Color(0.20, 0.80, 0.95),
+		 "accion": func(): _abrir_tienda()},
 	]
 
 	for i in DEFS.size():
@@ -2123,7 +2129,7 @@ func _on_btn_servicio_contenedor() -> void:
 
 func _on_contenedor_vaciado(xp: int, c: Node2D) -> void:
 	_aplicar_xp(xp, "contenedor_%s" % c.nombre_bin.to_lower().replace(" ", "_"))
-	EconomiaManager.ganar_creditos(xp / 4)
+	EconomiaManager.ganar_creditos(xp / 4, "contenedor")
 	# Contribuye al progreso M3 (Residuos)
 	var delta : float = 0.02 + float(xp) / 1000.0
 	var prev  : float = float(_progreso_modulos.get(3, 0.0))
@@ -2561,7 +2567,7 @@ func _spawn_punto_informe() -> void:
 func _on_papelera_vaciada(xp: int, ec: int, zr: Node2D) -> void:
 	var m_id : String = zr.get("mision_id") if zr.get("mision_id") != null else "papelera"
 	_aplicar_xp(xp, "servicio_%s" % m_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.ganar_creditos(ec, "contenedor")
 	_mostrar_notificacion_zona("🧹", "¡Papelera vaciada por el servicio! +%d XP +%d EC" % [xp, ec], Color(0.22, 0.90, 0.28))
 	_sfx("mision")
 
@@ -2589,6 +2595,39 @@ func _on_reciclar_solicitado(zona: Area2D) -> void:
 	_reciclar_ui.call("iniciar", mision_id, zona_nombre, zona)
 
 
+# ── Tienda del Conocimiento (HU-012) ──────────────────────────
+func _abrir_tienda(item_resaltado: String = "") -> void:
+	if is_instance_valid(_tienda_ui):
+		_tienda_ui.abrir(item_resaltado)
+		_sfx("zona")
+
+
+# HU-012: "ciertas herramientas son requisito para completar misiones de su
+# categoría". Devuelve true si la misión puede empezar.
+#
+# Deja pasar (fail-open) cuando no se puede decidir con certeza, para no
+# trabar a un estudiante por un problema ajeno a él: sin sesión (escena
+# corrida desde el editor), con el catálogo sin cargar (sin red), o si la
+# misión ya estaba completada (volver a verla no debería pedir nada).
+func _verificar_herramienta(tipo_mision: String, punto: Node) -> bool:
+	if SupabaseManager.jwt_token.is_empty():
+		return true
+	var herramienta : Dictionary = EconomiaManager.herramienta_para(tipo_mision)
+	if herramienta.is_empty():
+		return true
+	var item_id : String = str(herramienta.get("item_id", ""))
+	if EconomiaManager.tiene_item(item_id):
+		return true
+	var mid = punto.get("mision_id") if punto else null
+	var nm = _nivel_mgr()
+	if nm and mid != null and nm.mision_completada_q(int(herramienta.get("modulo_id", 0)), str(mid)):
+		return true
+	_mostrar_notificacion_zona("🔒", "Necesitás el %s (%d EC)" % [
+		herramienta.get("nombre", "equipo"), int(herramienta.get("precio", 0))], Color(1.0, 0.80, 0.25))
+	_abrir_tienda(item_id)
+	return false
+
+
 func _on_energia_solicitada(punto: Area2D) -> void:
 	var tipo : String = punto.get("tipo")
 	if tipo == "led":
@@ -2597,12 +2636,14 @@ func _on_energia_solicitada(punto: Area2D) -> void:
 		_interior_ui.call("iniciar", idx, punto)
 	elif tipo == "solar":
 		if not is_instance_valid(_solar_ui): return
+		if not _verificar_herramienta("solar", punto): return
 		var idx : int = punto.get("indice_mision") if punto.get("indice_mision") != null else 0
 		_solar_ui.call("iniciar", idx, punto)
 
 
 func _on_captacion_solicitada(punto: Area2D) -> void:
 	if not is_instance_valid(_captacion_ui): return
+	if not _verificar_herramienta("captacion", punto): return
 	var idx : int = punto.get("indice_mision") if punto.get("indice_mision") != null else 0
 	_captacion_ui.call("iniciar", idx, punto)
 
@@ -2614,6 +2655,7 @@ func _on_movilidad_solicitada(punto: Area2D, mision_id: String) -> void:
 
 func _on_bicicletero_solicitado(punto: Area2D) -> void:
 	if not is_instance_valid(_bicicletero_ui): return
+	if not _verificar_herramienta("bicicletero", punto): return
 	var idx : int = punto.get("indice_mision") if punto.get("indice_mision") != null else 0
 	_bicicletero_ui.call("iniciar", idx, punto)
 
@@ -2641,8 +2683,9 @@ func _on_informe_solicitado(punto: Area2D) -> void:
 # ── Callbacks de misión completada ───────────────────────────
 
 func _on_mision_plantar_completada(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(1) if nm else 0.0
 	_progreso_modulos[1] = pct
@@ -2688,8 +2731,9 @@ func _actualizar_indicador_edu() -> void:
 
 
 func _on_interior_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(2) if nm else 0.0
 	_progreso_modulos[2] = pct
@@ -2701,8 +2745,9 @@ func _on_interior_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_reciclaje_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(3) if nm else 0.0
 	_progreso_modulos[3] = pct
@@ -2714,8 +2759,9 @@ func _on_reciclaje_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_solar_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(2) if nm else 0.0
 	_progreso_modulos[2] = pct
@@ -2727,8 +2773,9 @@ func _on_solar_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_llave_cerrada(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(4) if nm else 0.0
 	_progreso_modulos[4] = pct
@@ -2741,8 +2788,9 @@ func _on_llave_cerrada(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_captacion_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(4) if nm else 0.0
 	_progreso_modulos[4] = pct
@@ -2755,8 +2803,9 @@ func _on_captacion_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_movilidad_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(5) if nm else 0.0
 	_progreso_modulos[5] = pct
@@ -2768,8 +2817,9 @@ func _on_movilidad_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_bicicletero_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(5) if nm else 0.0
 	_progreso_modulos[5] = pct
@@ -2781,8 +2831,9 @@ func _on_bicicletero_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_malla_verde_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
 	_progreso_modulos[6] = pct
@@ -2795,8 +2846,9 @@ func _on_malla_verde_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_comite_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
 	_progreso_modulos[6] = pct
@@ -2809,8 +2861,9 @@ func _on_comite_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_semana_verde_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
 	_progreso_modulos[6] = pct
@@ -2823,8 +2876,9 @@ func _on_semana_verde_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_informe_completado(mision_id: String, xp: int, ec: int) -> void:
+	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
 	_aplicar_xp(xp, mision_id)
-	EconomiaManager.ganar_creditos(ec)
+	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
 	_progreso_modulos[6] = pct
@@ -2843,7 +2897,7 @@ func _on_nivel_greenmetric_completado(nivel: int) -> void:
 	_mostrar_celebracion("%s NIVEL %d\n¡COMPLETADO!\n%s" % [icono, nivel, nombre])
 	_sfx("nivel")
 	var bonus_ec : int = int(nm.XP_NIVEL_BONUS.get(nivel, 150)) / 5 if nm else 30
-	EconomiaManager.ganar_creditos(bonus_ec)
+	EconomiaManager.ganar_creditos(bonus_ec, "nivel", str(nivel))
 	var sig_nivel := nivel + 1
 	if sig_nivel == 2 and nm and nm.nivel_desbloqueado(2):
 		_spawn_puntos_energia()

@@ -19,6 +19,10 @@ var _rows_vbox   : VBoxContainer = null
 var _estado_lbl  : Label        = null
 var _http        : HTTPRequest   = null
 var _cargando    : bool         = false
+# Título "Embajador GreenMetric" de la Tienda del Conocimiento: {user_id: título}.
+# Puede llegar antes o después que el ranking, por eso se guarda la última lista.
+var _titulos      : Dictionary = {}
+var _ultima_lista : Array      = []
 
 
 func _ready() -> void:
@@ -46,13 +50,22 @@ func _cargar_ranking() -> void:
 	_estado_lbl.text   = "Cargando ranking..."
 	_rows_vbox.visible = false
 	# Delegamos la petición al singleton centralizado
+	SupabaseManager.titulos_ranking_cargados.connect(_on_titulos_cargados, CONNECT_ONE_SHOT)
+	SupabaseManager.cargar_titulos_ranking()
 	SupabaseManager.ranking_cargado.connect(_on_ranking_cargado, CONNECT_ONE_SHOT)
 	SupabaseManager.cargar_ranking()
 
 
 func _on_ranking_cargado(lista: Array) -> void:
 	_cargando = false
+	_ultima_lista = lista
 	_poblar_filas(lista)
+
+
+func _on_titulos_cargados(titulos: Dictionary) -> void:
+	_titulos = titulos
+	if not _ultima_lista.is_empty():
+		_poblar_filas(_ultima_lista)
 
 
 func _on_request_completed(_result: int, _code: int, _hdrs: PackedStringArray, _body: PackedByteArray) -> void:
@@ -107,7 +120,9 @@ func _poblar_filas(data: Array) -> void:
 		row_hb.add_child(rank_lbl)
 
 		var nom_lbl := Label.new()
-		nom_lbl.text                   = nombre + (" (Tú)" if es_yo else "")
+		var titulo : String = str(_titulos.get(str(entrada.get("user_id", "")), ""))
+		nom_lbl.text                   = nombre + (" (Tú)" if es_yo else "") \
+			+ ("  🏆 " + titulo if titulo != "" else "")
 		nom_lbl.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
 		nom_lbl.add_theme_font_size_override("font_size", 13)
 		nom_lbl.add_theme_color_override("font_color",

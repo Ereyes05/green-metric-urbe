@@ -456,3 +456,13 @@ group by m.user_id, m.modulo_id
 having count(*) >= case m.modulo_id when 1 then 6 when 2 then 8 when 3 then 6
                                      when 4 then 8 when 5 then 8 when 6 then 4 end
 on conflict (user_id, ref) do nothing;
+
+-- ── Cuarta migración: tienda_descripciones_sin_repetir ───────
+-- La tienda ya muestra "Necesaria para ..." en una nota aparte (a partir de
+-- requerido_para); la misma frase dentro de la descripción quedaba repetida.
+update public.catalogo_tienda set descripcion = 'Herramientas para montar paneles solares en los techos del campus.'
+ where item_id = 'kit_solar';
+update public.catalogo_tienda set descripcion = 'Tanques y canaletas para recoger y aprovechar el agua de lluvia.'
+ where item_id = 'kit_captacion';
+update public.catalogo_tienda set descripcion = 'Estructura y candados para instalar bicicleteros seguros.'
+ where item_id = 'kit_bicicletero';

@@ -810,6 +810,15 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 		push_warning("SceneLogin: no se pudo recuperar el progreso del servidor "
 			+ "(sin red o tardó más de 8 s). Se entra con el guardado local.")
 
+	# EcoCredits, inventario de la tienda y mejoras de zona (HU-012). Se
+	# espera, con límite, para que el mapa arranque con el saldo real y las
+	# zonas ya mejoradas; si no llega, el mapa se actualiza solo cuando llegue.
+	EconomiaManager.iniciar_sesion()
+	var billetera_ok : bool = await _esperar_billetera_con_timeout()
+	print("SceneLogin: billetera %s (saldo=%d, items=%d)" % [
+		"cargada" if billetera_ok else "NO cargada a tiempo",
+		EconomiaManager.ecocredits, EconomiaManager.inventario.size()])
+
 	var tw := create_tween()
 	tw.tween_property(_center, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(func():
@@ -821,6 +830,13 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 # "ganar" con la que llegue primero entre dos señales distintas más un
 # límite de tiempo, y GDScript no tiene un await-de-varias-señales nativo.
 # Devuelve el Array de filas, o null si falló/no hubo respuesta a tiempo.
+func _esperar_billetera_con_timeout() -> bool:
+	var limite := Time.get_ticks_msec() + 6000
+	while not EconomiaManager.billetera_cargada and Time.get_ticks_msec() < limite:
+		await get_tree().process_frame
+	return EconomiaManager.billetera_cargada
+
+
 func _cargar_misiones_con_timeout() -> Variant:
 	SupabaseManager.cargar_misiones_estudiante()
 

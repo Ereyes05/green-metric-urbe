@@ -564,7 +564,7 @@ func _regar_planta() -> void:
 	_iniciar_animacion_riego()
 	var em = get_node_or_null("/root/EconomiaManager")
 	if em:
-		em.ganar_creditos(8)
+		em.ganar_creditos(8, "riego")
 	riego_realizado.emit(self, 10, 8)
 	if _jugador_cerca:
 		_actualizar_texto_prompt()

@@ -36,13 +36,15 @@ func _physics_process(delta: float) -> void:
 	var tutorial_ui  = get_tree().get_first_node_in_group("ui_tutorial")
 	var crisis_ui    = get_tree().get_first_node_in_group("ui_crisis")
 	var interior_ui  = get_tree().get_first_node_in_group("interior_bloque")
+	var tienda_ui    = get_tree().get_first_node_in_group("ui_tienda")
 
 	if (dlg and dlg.visible) or (quiz and quiz.visible) \
 			or (mision_ui and mision_ui.visible) \
 			or (minijuego_ui and minijuego_ui.visible) \
 			or (tutorial_ui and tutorial_ui.visible) \
 			or (crisis_ui and crisis_ui.visible) \
-			or (interior_ui and interior_ui.visible):
+			or (interior_ui and interior_ui.visible) \
+			or (tienda_ui and tienda_ui.visible):
 		velocity = Vector2.ZERO
 		_animar("idle_" + _dir_actual)
 		move_and_slide()
@@ -94,12 +96,30 @@ func _draw() -> void:
 
 	if _trail.is_empty(): return
 	var n : int = _trail.size()
+	# "Estela de hojas" de la Tienda del Conocimiento: hojas visibles y
+	# giradas en vez de los círculos tenues que tiene todo el mundo.
+	var hojas : bool = EconomiaManager.tiene_item("estela_hojas")
 	for i in n:
 		var local_p : Vector2 = to_local(_trail[i])
 		var t       : float   = float(i + 1) / float(n)
-		var alpha   : float   = t * 0.30
-		var r       : float   = 2.5 + t * 2.0
-		draw_circle(local_p, r, Color(0.30, 0.92, 0.42, alpha))
+		if hojas:
+			_dibujar_hoja(local_p, 3.5 + t * 3.0, float(i) * 1.7, t * 0.85)
+		else:
+			var alpha : float = t * 0.30
+			var r     : float = 2.5 + t * 2.0
+			draw_circle(local_p, r, Color(0.30, 0.92, 0.42, alpha))
+
+
+func _dibujar_hoja(centro: Vector2, largo: float, angulo: float, alpha: float) -> void:
+	var eje   := Vector2(cos(angulo), sin(angulo))
+	var perp  := Vector2(-eje.y, eje.x)
+	var punta := centro + eje * largo
+	var base  := centro - eje * largo
+	var ancho := largo * 0.55
+	draw_colored_polygon(PackedVector2Array([
+		base, centro + perp * ancho, punta, centro - perp * ancho,
+	]), Color(0.22, 0.72, 0.28, alpha))
+	draw_line(base, punta, Color(0.12, 0.42, 0.16, alpha), 1.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -112,9 +132,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	var minijuego_ui = get_tree().get_first_node_in_group("ui_minijuego")
 	var tutorial_ui2 = get_tree().get_first_node_in_group("ui_tutorial")
 	var crisis_ui2   = get_tree().get_first_node_in_group("ui_crisis")
+	var tienda_ui2   = get_tree().get_first_node_in_group("ui_tienda")
 	if (mision_ui and mision_ui.visible) or (dlg and dlg.visible) \
 			or (quiz and quiz.visible) or (minijuego_ui and minijuego_ui.visible) \
-			or (crisis_ui2 and crisis_ui2.visible):
+			or (crisis_ui2 and crisis_ui2.visible) or (tienda_ui2 and tienda_ui2.visible):
 		return
 	# Tutorial maneja [E] internamente, no lo consumimos aquí
 	if tutorial_ui2 and tutorial_ui2.visible:
