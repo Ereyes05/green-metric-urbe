@@ -52,11 +52,11 @@ create policy "leer_propios_eventos" on eventos_aprendizaje
   for select using (auth.uid() = user_id);
 
 -- Las políticas RLS dicen QUIÉN puede hacer qué, pero no otorgan el
--- privilegio de base: una tabla creada con SQL crudo no lo hereda solo.
--- Sin esto, el juego inserta y recibe un error de permisos, y los eventos
--- se quedan únicamente en el log local (user://eventos_aprendizaje.jsonl)
--- sin que nadie se entere. Es exactamente lo que pasó con
--- misiones_estudiante el 2026-09-02. Es idempotente: correrlo de nuevo no
+-- privilegio de base. En este proyecto el privilegio ya existe (verificado
+-- el 2026-09-14 en information_schema: son los privilegios por defecto que
+-- Supabase da a las tablas de public), así que esta línea hoy es redundante.
+-- Se deja explícita porque no siempre se hereda — a misiones_estudiante le
+-- faltaba el 2026-09-02 — y porque es idempotente: correrla de nuevo no
 -- rompe nada.
 grant select, insert on public.eventos_aprendizaje to authenticated;
 

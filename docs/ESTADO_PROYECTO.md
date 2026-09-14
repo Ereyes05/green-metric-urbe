@@ -109,8 +109,9 @@ La anon key es pública por diseño (protegida por RLS, no por estar oculta).
   y en qué racha venía — es decir, el proceso, no solo el resultado.
   `quiz_npc.iniciar()` recibe el nivel y la misión justamente para poder
   atribuir esos eventos a un indicador GreenMetric.
-  ⚠️ Falta confirmar que los eventos llegan al servidor y no solo al log
-  local — ver el pendiente correspondiente en la sección 8.
+  Verificado el 2026-09-14 que los eventos con sesión iniciada llegan al
+  servidor; los generados sin sesión quedan solo en el log local
+  (`user://eventos_aprendizaje.jsonl`). Ver sección 8.
 - **`estudiantes`** — perfil del estudiante (`xp_total`, etc.), creada por
   un trigger `on_auth_user_created`. El cliente Godot **nunca** la toca
   directo — solo la RPC (`security definer`) le suma XP.
@@ -286,20 +287,24 @@ mecanismo técnico de escaneo → activación a distancia.
 - [x] **Cobertura de `registrar_evento()`** — resuelto el 2026-09-11: pasó
   de 4 scripts (Niveles 5 y 6) a 14, cubriendo los 6 niveles. Se agregaron
   los tipos `respuesta_quiz`, `tiempo_agotado`, `crisis_resuelta` y
-  `servicio_solicitado`. **Pendiente de verificar en el servidor:** correr
-  el `grant` de `sql/eventos_aprendizaje.sql` y confirmar que los eventos
-  están llegando de verdad (ver abajo).
-- [ ] ⚠️ **Verificar que `eventos_aprendizaje` recibe los eventos.** El
-  archivo `sql/eventos_aprendizaje.sql` no tenía `grant` — el mismo
-  descuido que dejó `misiones_estudiante` sin permisos el 2026-09-02, donde
-  las peticiones fallaban en silencio. Si falta, los eventos de Niveles 5 y
-  6 de todo este tiempo podrían existir **solo** en el log local
-  (`user://eventos_aprendizaje.jsonl`) y no en Supabase. Cómo comprobarlo,
-  en el SQL Editor:
-  ```sql
-  select tipo_evento, count(*) from eventos_aprendizaje group by tipo_evento;
-  ```
-  Si devuelve 0 filas, correr el `grant` del archivo y volver a probar.
+  `servicio_solicitado`.
+- [x] **¿Llegan los eventos al servidor?** — verificado el 2026-09-14: **sí.**
+  Se sospechó que faltaba el `grant` (como pasó con `misiones_estudiante`),
+  pero **fue una falsa alarma**: `authenticated` tiene INSERT y SELECT (son
+  los privilegios por defecto de Supabase). El único evento del servidor
+  (nivel 5, `mov_parqueo`, 2026-09-03 23:33:18) coincide con el único
+  evento del log local generado con sesión iniciada: 1 de 1. Los otros 35
+  eventos del log local son de una prueba del 2026-09-02 en nivel 6 que casi
+  seguro corrió sin sesión (con una cuenta real no se podía llegar al
+  nivel 6 ese día), y sin sesión el evento se guarda solo en local, a
+  propósito.
+- [ ] ⚠️ **Casi no hay datos de proceso para la tesis.** `eventos_aprendizaje`
+  tiene **1 fila** al 2026-09-14. No es un bug: hasta el 2026-09-11 solo
+  registraban eventos los niveles 5 y 6, y nadie completó nunca una misión
+  de esos niveles (0 filas de módulos 5 y 6 en `misiones_estudiante`). Con la
+  instrumentación de los 6 niveles, la recolección real **empieza ahora**. Si
+  el análisis de la tesis necesita estos datos, hace falta que estudiantes
+  jueguen la versión web (con cuenta propia) antes de la fecha de análisis.
 - [ ] **XP validado solo del lado del cliente en su primer envío** — ver
   sección 6, "Modelo de confianza".
 - [ ] **Migración a TileMaps** — evaluado (2026-09-09), no iniciado. Hace
