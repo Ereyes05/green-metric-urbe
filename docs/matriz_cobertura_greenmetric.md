@@ -76,9 +76,19 @@ Convenciones de esta matriz:
 | WS1 | Programa 3R (Reducir, Reutilizar, Reciclar) para los residuos de la universidad | 300 | misión | 3 | `reciclar_corredor_n`, `reciclar_patio_e`, `reciclar_bloque_e`, `reciclar_oeste`, `reciclar_sur`, `reciclar_este` (`zona_reciclaje.gd`, vía `DATOS_ZONAS_RECICLAJE`); refuerzo en `minijuego_residuos.gd` | ya cubierto | — | sí |
 | WS2 | Programa para reducir el uso de papel y plástico en el campus | 300 | quiz | 3 | `mision_fotocopiado` (quiz, `QUIZ_POR_MISION`; nota: la zona `ZonaFotocopiado` está codificada como `modulo_id: 1`/Entorno aunque el tema es Residuos — ver Anomalías) | ya cubierto | — | sí |
 | WS3 | Tratamiento de residuos orgánicos | 300 | minijuego | 3 | — | **Compostera del Cafetín** (equilibrar verdes/marrones, humedad, volteo) — proyecto C, D10 | abono producido va a los árboles del Nivel 1 → Entorno (SI) | sí |
-| WS4 | Tratamiento de residuos inorgánicos | 300 | misión | 3 | `minijuego_residuos.gd` (clasificar 10 residuos, incluye reciclables inorgánicos como botellas PET); mismas zonas de `zona_reciclaje.gd` que WS1 | ya cubierto | — | sí |
+| WS4 | Tratamiento de residuos inorgánicos | 300 | misión | 3 | `minijuego_residuos.gd` (clasificar 10 residuos, incluye reciclables inorgánicos como botellas PET); mismas zonas de `zona_reciclaje.gd` que WS1 | ya cubierto† | — | sí |
 | WS5 | Tratamiento de residuos tóxicos | 300 | ficha | 3 | — | ficha informativa | — | no |
 | WS6 | Disposición de aguas residuales (alcantarillado) | 300 | quiz | 3 | — | pregunta nueva en quiz de Residuos | — | no |
+
+> † WS4 se clasifica como `misión` y no como `minijuego` aunque el contenido
+> que la cubre hoy (`minijuego_residuos.gd`) es, en el código, un minijuego
+> real y jugable: la decisión D10 del diseño 2026-09-14 reserva la etiqueta
+> `minijuego` únicamente para los 7 juegos nuevos que introduce (SI7, SI10,
+> SI11, EC2, EC8, WS3, WR2), así que esta fila no puede usar ese valor sin
+> romper esa cuenta. `minijuego_residuos.gd` sigue siendo el mismo objeto que
+> además alimenta la Comprensión de Residuos (proyecto A, sección 6.1 del
+> diseño: "Residuos: su Comprensión sale del minijuego de clasificación —
+> aciertos del primer intento / ítems — hasta que tenga quiz propio").
 
 ## 4. Uso del Agua (WR) — 10%
 
@@ -148,6 +158,20 @@ Convenciones de esta matriz:
    `plantar_cafetín`, que existe en el mismo array de datos) no tienen zona en
    el mapa ni cuentan para el progreso del Nivel 1: son datos sin usar, igual
    que `mision_bloque_g`.
+4. **WS4 se clasifica como `misión`, no `minijuego`, aunque su cobertura real
+   es un minijuego jugable.** `minijuego_residuos.gd` (clasificar 10 residuos
+   en el contenedor correcto en 60 segundos) cubre WS4 hoy y es, en el
+   código, un minijuego real — pero la decisión D10 del diseño 2026-09-14
+   reserva la etiqueta `minijuego` en esta matriz únicamente para los 7
+   juegos nuevos que introduce (SI7, SI10, SI11, EC2, EC8, WS3, WR2); si WS4
+   también usara `minijuego`, el conteo de verificación del Step 4
+   (`minijuego = 7`) se rompería. Por eso WS4 queda como `misión` en la
+   columna Tratamiento, con `minijuego_residuos.gd` citado igual en
+   "Cubierto hoy por" (ver también la nota † en la tabla de Residuos). El
+   mismo objeto es, además, la fuente de Comprensión de Residuos hasta que
+   exista un quiz propio (proyecto A, sección 6.1 del diseño: "Residuos: su
+   Comprensión sale del minijuego de clasificación — aciertos del primer
+   intento / ítems").
 
 **Anomalía adicional detectada durante el inventario** (no estaba en la lista
 del brief, se registra por transparencia): `ZonaFotocopiado` → `mision_fotocopiado`
