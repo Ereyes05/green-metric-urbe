@@ -9,3 +9,5 @@ supabase/.temp/
 
 # Logs y capturas del navegador de pruebas (Playwright MCP) — nunca van al repo.
 .playwright-mcp/
+
+.superpowers/
