@@ -68,10 +68,47 @@ var _session_id : String = ""
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
+	# En el export web, accept_gzip tiene que ir apagado. El navegador ya
+	# descomprime solo las respuestas (fetch lo hace siempre, no se puede
+	# evitar), pero Supabase expone el header Content-Encoding: gzip a
+	# JavaScript. Con accept_gzip=true, Godot lee ese header e intenta
+	# descomprimir OTRA VEZ bytes que ya son JSON plano -> result=8 (no pudo
+	# descomprimir). Síntoma: el login funciona (auth no comprime) pero todo
+	# lo de /rest/v1 falla, así que el progreso nunca carga en el navegador.
+	# Verificado en el código de Godot 4.7 (scene/main/http_request.cpp):
+	# Content-Encoding solo se lee si accept_gzip es true.
+	# En escritorio se deja encendido: ahí los bytes sí llegan comprimidos y
+	# ahorra ancho de banda. En web no se pierde nada: el navegador sigue
+	# negociando la compresión por su cuenta.
+	_http.accept_gzip = not OS.has_feature("web")
 	add_child(_http)
 	_http.request_completed.connect(_on_respuesta_http)
 	randomize()
 	_session_id = "%d-%04x" % [Time.get_unix_time_from_system(), randi() % 0xFFFF]
+	_autoprueba_red_si_se_pide()
+
+
+# Autoprueba de la capa HTTP en el export web: abrir el juego con ?diag=red
+# en la URL hace una petición REST real (sin login, contra una tabla de
+# solo lectura) e imprime el resultado en la consola del navegador.
+#
+# Existe porque los problemas de red del export web no se ven desde el
+# editor (en escritorio la capa HTTP se comporta distinto) y reproducirlos
+# con login obliga a usar una cuenta real. Así se detectó que Godot
+# intentaba descomprimir dos veces las respuestas gzip de Supabase.
+func _autoprueba_red_si_se_pide() -> void:
+	if not OS.has_feature("web"):
+		return
+	var query := str(JavaScriptBridge.eval("window.location.search", true))
+	if not query.contains("diag=red"):
+		return
+	print("AUTOPRUEBA RED: iniciando (accept_gzip=%s)" % _http.accept_gzip)
+	# select=* y no select=id a propósito: Cloudflare manda las respuestas
+	# chicas en Brotli (que Godot no intenta descomprimir) y las más grandes
+	# en gzip (que sí). Con select=id la prueba pasaba aunque el bug
+	# estuviera presente — un falso "OK".
+	_encolar("diag_red", SUPABASE_URL + "/rest/v1/modulos_greenmetric?select=*",
+			 HTTPClient.METHOD_GET, _headers_anon())
 
 
 func _encolar(accion: String, url: String, metodo: int,
@@ -342,6 +379,9 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"guardar_progreso": _procesar_guardar(code, datos, ctx)
 		"cargar_ranking"  : _procesar_ranking(code, datos)
 		"registrar_evento": _procesar_evento(code)
+		"diag_red"        : print("AUTOPRUEBA RED: OK — HTTP %d, %d bytes, JSON %s, Content-Encoding=%s"
+			% [code, body.size(), "valido" if datos != null else "INVALIDO",
+			   _valor_cabecera(hdrs, "content-encoding")])
 
 	_despachar()   # lanza la siguiente petición en cola si la hay
 
@@ -523,6 +563,14 @@ func _procesar_ranking(code: int, datos: Variant) -> void:
 
 
 # ── Headers ───────────────────────────────────────────────────
+func _valor_cabecera(hdrs: PackedStringArray, nombre: String) -> String:
+	var prefijo := nombre.to_lower() + ":"
+	for h in hdrs:
+		if h.to_lower().begins_with(prefijo):
+			return h.substr(prefijo.length()).strip_edges()
+	return "(ninguno)"
+
+
 func _headers_anon() -> PackedStringArray:
 	return PackedStringArray([
 		"Content-Type: application/json",

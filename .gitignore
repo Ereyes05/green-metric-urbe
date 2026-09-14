@@ -6,3 +6,6 @@
 # Estado local del Supabase CLI (link al proyecto, versiones) — no es
 # secreto, pero es específico de esta máquina, no del repo.
 supabase/.temp/
+
+# Logs y capturas del navegador de pruebas (Playwright MCP) — nunca van al repo.
+.playwright-mcp/

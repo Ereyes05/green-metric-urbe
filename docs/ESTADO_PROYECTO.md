@@ -517,6 +517,48 @@ Pages quedó activo el 2026-09-11 (*Settings → Pages → Deploy from a branch
 → `main` / `/docs`*). **URL pública:**
 **https://ereyes05.github.io/green-metric-urbe/juego/**
 
+### ⚠️ Problemas propios del navegador (no se ven desde el editor)
+
+Tres cosas que en escritorio funcionan y en web se rompían. Si algo "anda
+en Godot pero no en la página", empezar por acá:
+
+1. **Emoji como cuadraditos.** En escritorio Godot usa las fuentes del
+   sistema para los glifos que le faltan; en el navegador no hay. Se
+   empaqueta `assets/fonts/NotoColorEmoji-subset.ttf` (recortada a los 121
+   emoji del juego, 192 KB) y `WindowManager` la registra como fallback.
+   **Si se agregan emoji nuevos a la UI hay que regenerar el recorte**:
+   ```
+   pip install fonttools
+   python -m fontTools.subset NotoColorEmoji.ttf --unicodes-file=unicodes.txt \
+          --output-file=assets/fonts/NotoColorEmoji-subset.ttf
+   ```
+   (`unicodes.txt` = lista `U+XXXX` de los emoji usados en `scenes/` y
+   `autoload/`; la fuente completa está en
+   `github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf`).
+
+2. **El progreso no carga: "Sin conexión: no pudo descomprimir (8)".**
+   Resuelto el 2026-09-14. Causa: `HTTPRequest.accept_gzip` viene en `true`
+   por defecto. En web el navegador ya descomprime las respuestas, pero
+   Supabase expone el header `Content-Encoding: gzip` a JavaScript, así que
+   Godot intentaba descomprimir **otra vez** JSON plano. El login andaba
+   (auth no comprime) y todo `/rest/v1` fallaba. Arreglo: `accept_gzip`
+   apagado solo en web (`SupabaseManager._ready`).
+   - Detalle que despistó: Cloudflare manda las respuestas **chicas en
+     Brotli** (que Godot no intenta descomprimir) y las **grandes en gzip**.
+     Una prueba con una respuesta chica pasa aunque el bug esté presente.
+   - Antes de dar con la causa se probó una hipótesis equivocada (que el
+     problema era lanzar peticiones desde el callback de `request_completed`,
+     commit `15d6a3d`). **Esa no era la causa.** El cambio quedó porque no
+     hace daño y además agregó revisar el retorno de `request()` — sin eso,
+     un fallo al lanzar una petición dejaba la cola trabada para siempre.
+
+3. **El `.pck` viejo en caché.** Ver "Cómo regenerar el build" arriba.
+
+**Autoprueba de red:** abrir el juego con **`?diag=red`** al final de la URL
+(`.../juego/?diag=red`) hace una petición REST real sin necesidad de login e
+imprime el resultado en la consola del navegador (F12). Sirve para
+comprobar la capa HTTP del export web sin usar una cuenta real.
+
 ### Qué quedó verificado y qué no
 
 - ✅ **El juego carga y muestra la pantalla de login en la URL pública**,
