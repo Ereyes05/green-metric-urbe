@@ -338,3 +338,60 @@ grant  execute on function public.obtener_detalles()                  to authent
 grant  execute on function public.registrar_quiz(text, int)           to authenticated;
 grant  execute on function public.registrar_decision(text, text)      to authenticated;
 grant  execute on function public.registrar_sinergia(text)            to authenticated;
+
+-- ── Ajustes tras revisión ────────────────────────────────────
+-- Formato de ids: las penalizaciones se cuentan por prefijo 'penal:<id>:'.
+-- Si un id pudiera tener ':', 'penal:a:' también contaría las de 'a:b'. Los
+-- catálogos están vacíos al aplicar esto, así que el check no rompe nada.
+alter table public.catalogo_decisiones drop constraint if exists catalogo_decisiones_id_formato;
+alter table public.catalogo_decisiones add constraint catalogo_decisiones_id_formato
+  check (decision_id ~ '^[a-z0-9_]{1,60}$' and opcion_id ~ '^[a-z0-9_]{1,60}$');
+alter table public.catalogo_sinergias drop constraint if exists catalogo_sinergias_id_formato;
+alter table public.catalogo_sinergias add constraint catalogo_sinergias_id_formato
+  check (accion_id ~ '^[a-z0-9_]{1,60}$');
+
+-- La opción válida reemplaza a la anterior aunque sea de OTRA categoría. El
+-- upsert por (user_id, ref, categoria) solo reemplazaba dentro de la misma
+-- categoría: elegir x (cat. 5) y luego y (cat. 6) dejaba las dos filas
+-- 'decision:<id>' acreditadas. Ahora se borra la fila previa y se inserta la
+-- nueva, todo dentro del advisory lock del estudiante.
+create or replace function public.registrar_decision(p_decision_id text, p_opcion_id text)
+returns jsonb language plpgsql security definer set search_path to 'public' as $$
+declare
+  v_user   uuid := auth.uid();
+  v_cat    int;
+  v_puntos numeric;
+  v_contra boolean;
+  v_prefijo text;
+  v_n      int;
+begin
+  if v_user is null then
+    raise exception 'No autenticado' using errcode = '42501';
+  end if;
+  select categoria, puntos, contraproducente into v_cat, v_puntos, v_contra
+    from catalogo_decisiones where decision_id = p_decision_id and opcion_id = p_opcion_id;
+  if v_cat is null then
+    return jsonb_build_object('ok', false, 'error', 'opcion_inexistente');
+  end if;
+  perform pg_advisory_xact_lock(hashtext('calidad:' || v_user::text));
+  if v_contra then
+    v_prefijo := 'penal:' || p_decision_id || ':';
+    select count(*) into v_n from puntos_calidad
+     where user_id = v_user and left(ref, length(v_prefijo)) = v_prefijo;
+    if v_n < 3 then
+      insert into puntos_calidad (user_id, categoria, componente, puntos, ref)
+      values (v_user, v_cat, 'decision', -1, v_prefijo || (v_n + 1));
+    end if;
+    return jsonb_build_object('ok', true, 'contraproducente', true, 'penalizado', v_n < 3,
+                              'puntaje', _puntaje_greenmetric(v_user));
+  end if;
+  delete from puntos_calidad where user_id = v_user and ref = 'decision:' || p_decision_id;
+  insert into puntos_calidad (user_id, categoria, componente, puntos, ref)
+  values (v_user, v_cat, 'decision', v_puntos, 'decision:' || p_decision_id);
+  return jsonb_build_object('ok', true, 'contraproducente', false,
+                            'puntaje', _puntaje_greenmetric(v_user));
+end;
+$$;
+
+revoke execute on function public.registrar_decision(text, text) from public, anon;
+grant  execute on function public.registrar_decision(text, text) to authenticated;

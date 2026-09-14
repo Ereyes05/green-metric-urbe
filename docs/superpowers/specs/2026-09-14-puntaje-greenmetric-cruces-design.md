@@ -171,7 +171,7 @@ Copia versionada en `sql/puntaje_greenmetric.sql`.
 | `guardar_detalle(p_clave, p_detalle)` | upsert; clave `^[a-z0-9_:.-]{1,80}$` |
 | `obtener_detalles()` | todos los detalles propios (para restaurar al iniciar sesión) |
 | `registrar_quiz(p_mision_id, p_aciertos)` | valida contra `catalogo_misiones`; `0 ≤ aciertos ≤ preguntas`; inserta en `puntos_calidad` (`componente = comprension`, `puntos = aciertos`, `ref = quiz:<mision_id>`); **si ya existe, no hace nada** (primer intento). La normalización a 10 la hace `puntaje_greenmetric` |
-| `registrar_decision(p_decision_id, p_opcion_id)` | opción válida → upsert `ref = decision:<id>` con sus puntos; contraproducente → inserta penalización `ref = penal:<id>:<n>` (−1, máx. 3 por decisión) y devuelve `{ok:false, contraproducente:true}` para que el cliente ofrezca reintento |
+| `registrar_decision(p_decision_id, p_opcion_id)` | opción válida → reemplaza la fila `ref = decision:<id>` con sus puntos (borra la anterior aunque fuera de otra categoría); contraproducente → inserta penalización `ref = penal:<id>:<n>` (−1, máx. 3 por decisión) y devuelve `{ok:true, contraproducente:true, penalizado}` para que el cliente ofrezca reintento (`ok:false` queda para errores reales, p. ej. `opcion_inexistente`) |
 | `registrar_sinergia(p_accion_id)` | valida catálogo y `requisito_mision` en `misiones_estudiante`; inserta una fila por categoría con `ref = sinergia:<accion>`; repetir no suma |
 | `puntaje_greenmetric()` | devuelve `{categorias: {1: {avance, comprension, decisiones, sinergias, total}, …}, total}` |
 
