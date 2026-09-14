@@ -593,7 +593,8 @@ comprobar la capa HTTP del export web sin usar una cuenta real.
     late. Ahora se dibujan una vez y se anima posición/escala/transparencia
     (que no obliga a redibujar). Escritorio: **89 → 124-132 FPS**. Verificado
     por captura con todos los estados forzados (brillo de NPCs, hoyo, árbol
-    adulto con cartel, indicador de agua).
+    adulto con cartel, indicador de agua). El usuario confirmó en la web
+    que se nota "súper mejor" (sin número de FPS).
   - Descartados por la medición (eran ruido): `mision_bicicletero`,
     `mision_comite_ambiental`.
   - Todavía redibujan en cada frame: puntos de misión de los niveles 2-6,
