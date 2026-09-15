@@ -92,13 +92,12 @@ func _process(delta: float) -> void:
 
 
 func _mostrar_score_final() -> void:
-	var score_total : float = 0.0
-	for info : Dictionary in MODULOS_INFO:
-		var pct   : float = clampf(float(_progreso.get(info["id"], 0.0)), 0.0, 1.0)
-		var peso  : float = float(info["peso"])
-		score_total += pct * peso
-
-	var score_100 : float = score_total  # ya está en escala 0-100 (pesos suman ~100)
+	# El total sale de PuntajeManager (el mismo número que el informe final y
+	# el HUD) en vez de recalcularlo aquí con la copia de pesos de
+	# MODULOS_INFO: recalcular desde fracciones redondeadas daba diferencias
+	# de 0.1 con el informe. Los pesos de arriba quedan solo para la etiqueta
+	# "×N" de cada barra.
+	var score_100 : float = PuntajeManager.total
 	_score_lbl.text = "%.1f / 100" % score_100
 
 	var pos : int = 8
