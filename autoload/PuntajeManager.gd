@@ -85,7 +85,8 @@ func registrar_sinergia(accion_id: String) -> void:
 # Une los detalles del servidor con los locales. El servidor gana en las
 # claves que tiene; las que solo existen localmente (decisiones tomadas
 # antes de que existiera detalles_estudiante, o guardados que fallaron) se
-# suben una vez.
+# suben una vez. Solo llamar con una respuesta real del servidor: ante un
+# fallo no se sabe qué claves tiene y se subirían todas las locales.
 func restaurar_detalles(detalles_servidor: Dictionary) -> void:
 	var locales : Dictionary = NivelManager.detalles_todos()
 	for clave in locales.keys():

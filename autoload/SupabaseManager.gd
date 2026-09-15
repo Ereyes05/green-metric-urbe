@@ -65,8 +65,14 @@ signal puntaje_recibido(datos: Dictionary)
 signal puntaje_fallido()
 # Respuesta de registrar_quiz/decision/sinergia. ctx.tipo: "quiz"|"decision"|"sinergia".
 signal calidad_respuesta(respuesta: Dictionary, ctx: Dictionary)
-# detalles: {clave: detalle}. {} si falló (el llamador tiene su propio timeout).
+# detalles: {clave: detalle} tal como están en el servidor ({} = el servidor
+# de verdad no tiene ninguno). Solo se emite con una respuesta real.
 signal detalles_recibidos(detalles: Dictionary)
+# Pedir los detalles falló (red, HTTP≠200 o request() que no salió). Es una
+# señal aparte a propósito: si se emitiera detalles_recibidos({}), el
+# llamador no podría distinguirlo de "servidor vacío" y subiría todos los
+# detalles locales, pisando datos más nuevos que sí estaban en el servidor.
+signal detalles_fallidos()
 
 # ── Estado interno ───────────────────────────────────────────
 var jwt_token      : String = ""
@@ -168,11 +174,38 @@ func _lanzar(p: Dictionary) -> void:
 	# ningún error visible).
 	push_error("SupabaseManager: no se pudo lanzar '%s' (error %d)" % [_accion_actual, err])
 	var accion := _accion_actual
+	var ctx : Dictionary = p.get("ctx", {})
 	_accion_actual = ""
 	_ctx_actual    = {}
 	_ocupado       = false
 	emit_signal("error_red", "No se pudo enviar la petición '%s' (error %d)." % [accion, err])
+	# Igual que en el fallo de red: quien espera esta acción en particular
+	# (p. ej. PuntajeManager._pidiendo) tiene que enterarse, o queda trabado.
+	_emitir_fallo(accion, ctx)
 	_despachar()
+
+
+# Avisa el fallo de una petición a quien espera esa acción concreta. Se usa
+# desde el fallo de red de _on_respuesta_http y desde _lanzar (request() que
+# no llegó a salir): en ambos casos no hay respuesta que procesar y, sin
+# estas señales, los que llevan cuenta de peticiones en vuelo se quedan
+# esperando para siempre.
+func _emitir_fallo(accion: String, ctx: Dictionary) -> void:
+	if accion == "guardar_progreso":
+		emit_signal("progreso_guardado_fallido", str(ctx.get("mision_id", "")), int(ctx.get("xp_local", 0)))
+	# Las operaciones de EcoCredits también tienen que enterarse del
+	# fallo: EconomiaManager lleva la cuenta de las que están en vuelo y
+	# sin esto se quedaría esperando una respuesta que nunca llega.
+	elif accion == "billetera_mov":
+		emit_signal("billetera_actualizada", {"ok": false, "error": "red"}, ctx)
+	elif accion == "comprar":
+		emit_signal("compra_resuelta", {"ok": false, "error": "red"}, str(ctx.get("item_id", "")))
+	elif accion == "calidad":
+		emit_signal("calidad_respuesta", {"ok": false, "error": "red"}, ctx)
+	elif accion == "detalles":
+		emit_signal("detalles_fallidos")
+	elif accion == "puntaje":
+		emit_signal("puntaje_fallido")
 
 
 # ── LOGIN ─────────────────────────────────────────────────────
@@ -457,21 +490,7 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		push_error("SupabaseManager: '%s' falló en red -> %s (result=%d)"
 			% [accion, detalle, result])
 		emit_signal("error_red", "Sin conexión: %s (%d)" % [detalle, result])
-		if accion == "guardar_progreso":
-			emit_signal("progreso_guardado_fallido", str(ctx.get("mision_id", "")), int(ctx.get("xp_local", 0)))
-		# Las operaciones de EcoCredits también tienen que enterarse del
-		# fallo: EconomiaManager lleva la cuenta de las que están en vuelo y
-		# sin esto se quedaría esperando una respuesta que nunca llega.
-		elif accion == "billetera_mov":
-			emit_signal("billetera_actualizada", {"ok": false, "error": "red"}, ctx)
-		elif accion == "comprar":
-			emit_signal("compra_resuelta", {"ok": false, "error": "red"}, str(ctx.get("item_id", "")))
-		elif accion == "calidad":
-			emit_signal("calidad_respuesta", {"ok": false, "error": "red"}, ctx)
-		elif accion == "detalles":
-			emit_signal("detalles_recibidos", {})
-		elif accion == "puntaje":
-			emit_signal("puntaje_fallido")
+		_emitir_fallo(accion, ctx)
 		_despachar()
 		return
 
@@ -757,7 +776,8 @@ func _procesar_detalles(code: int, datos: Variant) -> void:
 		emit_signal("detalles_recibidos", datos)
 	else:
 		push_warning("SupabaseManager: falló obtener_detalles (HTTP %d)" % code)
-		emit_signal("detalles_recibidos", {})
+		# No {}: un fallo no es "el servidor no tiene detalles" (ver detalles_fallidos).
+		emit_signal("detalles_fallidos")
 
 
 # ── Headers ───────────────────────────────────────────────────

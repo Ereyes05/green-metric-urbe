@@ -823,11 +823,15 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 	# detalles se esperan con límite: el informe final los necesita y antes
 	# vivían solo en esta computadora. El puntaje no se espera: el HUD se
 	# actualiza solo cuando llega (PuntajeManager.puntaje_actualizado).
+	# Con null (fallo o timeout) NO se restaura: restaurar_detalles sube los
+	# locales que el servidor "no tiene", y sin respuesta real no sabemos qué
+	# tiene; subirlos podría pisar detalles más nuevos guardados desde otro
+	# equipo. Se reintenta en el próximo login.
 	var detalles = await _esperar_detalles_con_timeout()
 	if detalles is Dictionary:
 		PuntajeManager.restaurar_detalles(detalles)
 	print("SceneLogin: detalles %s" % (
-		"%d del servidor" % detalles.size() if detalles is Dictionary else "NO cargados a tiempo"))
+		"%d del servidor" % detalles.size() if detalles is Dictionary else "NO cargados (fallo o timeout)"))
 	PuntajeManager.iniciar_sesion()
 
 	var tw := create_tween()
@@ -848,22 +852,31 @@ func _esperar_billetera_con_timeout() -> bool:
 	return EconomiaManager.billetera_cargada
 
 
-# Devuelve {clave: detalle} o null si no llegó en 6 s. Mismo patrón de
-# Dictionary por referencia que _cargar_misiones_con_timeout: las lambdas
-# capturan variables simples por valor, así que el estado se guarda en un
-# Dictionary (tipo por referencia) para que el bucle de abajo lo vea.
+# Devuelve {clave: detalle}, o null si la petición falló (detalles_fallidos)
+# o no llegó en 6 s. Mismo patrón de Dictionary por referencia que
+# _cargar_misiones_con_timeout: las lambdas capturan variables simples por
+# valor, así que el estado se guarda en un Dictionary (tipo por referencia)
+# para que el bucle de abajo lo vea.
 func _esperar_detalles_con_timeout() -> Variant:
 	var estado := {"resuelto": false, "resultado": null}
 	var on_ok := func(d: Dictionary):
 		estado["resuelto"]  = true
 		estado["resultado"] = d
+	# El fallo resuelve la espera en el acto (sin gastar los 6 s), con null.
+	var on_fallo := func():
+		estado["resuelto"] = true
 	SupabaseManager.detalles_recibidos.connect(on_ok, CONNECT_ONE_SHOT)
+	SupabaseManager.detalles_fallidos.connect(on_fallo, CONNECT_ONE_SHOT)
 	SupabaseManager.obtener_detalles()
 	var limite := Time.get_ticks_msec() + 6000
 	while not estado["resuelto"] and Time.get_ticks_msec() < limite:
 		await get_tree().process_frame
+	# Desconectar ambos: la que no se disparó quedaría enganchada y, al
+	# llegar tarde, tocaría el estado de una espera que ya terminó.
 	if SupabaseManager.detalles_recibidos.is_connected(on_ok):
 		SupabaseManager.detalles_recibidos.disconnect(on_ok)
+	if SupabaseManager.detalles_fallidos.is_connected(on_fallo):
+		SupabaseManager.detalles_fallidos.disconnect(on_fallo)
 	return estado["resultado"]
 
 

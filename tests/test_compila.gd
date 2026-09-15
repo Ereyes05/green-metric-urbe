@@ -21,8 +21,13 @@ func _ready() -> void:
 		for f in ["obtener_puntaje", "registrar_quiz", "registrar_decision",
 				  "registrar_sinergia", "guardar_detalle", "obtener_detalles"]:
 			_check(sm.has_method(f), "SupabaseManager.%s existe" % f)
-		for s in ["puntaje_recibido", "puntaje_fallido", "calidad_respuesta", "detalles_recibidos"]:
+		for s in ["puntaje_recibido", "puntaje_fallido", "calidad_respuesta", "detalles_recibidos",
+				  "detalles_fallidos"]:
 			_check(sm.has_signal(s), "SupabaseManager señal %s existe" % s)
+		# Un único punto que avisa el fallo por acción: lo usan tanto el fallo
+		# de red como el request() que no llega a salir (sin él, quien espera
+		# la respuesta queda trabado para siempre).
+		_check(sm.has_method("_emitir_fallo"), "SupabaseManager._emitir_fallo existe")
 	var pm = get_node_or_null("/root/PuntajeManager")
 	_check(pm != null, "PuntajeManager cargado como autoload")
 	if pm:
