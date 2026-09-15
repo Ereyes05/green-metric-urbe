@@ -54,7 +54,8 @@ func _ready() -> void:
 	_check(em != null and not em.has_method("actualizar_impacto"), "actualizar_impacto eliminado")
 	for ruta in ["res://scenes/mapa/SceneMapaMundo.gd", "res://scenes/mapa/mapa_campus.gd",
 				 "res://scenes/ui/simulador_decision.gd", "res://scenes/misiones/mision_movilidad.gd",
-				 "res://scenes/misiones/mision_informe_final.gd", "res://scenes/ui/resultados_greenmetric.gd"]:
+				 "res://scenes/misiones/mision_informe_final.gd", "res://scenes/ui/resultados_greenmetric.gd",
+				 "res://scenes/ui/quiz_npc.gd", "res://scenes/ui/minijuego_residuos.gd"]:
 		var s : Script = load(ruta)
 		_check(s != null and s.can_instantiate(), "compila: %s" % ruta)
 	var mapa : Script = load("res://scenes/mapa/SceneMapaMundo.gd")

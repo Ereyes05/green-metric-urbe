@@ -164,6 +164,8 @@ func _clasificar(tipo_elegido: int) -> void:
 
 func _terminar() -> void:
 	_activo = false
+	# Es la Comprensión de Residuos (catalogo_misiones: tipo quiz, 10 ítems).
+	PuntajeManager.registrar_quiz("mision_residuos_minijuego", _aciertos)
 	SupabaseManager.registrar_evento(3, "mision_residuos_minijuego",
 		"mision_completada",
 		{

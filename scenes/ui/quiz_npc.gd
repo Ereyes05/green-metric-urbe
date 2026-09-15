@@ -33,6 +33,9 @@ var _preguntas         : Array = []
 var _indice            : int   = 0
 var _xp_total          : int   = 0
 var _racha             : int   = 0
+var _aciertos          : int   = 0
+# 1 = primer intento (cuenta para la Comprensión), 2 = repetición.
+var _intento           : int   = 1
 var _bloqueado         : bool  = false
 var _tiempo_restante   : float = TIEMPO_PREGUNTA
 var _tiempo_inicio_preg: float = 0.0
@@ -353,6 +356,8 @@ func iniciar(preguntas: Array, nombre_npc: String,
 	_indice    = 0
 	_xp_total  = 0
 	_racha     = 0
+	_aciertos  = 0
+	_intento   = 2 if PuntajeManager.quiz_hecho(mision_id) else 1
 	_xp_offset = 0
 	_nivel     = nivel
 	_mision_id = mision_id if mision_id != "" else "quiz_%s" % nombre_npc.to_lower()
@@ -438,6 +443,7 @@ func _responder(idx: int) -> void:
 	# Calcular XP
 	var xp_ganado : int = 0
 	if acerto:
+		_aciertos += 1
 		xp_ganado += XP_POR_PREGUNTA
 		var tiempo_usado : float = Time.get_ticks_msec() / 1000.0 - _tiempo_inicio_preg
 		if tiempo_usado < 6.0:
@@ -468,6 +474,7 @@ func _responder(idx: int) -> void:
 			"segundos"      : snappedf(Time.get_ticks_msec() / 1000.0 - _tiempo_inicio_preg, 0.01),
 			"racha"         : _racha,
 			"xp_ganado"     : xp_ganado,
+			"intento_quiz"  : _intento,
 		},
 		acerto, _indice + 1)
 
@@ -525,7 +532,7 @@ func _tiempo_se_acabo() -> void:
 	# mismo que "contestó mal", y para el análisis pedagógico conviene poder
 	# distinguirlos.
 	SupabaseManager.registrar_evento(_nivel, _mision_id, "tiempo_agotado",
-		{"pregunta": str(q.get("pregunta", ""))}, false, _indice + 1)
+		{"pregunta": str(q.get("pregunta", "")), "intento_quiz": _intento}, false, _indice + 1)
 	await get_tree().create_timer(1.8).timeout
 	if not is_instance_valid(self): return
 	_indice += 1
@@ -534,6 +541,9 @@ func _tiempo_se_acabo() -> void:
 
 
 func _finalizar() -> void:
+	# El servidor guarda solo el primer intento (registrar_quiz); repetir el
+	# quiz se juega igual pero no cambia la Comprensión.
+	PuntajeManager.registrar_quiz(_mision_id, _aciertos)
 	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_completada",
 		{"xp_total": _xp_total, "preguntas": _preguntas.size()})
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
