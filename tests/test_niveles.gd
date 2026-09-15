@@ -32,6 +32,9 @@ func _ready() -> void:
 	var basura := {}
 	for i in 10:
 		basura["no_es_del_nivel_%d" % i] = true
+	# Cada NivelManager se crea con .new() fuera del árbol: nadie lo libera
+	# solo, así que se libera antes de reemplazarlo (si no, ObjectDB leaks).
+	nm.free()
 	nm = _nm_con({"1": basura})
 	_check(not nm.nivel_completo(1), "IDs ajenos no completan el nivel 1")
 	_check(is_equal_approx(nm.pct_nivel(1), 0.0), "IDs ajenos dan 0% en nivel 1")
@@ -40,11 +43,13 @@ func _ready() -> void:
 	var n1 := {}
 	for id in nm.MISIONES_NIVEL[1]:
 		n1[id] = true
+	nm.free()
 	nm = _nm_con({"1": n1})
 	_check(nm.nivel_completo(1), "nivel 1 completo con sus 6 IDs")
 	_check(nm.nivel_desbloqueado(2), "nivel 2 desbloqueado")
 
 	# Legado: el nivel cambió (IDs nuevos) pero ya se había superado.
+	nm.free()
 	nm = _nm_con({"5": {"viejo_a": true, "viejo_b": true}})
 	nm.misiones_nivel[5] = ["nuevo_a", "nuevo_b", "nuevo_c"]
 	nm.misiones_legado[5] = ["viejo_a", "viejo_b"]
@@ -63,5 +68,6 @@ func _ready() -> void:
 	_check(not nm.nivel_superado(5), "legado incompleto no supera el nivel")
 	_check(not nm.nivel_desbloqueado(6), "legado incompleto no desbloquea el 6")
 
+	nm.free()
 	print("test_niveles: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)
