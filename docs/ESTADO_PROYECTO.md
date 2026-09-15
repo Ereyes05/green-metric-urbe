@@ -260,7 +260,10 @@ espejo en GDScript para mostrar el avance sin esperar la red.
   opción contraproducente (`catalogo_decisiones`) que **penaliza en vez de
   sumar** — resta 1 punto, hasta 3 veces por decisión — y permite reintentar;
   `registrar_decision` devuelve `{"ok": true, "contraproducente": true,
-  "penalizado": n}` en ese caso. Elegir después una opción válida **reemplaza
+  "penalizado": true|false}` en ese caso — `penalizado` es booleano: `true`
+  si esta elección todavía restó punto (sigue bajo el tope de 3), `false` una
+  vez alcanzado el tope para esa decisión (ya no resta más, pero sigue
+  marcada como contraproducente). Elegir después una opción válida **reemplaza
   la anterior**, incluso si la decisión anterior había sumado a otra
   categoría (no se acumulan intentos de la misma decisión).
 - **Espejo `catalogo_misiones` ↔ `NivelManager.MISIONES_NIVEL`:** el avance
