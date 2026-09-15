@@ -83,13 +83,11 @@ func _process(delta: float) -> void:
 	if _capa_ambiente:
 		_capa_ambiente.queue_redraw()   # solo la capa animada, no el campus
 
+# Se alimenta desde SceneMapaMundo._refrescar_progreso (PuntajeManager).
+# Antes arrancaba con valores inventados (0.35, 0.40...).
 var impacto : Dictionary = {
-	1: 0.35,   # Entorno e Infraestructura
-	2: 0.40,   # Energía
-	3: 0.30,   # Residuos
-	4: 0.45,   # Agua
-	5: 0.22,   # Transporte
-	6: 0.55,   # Educación
+	1: 0.0, 2: 0.0, 3: 0.0,
+	4: 0.0, 5: 0.0, 6: 0.0
 }
 
 var mostrar_calor : bool = false

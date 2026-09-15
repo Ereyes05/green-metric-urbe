@@ -12,9 +12,8 @@ signal informe_completada(mision_id: String, xp: int, ec: int)
 
 const MISION_ID : String = "informe_final"
 
-# Mismos pesos que resultados_greenmetric.gd, para que el score
-# que ve el jugador sea consistente entre ambas pantallas.
-const PESOS : Dictionary = {1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}
+# El puntaje sale de PuntajeManager (servidor), el mismo número que muestran
+# el HUD y la pantalla de resultados.
 
 var _punto_ref : Area2D = null
 
@@ -107,10 +106,7 @@ func _construir_informe() -> void:
 			% [", ".join(acts), int(det_semana.get("costo_total", 0)), int(det_semana.get("alcance_total", 0))])
 
 	_subtitulo("📊 Puntaje GreenMetric del campus")
-	var score := 0.0
-	for m in PESOS.keys():
-		var pct : float = nm.pct_nivel(m) if nm else 0.0
-		score += pct * float(PESOS[m])
+	var score : float = PuntajeManager.total
 	_score_lbl.text = "%.1f / 100" % score
 	var pos := 8
 	if score >= 80.0:    pos = 1

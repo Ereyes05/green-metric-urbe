@@ -49,5 +49,17 @@ func _ready() -> void:
 		_check(metodos.has("_esperar_detalles_con_timeout"),
 			"SceneLogin.gd tiene _esperar_detalles_con_timeout")
 
+	var em = get_node_or_null("/root/EconomiaManager")
+	_check(em != null and not ("impacto" in em), "EconomiaManager ya no tiene ImpactRating")
+	_check(em != null and not em.has_method("actualizar_impacto"), "actualizar_impacto eliminado")
+	for ruta in ["res://scenes/mapa/SceneMapaMundo.gd", "res://scenes/mapa/mapa_campus.gd",
+				 "res://scenes/ui/simulador_decision.gd", "res://scenes/misiones/mision_movilidad.gd",
+				 "res://scenes/misiones/mision_informe_final.gd", "res://scenes/ui/resultados_greenmetric.gd"]:
+		var s : Script = load(ruta)
+		_check(s != null and s.can_instantiate(), "compila: %s" % ruta)
+	var mapa : Script = load("res://scenes/mapa/SceneMapaMundo.gd")
+	_check(mapa != null and mapa.get_script_method_list().any(func(m): return m["name"] == "_refrescar_progreso"),
+		"SceneMapaMundo._refrescar_progreso existe")
+
 	print("test_compila: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

@@ -230,7 +230,7 @@ func _seleccionar(idx: int) -> void:
 		s.set_border_width_all(2); s.set_corner_radius_all(10)
 		_btn_ops[i].add_theme_stylebox_override("normal", s)
 
-	var pct : float = clampf(EconomiaManager.impacto.get(5, 0.5) + delta, 0.0, 1.0)
+	var pct : float = clampf(PuntajeManager.fraccion(5) + delta, 0.0, 1.0)
 	_barra_fill.color = op["color"]
 	var tw := create_tween().set_ease(Tween.EASE_OUT)
 	tw.tween_property(_barra_fill, "size:x", 360.0 * pct, 0.40)
@@ -253,7 +253,6 @@ func _confirmar() -> void:
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(5, _mision_id)
-	EconomiaManager.actualizar_impacto(5, delta)
 	if is_instance_valid(_punto_ref) and _punto_ref.has_method("_notificar_escenario_resuelto"):
 		_punto_ref._notificar_escenario_resuelto()
 

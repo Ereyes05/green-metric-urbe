@@ -1,6 +1,6 @@
 # ============================================================
 # EconomiaManager.gd — URBE Rangers: Eco-Quest
-# Autoload: EcoCredits, Energía/Vidas, Insignias, ImpactRating.
+# Autoload: EcoCredits, Energía/Vidas, Insignias.
 # ============================================================
 extends Node
 
@@ -8,7 +8,6 @@ extends Node
 signal ecocredits_cambiados(total: int)
 signal energia_cambiada(actual: int, maximo: int)
 signal insignia_obtenida(id: String, nombre: String, icono: String)
-signal impacto_cambiado(modulo_id: int, valor: float)
 
 # ── EcoCredits ────────────────────────────────────────────────
 # Desde el 2026-09-14 el saldo vive en el servidor (movimientos_ecocredits,
@@ -55,16 +54,6 @@ var _contador_refs : int = 0
 const MAX_ENERGIA   : int = 3
 var energia_actual  : int = 3
 var _fallos_racha   : int = 0
-
-# ── ImpactRating por módulo (0.0–1.0) ────────────────────────
-# Arranca en 0 para todos — antes tenía valores inventados (0.35, 0.40...)
-# que no reflejaban nada que el jugador hubiera hecho, y desincronizaban
-# esta barra de la de NivelManager.pct_nivel() (única fuente real de
-# progreso, basada en misiones completadas). Ver commit de esta fecha.
-var impacto : Dictionary = {
-	1: 0.0, 2: 0.0, 3: 0.0,
-	4: 0.0, 5: 0.0, 6: 0.0
-}
 
 # ── Insignias ─────────────────────────────────────────────────
 const INSIGNIAS : Dictionary = {
@@ -322,27 +311,6 @@ func siguiente_pregunta_remedial() -> Dictionary:
 	return p
 
 
-# ── ImpactRating ──────────────────────────────────────────────
-func actualizar_impacto(modulo_id: int, delta: float) -> float:
-	if not impacto.has(modulo_id): return 0.0
-	impacto[modulo_id] = clampf(impacto[modulo_id] + delta, 0.0, 1.0)
-	impacto_cambiado.emit(modulo_id, impacto[modulo_id])
-	return impacto[modulo_id]
-
-
-func get_color_impacto(modulo_id: int) -> Color:
-	var v : float = impacto.get(modulo_id, 0.5)
-	if v < 0.40:   return Color(0.88, 0.18, 0.18)
-	elif v < 0.75: return Color(0.90, 0.65, 0.08)
-	else:          return Color(0.18, 0.82, 0.18)
-
-
-func impacto_global() -> float:
-	var s : float = 0.0
-	for v in impacto.values(): s += v
-	return s / float(impacto.size())
-
-
 # ── Insignias ─────────────────────────────────────────────────
 func otorgar_insignia(id: String) -> void:
 	if id in _insignias_obtenidas or not INSIGNIAS.has(id): return
@@ -353,7 +321,6 @@ func otorgar_insignia(id: String) -> void:
 
 func on_modulo_completado(modulo_id: int, xp_ganado: int, xp_maximo: int) -> void:
 	ganar_creditos(xp_ganado / 5, "quiz")
-	actualizar_impacto(modulo_id, 0.15)
 	otorgar_insignia("m%d_completo" % modulo_id)
 	if xp_ganado >= xp_maximo:
 		otorgar_insignia("quiz_perfecto")

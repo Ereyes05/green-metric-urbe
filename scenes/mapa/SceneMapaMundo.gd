@@ -495,10 +495,10 @@ func _ready() -> void:
 	# servidor en SceneLogin, ver iniciar_sesion()/repoblar_desde_servidor)
 	# tuviera el progreso real. Hay que sembrar ANTES de _construir_sidebar(),
 	# que pinta con lo que haya en _progreso_modulos en ese momento.
-	var nm_inicial = _nivel_mgr()
-	if nm_inicial:
-		for mod_id in _progreso_modulos.keys():
-			_progreso_modulos[mod_id] = nm_inicial.pct_nivel(mod_id)
+	for mod_id in _progreso_modulos.keys():
+		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
+	PuntajeManager.puntaje_actualizado.connect(_refrescar_progreso)
+	PuntajeManager.sinergia_obtenida.connect(_on_sinergia_obtenida)
 
 	_construir_hud()
 	_construir_sidebar()
@@ -509,9 +509,7 @@ func _ready() -> void:
 	_actualizar_hud()
 	# Mismo motivo que el sembrado de _progreso_modulos de arriba: estos
 	# tres solo se actualizaban al completar una misión en vivo.
-	_actualizar_indicador_verde()
-	_actualizar_indicador_agua()
-	_actualizar_indicador_edu()
+	_refrescar_progreso()
 
 	# Escena de interior de edificio (overlay sobre el campus)
 	_edificio_ui = EDIFICIO_ESCENA.new()
@@ -1013,11 +1011,6 @@ func _on_minijuego_completado(xp: int) -> void:
 	# guardar_progreso() — duplicaba la llamada de red en cada partida.
 	_aplicar_xp(xp, "mision_residuos_minijuego")
 	EconomiaManager.ganar_creditos(xp / 5, "minijuego")
-	# Actualizar progreso M3 en sidebar (10 aciertos = 50 XP máx → 100%)
-	var pct  : float = clampf(float(xp) / 50.0, 0.0, 1.0)
-	var prev : float = float(_progreso_modulos.get(3, 0.0))
-	_progreso_modulos[3] = clampf(prev + pct * 0.5, 0.0, 1.0)
-	_actualizar_sidebar()
 	# El minijuego es un bonus aparte, no una de las 6 misiones de reciclaje
 	# que cuenta NivelManager — así que su % de acierto propio (pct) y su
 	# xp>=40 propio NO representan el estado real del módulo 3. Antes se
@@ -1053,11 +1046,6 @@ func _aplicar_xp(xp: int, mision_id: String) -> void:
 			var nuevo : float = clampf(float(info["progreso"]) + 0.20, 0.0, 1.0)
 			ZONA_A_MISION[zona_key]["progreso"] = nuevo
 			var mod_id : int = int(info["modulo_id"])
-			if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
-				mapa_campus.actualizar_modulo(mod_id, nuevo)
-			# Actualiza dict de progreso para sidebar y persiste
-			_progreso_modulos[mod_id] = nuevo
-			_actualizar_sidebar()
 			_mostrar_mision_completada(mision_id, xp)
 			# Persistir en Supabase — usa el % y el completado REALES de
 			# NivelManager, no `nuevo` (el contador propio y desconectado
@@ -1260,6 +1248,31 @@ func _actualizar_sidebar() -> void:
 		if i < _sidebar_pcts.size():
 			var lbl : Label = _sidebar_pcts[i]
 			lbl.text = "%d%%" % int(pct * 100)
+
+
+# Única vía para actualizar barras de categoría, índices del HUD y mapa de
+# calor. Todos leen PuntajeManager (avance 80 + comprensión 10 + decisiones 5
+# + sinergias 5). Antes cada pantalla tenía su propio número (ImpactRating
+# sin guardar, valores fijos del mapa de calor, % de misiones).
+func _refrescar_progreso(_cats: Dictionary = {}, _total: float = 0.0) -> void:
+	for mod_id in _progreso_modulos.keys():
+		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
+		if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
+			mapa_campus.actualizar_modulo(mod_id, _progreso_modulos[mod_id])
+	_actualizar_sidebar()
+	_actualizar_indicador_verde()
+	_actualizar_indicador_agua()
+	_actualizar_indicador_edu()
+
+
+func _on_sinergia_obtenida(_accion_id: String, cats: Array) -> void:
+	var nm = _nivel_mgr()
+	var partes : PackedStringArray = []
+	for c in cats:
+		if c is Dictionary:
+			var icono : String = nm.ICONOS_NIVEL[int(c.get("categoria", 0))] if nm else "•"
+			partes.append("%s +%d" % [icono, int(c.get("puntos", 0))])
+	_mostrar_notificacion_zona("✨", "Sinergia: " + "  ".join(partes), Color(0.75, 0.95, 1.0))
 
 
 # ════════════════════════════════════════════════════════════
@@ -1565,12 +1578,7 @@ func _on_btn_mejorar_zona() -> void:
 	zona.aplicar_mejora()
 	# Recompensas inmediatas
 	var xp_bonus : int   = zona.XP_MEJORA_INM[lvl_antes - 1]
-	var prog_bon : float = zona.PROG_MEJORA[lvl_antes - 1]
 	_aplicar_xp(xp_bonus, "mejora_zona_%s" % zona.nombre_zona.to_lower().replace(" ","_"))
-	var mod_id  : int   = zona.modulo_id
-	var nuevo   : float = clampf(float(_progreso_modulos.get(mod_id, 0.0)) + prog_bon, 0.0, 1.0)
-	_progreso_modulos[mod_id] = nuevo
-	_actualizar_sidebar()
 	_sfx("xp_bonus")
 	_mostrar_notificacion_zona("🌳", "%s → Nivel %d  (+%d XP)" % [zona.nombre_zona, zona.nivel, xp_bonus],
 			Color(0.30, 1.0, 0.42))
@@ -1791,24 +1799,13 @@ func _on_tutorial_completado() -> void:
 
 
 func _on_crisis_resulta(modulo_id: int, exito: bool) -> void:
-	var delta : float = 0.08 if exito else -0.06
-	var nuevo : float = EconomiaManager.actualizar_impacto(modulo_id, delta)
-	_progreso_modulos[modulo_id] = nuevo
-	_actualizar_sidebar()
-	if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
-		mapa_campus.actualizar_modulo(modulo_id, nuevo)
 	if exito:
 		_aplicar_xp(25, "crisis_%d" % modulo_id)
 		EconomiaManager.otorgar_insignia("crisis_resuelta")
 	_timer_crisis = randf_range(_CRISIS_MIN, _CRISIS_MAX)
 
 
-func _on_decision_tomada(modulo_id: int, delta: float) -> void:
-	var nuevo : float = EconomiaManager.actualizar_impacto(modulo_id, delta)
-	_progreso_modulos[modulo_id] = nuevo
-	_actualizar_sidebar()
-	if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
-		mapa_campus.actualizar_modulo(modulo_id, nuevo)
+func _on_decision_tomada(_modulo_id: int, delta: float) -> void:
 	if delta > 0.0:
 		EconomiaManager.ganar_creditos(15, "decision")
 
@@ -1842,13 +1839,7 @@ func _spawn_zonas_verdes() -> void:
 	pass  # zonas mejorables con ecocredits eliminadas del mapa
 
 
-func _on_zona_verde_adoptada(nombre_zona: String, modulo_id: int) -> void:
-	var delta : float = 0.06
-	var nuevo : float = clampf(float(_progreso_modulos.get(modulo_id, 0.0)) + delta, 0.0, 1.0)
-	_progreso_modulos[modulo_id] = nuevo
-	_actualizar_sidebar()
-	if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
-		mapa_campus.actualizar_modulo(modulo_id, nuevo)
+func _on_zona_verde_adoptada(nombre_zona: String, _modulo_id: int) -> void:
 	_aplicar_xp(15, "adopcion_%s" % nombre_zona.to_lower().replace(" ", "_"))
 	_mostrar_notificacion_zona("♥", "Adoptaste: " + nombre_zona, Color(0.28, 0.90, 0.40))
 	_sfx("adoptar")
@@ -1890,16 +1881,16 @@ func _abrir_simulador() -> void:
 
 
 func _verificar_misiones_completadas() -> void:
-	var total_completadas : int = 0
-	for mod_id in _progreso_modulos.keys():
-		if float(_progreso_modulos[mod_id]) >= 0.80:
-			total_completadas += 1
-	if total_completadas >= 6:
-		if not _crises_desbloqueadas:
-			_crises_desbloqueadas = true
-			_timer_crisis = _CRISIS_MIN
-		await get_tree().create_timer(1.5).timeout
-		_abrir_resultados()
+	var nm = _nivel_mgr()
+	if not nm: return
+	for mod_id in range(1, 7):
+		if not nm.nivel_completo(mod_id):
+			return
+	if not _crises_desbloqueadas:
+		_crises_desbloqueadas = true
+		_timer_crisis = _CRISIS_MIN
+	await get_tree().create_timer(1.5).timeout
+	_abrir_resultados()
 
 
 # ════════════════════════════════════════════════════════════
@@ -2130,11 +2121,6 @@ func _on_btn_servicio_contenedor() -> void:
 func _on_contenedor_vaciado(xp: int, c: Node2D) -> void:
 	_aplicar_xp(xp, "contenedor_%s" % c.nombre_bin.to_lower().replace(" ", "_"))
 	EconomiaManager.ganar_creditos(xp / 4, "contenedor")
-	# Contribuye al progreso M3 (Residuos)
-	var delta : float = 0.02 + float(xp) / 1000.0
-	var prev  : float = float(_progreso_modulos.get(3, 0.0))
-	_progreso_modulos[3] = clampf(prev + delta, 0.0, 1.0)
-	_actualizar_sidebar()
 	var msg : String
 	if xp >= 20:
 		msg = "🗑 ¡Contenedor vacío! Servicio excelente  +%d XP" % xp
@@ -2688,9 +2674,7 @@ func _on_mision_plantar_completada(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(1) if nm else 0.0
-	_progreso_modulos[1] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_verde()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(1, mision_id, int(pct * 100), xp, nm.nivel_completo(1) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2698,9 +2682,7 @@ func _on_mision_plantar_completada(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _actualizar_indicador_verde() -> void:
-	var nm = _nivel_mgr()
-	if not nm: return
-	var pct : float = nm.pct_nivel(1)
+	var pct : float = PuntajeManager.fraccion(1)
 	if _hud_verde_fill:
 		var tw := create_tween()
 		tw.tween_property(_hud_verde_fill, "size:x", 236.0 * pct, 0.4)
@@ -2709,9 +2691,7 @@ func _actualizar_indicador_verde() -> void:
 
 
 func _actualizar_indicador_agua() -> void:
-	var nm = _nivel_mgr()
-	if not nm: return
-	var pct : float = nm.pct_nivel(4)
+	var pct : float = PuntajeManager.fraccion(4)
 	if _hud_agua_fill:
 		var tw := create_tween()
 		tw.tween_property(_hud_agua_fill, "size:x", 236.0 * pct, 0.4)
@@ -2720,9 +2700,7 @@ func _actualizar_indicador_agua() -> void:
 
 
 func _actualizar_indicador_edu() -> void:
-	var nm = _nivel_mgr()
-	if not nm: return
-	var pct : float = nm.pct_nivel(6)
+	var pct : float = PuntajeManager.fraccion(6)
 	if _hud_edu_fill:
 		var tw := create_tween()
 		tw.tween_property(_hud_edu_fill, "size:x", 236.0 * pct, 0.4)
@@ -2736,8 +2714,7 @@ func _on_interior_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(2) if nm else 0.0
-	_progreso_modulos[2] = pct
-	_actualizar_sidebar()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(2, mision_id, int(pct * 100), xp, nm.nivel_completo(2) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2750,8 +2727,7 @@ func _on_reciclaje_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(3) if nm else 0.0
-	_progreso_modulos[3] = pct
-	_actualizar_sidebar()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(3, mision_id, int(pct * 100), xp, nm.nivel_completo(3) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2764,8 +2740,7 @@ func _on_solar_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(2) if nm else 0.0
-	_progreso_modulos[2] = pct
-	_actualizar_sidebar()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(2, mision_id, int(pct * 100), xp, nm.nivel_completo(2) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2778,9 +2753,7 @@ func _on_llave_cerrada(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(4) if nm else 0.0
-	_progreso_modulos[4] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_agua()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(4, mision_id, int(pct * 100), xp, nm.nivel_completo(4) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2793,9 +2766,7 @@ func _on_captacion_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(4) if nm else 0.0
-	_progreso_modulos[4] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_agua()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(4, mision_id, int(pct * 100), xp, nm.nivel_completo(4) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2808,8 +2779,7 @@ func _on_movilidad_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(5) if nm else 0.0
-	_progreso_modulos[5] = pct
-	_actualizar_sidebar()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(5, mision_id, int(pct * 100), xp, nm.nivel_completo(5) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2822,8 +2792,7 @@ func _on_bicicletero_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(5) if nm else 0.0
-	_progreso_modulos[5] = pct
-	_actualizar_sidebar()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(5, mision_id, int(pct * 100), xp, nm.nivel_completo(5) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2836,9 +2805,7 @@ func _on_malla_verde_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
-	_progreso_modulos[6] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_edu()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(6, mision_id, int(pct * 100), xp, nm.nivel_completo(6) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2851,9 +2818,7 @@ func _on_comite_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
-	_progreso_modulos[6] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_edu()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(6, mision_id, int(pct * 100), xp, nm.nivel_completo(6) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2866,9 +2831,7 @@ func _on_semana_verde_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
-	_progreso_modulos[6] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_edu()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(6, mision_id, int(pct * 100), xp, nm.nivel_completo(6) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
@@ -2881,9 +2844,7 @@ func _on_informe_completado(mision_id: String, xp: int, ec: int) -> void:
 	EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(6) if nm else 0.0
-	_progreso_modulos[6] = pct
-	_actualizar_sidebar()
-	_actualizar_indicador_edu()
+	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(6, mision_id, int(pct * 100), xp, nm.nivel_completo(6) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")

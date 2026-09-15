@@ -187,7 +187,7 @@ func _seleccionar(idx: int) -> void:
 
 	# Barra de impacto animada
 	var pct : float = clampf(
-		EconomiaManager.impacto.get(int(_esc_actual["modulo"]), 0.5) + delta, 0.0, 1.0)
+		PuntajeManager.fraccion(int(_esc_actual["modulo"])) + delta, 0.0, 1.0)
 	_barra_fill.color = op["color"]
 	var tw := create_tween().set_ease(Tween.EASE_OUT)
 	tw.tween_property(_barra_fill, "size:x", 360.0 * pct, 0.40)
