@@ -17,15 +17,15 @@ const ESCENARIOS_MOVILIDAD : Array = [
 		"pregunta": "¿Qué política de permisos de estacionamiento implementarías?",
 		"opciones": [
 			{"texto": "Limitar permisos de carro privado a quienes no tengan alternativa de transporte",
-			 "impacto": "+20% ImpactRating", "delta": 0.20,
+			 "impacto": "Impacto estimado: +20%", "delta": 0.20,
 			 "edu": "Reducir la proporción de vehículos por persona es exactamente lo que mide el indicador TR1 de GreenMetric.",
 			 "color": Color(0.18, 0.82, 0.18)},
 			{"texto": "Construir un nuevo estacionamiento para aumentar los espacios disponibles",
-			 "impacto": "-10% ImpactRating", "delta": -0.10,
+			 "impacto": "Impacto estimado: -10%", "delta": -0.10,
 			 "edu": "Más estacionamiento incentiva más uso del vehículo privado — contradice el objetivo del indicador.",
 			 "color": Color(0.90, 0.20, 0.20)},
 			{"texto": "Dejar los permisos como están",
-			 "impacto": "+2% ImpactRating", "delta": 0.02,
+			 "impacto": "Impacto estimado: +2%", "delta": 0.02,
 			 "edu": "No actuar mantiene la saturación actual y prácticamente no mejora el indicador.",
 			 "color": Color(0.90, 0.80, 0.10)},
 		],
@@ -37,15 +37,15 @@ const ESCENARIOS_MOVILIDAD : Array = [
 		"pregunta": "¿Cómo mejorarías el servicio de shuttle del campus?",
 		"opciones": [
 			{"texto": "Ampliar a 4 rutas con frecuencia de 15 minutos",
-			 "impacto": "+20% ImpactRating", "delta": 0.20,
+			 "impacto": "Impacto estimado: +20%", "delta": 0.20,
 			 "edu": "Un shuttle frecuente y con buena cobertura satisface el indicador de servicio de shuttle (TR2) por completo.",
 			 "color": Color(0.18, 0.82, 0.18)},
 			{"texto": "Mantener las rutas actuales pero bajar el precio del pasaje",
-			 "impacto": "+8% ImpactRating", "delta": 0.08,
+			 "impacto": "Impacto estimado: +8%", "delta": 0.08,
 			 "edu": "Ayuda a la adopción, pero sin mejorar cobertura ni frecuencia el impacto es limitado.",
 			 "color": Color(0.90, 0.80, 0.10)},
 			{"texto": "Eliminar el shuttle por bajo uso actual",
-			 "impacto": "-15% ImpactRating", "delta": -0.15,
+			 "impacto": "Impacto estimado: -15%", "delta": -0.15,
 			 "edu": "Eliminar el servicio empeora directamente el indicador y empuja a más estudiantes al carro.",
 			 "color": Color(0.90, 0.20, 0.20)},
 		],
@@ -57,15 +57,15 @@ const ESCENARIOS_MOVILIDAD : Array = [
 		"pregunta": "¿Qué harías con uno de los lotes de estacionamiento menos usados?",
 		"opciones": [
 			{"texto": "Convertirlo en ciclovía y zona verde",
-			 "impacto": "+18% ImpactRating", "delta": 0.18,
+			 "impacto": "Impacto estimado: +18%", "delta": 0.18,
 			 "edu": "Reducir el área destinada a parqueo mejora directamente los indicadores de proporción y reducción de área de estacionamiento.",
 			 "color": Color(0.18, 0.82, 0.18)},
 			{"texto": "Reducirlo a la mitad y dejar la otra mitad para eventos",
-			 "impacto": "+8% ImpactRating", "delta": 0.08,
+			 "impacto": "Impacto estimado: +8%", "delta": 0.08,
 			 "edu": "Una reducción parcial ayuda, aunque el indicador premia más una reducción sostenida y documentada.",
 			 "color": Color(0.90, 0.80, 0.10)},
 			{"texto": "Mantenerlo igual, por si el campus crece",
-			 "impacto": "-5% ImpactRating", "delta": -0.05,
+			 "impacto": "Impacto estimado: -5%", "delta": -0.05,
 			 "edu": "No reducir el área de estacionamiento no aporta al indicador y perpetúa el uso del vehículo privado.",
 			 "color": Color(0.90, 0.20, 0.20)},
 		],
@@ -77,15 +77,15 @@ const ESCENARIOS_MOVILIDAD : Array = [
 		"pregunta": "¿Implementarías un día sin carros en URBE?",
 		"opciones": [
 			{"texto": "Sí, un día fijo a la semana con transporte alternativo gratuito ese día",
-			 "impacto": "+18% ImpactRating", "delta": 0.18,
+			 "impacto": "Impacto estimado: +18%", "delta": 0.18,
 			 "edu": "Es una iniciativa concreta y medible para reducir vehículos privados en el campus (indicador TR7).",
 			 "color": Color(0.18, 0.82, 0.18)},
 			{"texto": "Solo como piloto, un día al mes",
-			 "impacto": "+8% ImpactRating", "delta": 0.08,
+			 "impacto": "Impacto estimado: +8%", "delta": 0.08,
 			 "edu": "Un piloto es un buen primer paso, pero el impacto medido es menor que una iniciativa sostenida.",
 			 "color": Color(0.90, 0.80, 0.10)},
 			{"texto": "No, afectaría demasiado la asistencia a clases",
-			 "impacto": "-6% ImpactRating", "delta": -0.06,
+			 "impacto": "Impacto estimado: -6%", "delta": -0.06,
 			 "edu": "No implementar ninguna iniciativa no aporta al indicador de reducción de vehículos privados.",
 			 "color": Color(0.90, 0.20, 0.20)},
 		],
@@ -97,15 +97,15 @@ const ESCENARIOS_MOVILIDAD : Array = [
 		"pregunta": "¿Qué harías con la flota de mantenimiento del campus?",
 		"opciones": [
 			{"texto": "Piloto de 2 vehículos eléctricos para las labores de mantenimiento",
-			 "impacto": "+16% ImpactRating", "delta": 0.16,
+			 "impacto": "Impacto estimado: +16%", "delta": 0.16,
 			 "edu": "Introducir vehículos de cero emisiones, aunque sea un piloto pequeño, mejora los indicadores de disponibilidad y proporción de ZEV.",
 			 "color": Color(0.18, 0.82, 0.18)},
 			{"texto": "Evaluar el cambio en los próximos años sin comprometerse aún",
-			 "impacto": "+4% ImpactRating", "delta": 0.04,
+			 "impacto": "Impacto estimado: +4%", "delta": 0.04,
 			 "edu": "Evaluar sin actuar aporta muy poco a un indicador que mide disponibilidad real, no intención.",
 			 "color": Color(0.90, 0.80, 0.10)},
 			{"texto": "Mantener la flota actual — es más barato a corto plazo",
-			 "impacto": "-8% ImpactRating", "delta": -0.08,
+			 "impacto": "Impacto estimado: -8%", "delta": -0.08,
 			 "edu": "No invertir en ZEV mantiene el indicador en cero y penaliza la calificación de Transporte.",
 			 "color": Color(0.90, 0.20, 0.20)},
 		],
@@ -117,15 +117,15 @@ const ESCENARIOS_MOVILIDAD : Array = [
 		"pregunta": "¿Qué incentivo de viaje compartido (carpool) implementarías?",
 		"opciones": [
 			{"texto": "Espacios de estacionamiento preferenciales para carros con 3 o más ocupantes",
-			 "impacto": "+14% ImpactRating", "delta": 0.14,
+			 "impacto": "Impacto estimado: +14%", "delta": 0.14,
 			 "edu": "Un incentivo concreto y visible es más efectivo que solo informar — cuenta como iniciativa real (TR7).",
 			 "color": Color(0.18, 0.82, 0.18)},
 			{"texto": "Campaña informativa sobre los beneficios del carpool",
-			 "impacto": "+6% ImpactRating", "delta": 0.06,
+			 "impacto": "Impacto estimado: +6%", "delta": 0.06,
 			 "edu": "Informar ayuda a crear conciencia, pero sin un incentivo concreto el cambio de conducta es más lento.",
 			 "color": Color(0.90, 0.80, 0.10)},
 			{"texto": "No implementar ningún incentivo",
-			 "impacto": "-4% ImpactRating", "delta": -0.04,
+			 "impacto": "Impacto estimado: -4%", "delta": -0.04,
 			 "edu": "Sin ninguna iniciativa, el indicador de reducción de vehículos privados no mejora.",
 			 "color": Color(0.90, 0.20, 0.20)},
 		],
@@ -217,7 +217,6 @@ func _poblar() -> void:
 func _seleccionar(idx: int) -> void:
 	_opcion_sel = idx
 	var op    : Dictionary = _esc_actual["opciones"][idx]
-	var delta : float      = float(op["delta"])
 
 	for i in _btn_ops.size():
 		var s := StyleBoxFlat.new()
@@ -230,7 +229,9 @@ func _seleccionar(idx: int) -> void:
 		s.set_border_width_all(2); s.set_corner_radius_all(10)
 		_btn_ops[i].add_theme_stylebox_override("normal", s)
 
-	var pct : float = clampf(PuntajeManager.fraccion(5) + delta, 0.0, 1.0)
+	# Puntaje actual de la categoría (mismo número que el HUD), sin sumar el
+	# delta de la opción: esa ganancia ya no existe.
+	var pct : float = PuntajeManager.fraccion(5)
 	_barra_fill.color = op["color"]
 	var tw := create_tween().set_ease(Tween.EASE_OUT)
 	tw.tween_property(_barra_fill, "size:x", 360.0 * pct, 0.40)
@@ -378,7 +379,7 @@ func _crear_ui() -> void:
 	vbox.add_child(imp_row)
 
 	var imp_lbl := Label.new()
-	imp_lbl.text = "ImpactRating:"
+	imp_lbl.text = "Puntaje de la categoría:"
 	imp_lbl.add_theme_font_size_override("font_size", 11)
 	imp_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 	imp_row.add_child(imp_lbl)

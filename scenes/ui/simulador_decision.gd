@@ -1,7 +1,8 @@
 # ============================================================
 # simulador_decision.gd — URBE Rangers: Eco-Quest
 # Simulador de decisiones para Agua (M4) y Residuos (M3).
-# 3 opciones por escenario. Muestra impacto en ImpactRating.
+# 3 opciones por escenario. Muestra el impacto estimado de cada opción y,
+# en la barra, el puntaje actual de la categoría (PuntajeManager).
 # Señal decision_tomada(modulo_id, delta_impacto).
 # ============================================================
 extends CanvasLayer
@@ -18,21 +19,21 @@ const ESCENARIOS : Array = [
 		"opciones": [
 			{
 				"texto":   "Renovar los 3 lavavajillas por modelos de bajo consumo (90 L/hora)",
-				"impacto": "+18% ImpactRating",
+				"impacto": "Impacto estimado: +18%",
 				"delta":   0.18,
 				"edu":     "Los equipos eficientes reducen el consumo en un 70%. Es la solución de mayor impacto a largo plazo.",
 				"color":   Color(0.18, 0.82, 0.18),
 			},
 			{
 				"texto":   "Reducir el horario de la cafetería de 6h a 4h diarias",
-				"impacto": "+6% ImpactRating",
+				"impacto": "Impacto estimado: +6%",
 				"delta":   0.06,
 				"edu":     "Reducir horarios ayuda, pero impacta el servicio al estudiante y no resuelve la ineficiencia del equipo.",
 				"color":   Color(0.90, 0.80, 0.10),
 			},
 			{
 				"texto":   "Mantener el sistema actual — el costo de cambio es muy alto",
-				"impacto": "-8% ImpactRating",
+				"impacto": "Impacto estimado: -8%",
 				"delta":  -0.08,
 				"edu":     "No actuar perpetúa el gasto hídrico. GreenMetric penaliza la falta de inversión en eficiencia.",
 				"color":   Color(0.90, 0.20, 0.20),
@@ -47,21 +48,21 @@ const ESCENARIOS : Array = [
 		"opciones": [
 			{
 				"texto":   "Instalar riego por goteo y programarlo para la madrugada",
-				"impacto": "+20% ImpactRating",
+				"impacto": "Impacto estimado: +20%",
 				"delta":   0.20,
 				"edu":     "El riego por goteo reduce el consumo hasta en un 60% y la programación nocturna minimiza la evaporación.",
 				"color":   Color(0.18, 0.82, 0.18),
 			},
 			{
 				"texto":   "Mantener aspersores pero regar solo 3 días a la semana",
-				"impacto": "+8% ImpactRating",
+				"impacto": "Impacto estimado: +8%",
 				"delta":   0.08,
 				"edu":     "Reducir frecuencia ayuda pero los aspersores siguen siendo ineficientes en distribución.",
 				"color":   Color(0.90, 0.80, 0.10),
 			},
 			{
 				"texto":   "Reemplazar las plantas por especies de cemento decorativo",
-				"impacto": "-12% ImpactRating",
+				"impacto": "Impacto estimado: -12%",
 				"delta":  -0.12,
 				"edu":     "Eliminar la vegetación reduce la biodiversidad y el área verde, dos factores que GreenMetric evalúa negativamente.",
 				"color":   Color(0.90, 0.20, 0.20),
@@ -77,21 +78,21 @@ const ESCENARIOS : Array = [
 		"opciones": [
 			{
 				"texto":   "Instalar 50 estaciones de clasificación con señalización clara y colores",
-				"impacto": "+22% ImpactRating",
+				"impacto": "Impacto estimado: +22%",
 				"delta":   0.22,
 				"edu":     "La infraestructura visible y accesible es el principal factor para mejorar la tasa de clasificación.",
 				"color":   Color(0.18, 0.82, 0.18),
 			},
 			{
 				"texto":   "Contratar empresa especializada en reciclaje para procesar los residuos mezclados",
-				"impacto": "+10% ImpactRating",
+				"impacto": "Impacto estimado: +10%",
 				"delta":   0.10,
 				"edu":     "Tercerizar el procesamiento ayuda, pero no genera conciencia ambiental en la comunidad universitaria.",
 				"color":   Color(0.90, 0.80, 0.10),
 			},
 			{
 				"texto":   "Emitir multas a quienes no clasifiquen los residuos",
-				"impacto": "+4% ImpactRating",
+				"impacto": "Impacto estimado: +4%",
 				"delta":   0.04,
 				"edu":     "Las multas sin educación generan resistencia. GreenMetric valora más los programas de concientización.",
 				"color":   Color(0.90, 0.65, 0.10),
@@ -172,7 +173,6 @@ func _poblar() -> void:
 func _seleccionar(idx: int) -> void:
 	_opcion_sel = idx
 	var op   : Dictionary = _esc_actual["opciones"][idx]
-	var delta : float     = float(op["delta"])
 
 	for i in _btn_ops.size():
 		var s := StyleBoxFlat.new()
@@ -185,9 +185,10 @@ func _seleccionar(idx: int) -> void:
 		s.set_border_width_all(2); s.set_corner_radius_all(10)
 		_btn_ops[i].add_theme_stylebox_override("normal", s)
 
-	# Barra de impacto animada
-	var pct : float = clampf(
-		PuntajeManager.fraccion(int(_esc_actual["modulo"])) + delta, 0.0, 1.0)
+	# Barra animada con el puntaje actual de la categoría, el mismo número
+	# que el HUD. No se le suma el delta de la opción: esa ganancia ya no
+	# existe (el índice de impacto se eliminó) y mostraría otro número.
+	var pct : float = PuntajeManager.fraccion(int(_esc_actual["modulo"]))
 	_barra_fill.color = op["color"]
 	var tw := create_tween().set_ease(Tween.EASE_OUT)
 	tw.tween_property(_barra_fill, "size:x", 360.0 * pct, 0.40)
@@ -320,7 +321,7 @@ func _crear_ui() -> void:
 	vbox.add_child(imp_row)
 
 	var imp_lbl := Label.new()
-	imp_lbl.text = "ImpactRating:"
+	imp_lbl.text = "Puntaje de la categoría:"
 	imp_lbl.add_theme_font_size_override("font_size", 11)
 	imp_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 	imp_row.add_child(imp_lbl)

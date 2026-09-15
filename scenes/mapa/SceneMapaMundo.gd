@@ -1252,8 +1252,8 @@ func _actualizar_sidebar() -> void:
 
 # Única vía para actualizar barras de categoría, índices del HUD y mapa de
 # calor. Todos leen PuntajeManager (avance 80 + comprensión 10 + decisiones 5
-# + sinergias 5). Antes cada pantalla tenía su propio número (ImpactRating
-# sin guardar, valores fijos del mapa de calor, % de misiones).
+# + sinergias 5). Antes cada pantalla tenía su propio número (índice de
+# impacto sin guardar, valores fijos del mapa de calor, % de misiones).
 func _refrescar_progreso(_cats: Dictionary = {}, _total: float = 0.0) -> void:
 	for mod_id in _progreso_modulos.keys():
 		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
@@ -1270,7 +1270,11 @@ func _on_sinergia_obtenida(_accion_id: String, cats: Array) -> void:
 	var partes : PackedStringArray = []
 	for c in cats:
 		if c is Dictionary:
-			var icono : String = nm.ICONOS_NIVEL[int(c.get("categoria", 0))] if nm else "•"
+			var cat : int = int(c.get("categoria", 0))
+			var icono : String = "•"
+			# Una categoría fuera de rango desde el servidor no debe romper el aviso.
+			if nm and cat >= 1 and cat < nm.ICONOS_NIVEL.size():
+				icono = nm.ICONOS_NIVEL[cat]
 			partes.append("%s +%d" % [icono, int(c.get("puntos", 0))])
 	_mostrar_notificacion_zona("✨", "Sinergia: " + "  ".join(partes), Color(0.75, 0.95, 1.0))
 
