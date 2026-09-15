@@ -38,5 +38,16 @@ func _ready() -> void:
 			"algo escucha SupabaseManager.puntaje_fallido")
 	var nm = get_node_or_null("/root/NivelManager")
 	_check(nm != null and nm.has_signal("detalle_guardado"), "NivelManager emite detalle_guardado")
+
+	var script_login := load("res://scenes/login/SceneLogin.gd")
+	_check(script_login != null, "SceneLogin.gd carga")
+	if script_login:
+		_check(script_login.can_instantiate(), "SceneLogin.gd se puede instanciar")
+		var metodos := []
+		for m in script_login.get_script_method_list():
+			metodos.append(m["name"])
+		_check(metodos.has("_esperar_detalles_con_timeout"),
+			"SceneLogin.gd tiene _esperar_detalles_con_timeout")
+
 	print("test_compila: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

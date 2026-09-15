@@ -819,6 +819,17 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 		"cargada" if billetera_ok else "NO cargada a tiempo",
 		EconomiaManager.ecocredits, EconomiaManager.inventario.size()])
 
+	# Detalles (decisiones con criterio propio) y puntaje GreenMetric. Los
+	# detalles se esperan con límite: el informe final los necesita y antes
+	# vivían solo en esta computadora. El puntaje no se espera: el HUD se
+	# actualiza solo cuando llega (PuntajeManager.puntaje_actualizado).
+	var detalles = await _esperar_detalles_con_timeout()
+	if detalles is Dictionary:
+		PuntajeManager.restaurar_detalles(detalles)
+	print("SceneLogin: detalles %s" % (
+		"%d del servidor" % detalles.size() if detalles is Dictionary else "NO cargados a tiempo"))
+	PuntajeManager.iniciar_sesion()
+
 	var tw := create_tween()
 	tw.tween_property(_center, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(func():
@@ -835,6 +846,25 @@ func _esperar_billetera_con_timeout() -> bool:
 	while not EconomiaManager.billetera_cargada and Time.get_ticks_msec() < limite:
 		await get_tree().process_frame
 	return EconomiaManager.billetera_cargada
+
+
+# Devuelve {clave: detalle} o null si no llegó en 6 s. Mismo patrón de
+# Dictionary por referencia que _cargar_misiones_con_timeout: las lambdas
+# capturan variables simples por valor, así que el estado se guarda en un
+# Dictionary (tipo por referencia) para que el bucle de abajo lo vea.
+func _esperar_detalles_con_timeout() -> Variant:
+	var estado := {"resuelto": false, "resultado": null}
+	var on_ok := func(d: Dictionary):
+		estado["resuelto"]  = true
+		estado["resultado"] = d
+	SupabaseManager.detalles_recibidos.connect(on_ok, CONNECT_ONE_SHOT)
+	SupabaseManager.obtener_detalles()
+	var limite := Time.get_ticks_msec() + 6000
+	while not estado["resuelto"] and Time.get_ticks_msec() < limite:
+		await get_tree().process_frame
+	if SupabaseManager.detalles_recibidos.is_connected(on_ok):
+		SupabaseManager.detalles_recibidos.disconnect(on_ok)
+	return estado["resultado"]
 
 
 func _cargar_misiones_con_timeout() -> Variant:
