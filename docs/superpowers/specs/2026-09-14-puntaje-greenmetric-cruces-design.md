@@ -1,7 +1,7 @@
 # Puntaje GreenMetric unificado, cruces entre categorías y rediseño de niveles
 
 - **Fecha:** 2026-09-14
-- **Estado:** diseño aprobado por partes en conversación; pendiente revisión de este documento.
+- **Estado:** Paso 0 y proyecto A implementados (2026-09-14); B y C pendientes.
 - **Alcance de este documento:** hoja de ruta completa (0 → A → B → C), diseño
   detallado del **paso 0** y del **proyecto A**, y diseño de alto nivel de **B** y **C**.
   B y C reciben su propio documento detallado antes de implementarse.

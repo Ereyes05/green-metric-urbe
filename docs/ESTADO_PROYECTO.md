@@ -4,9 +4,8 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-14 (Tienda del Conocimiento / HU-012 con
-EcoCredits en el servidor, rendimiento web, arreglos del export — ver
-secciones 4, 8, 9 y 10).
+Última actualización: 2026-09-14 (puntaje GreenMetric unificado — ver
+secciones 3, 4 y 8).
 
 > ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
 > [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
@@ -55,8 +54,21 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
     inventario de la tienda viven en el servidor** (antes estaban solo en
     memoria y volvían a 50 en cada sesión). `EconomiaManager` muestra los
     cambios al instante y se alinea con el saldo del servidor cuando no
-    quedan operaciones en vuelo. Energía, insignias e impacto siguen solo en
-    memoria.
+    quedan operaciones en vuelo. Energía e insignias siguen solo en memoria.
+    **`EconomiaManager` ya no tiene `ImpactRating`** (2026-09-14): ese cálculo
+    local, inventado y desalineado del resto de los números, lo reemplaza
+    `PuntajeManager` — ver abajo y la sección 4.
+  - `PuntajeManager.gd` (+ `autoload/puntaje_formula.gd`, nuevos, 2026-09-14)
+    — el puntaje GreenMetric por categoría (0–100), **un solo número** que
+    usan el HUD, el mapa de calor, el simulador de movilidad y el informe
+    final (antes cada uno mostraba un valor distinto — ver sección 4,
+    "Puntaje GreenMetric (proyecto A)"). Lo calcula el servidor
+    (`puntaje_greenmetric`); `puntaje_formula.gd` es un espejo local sin
+    autoloads (para poder probarlo solo) que muestra el avance al instante
+    mientras llega la respuesta del servidor, que sigue siendo la fuente de
+    verdad. También sincroniza con el servidor los "detalles" de
+    `NivelManager` (decisiones con criterio propio del Nivel 6), que antes
+    vivían solo en el archivo local de la máquina.
 - **`scenes/ui/tienda_conocimiento.gd`** — pantalla de la Tienda del
   Conocimiento (HU-012). Se abre con el botón 🛒 del HUD o sola, cuando una
   misión exige una herramienta que el estudiante no tiene
@@ -204,6 +216,69 @@ supabase functions deploy <nombre_de_la_funcion> --no-verify-jwt
 sesión de Supabase, como `marcar_escaneado`; si se agrega una función que sí
 espera que el cliente Godot logueado la llame, no hace falta esa flag).
 
+### Puntaje GreenMetric (proyecto A)
+
+Nuevo (2026-09-14). Diseño completo en
+`docs/superpowers/specs/2026-09-14-puntaje-greenmetric-cruces-design.md`.
+Reemplaza los tres números que no coincidían entre sí (barra del HUD con
+`ImpactRating`, mapa de calor con valores fijos inventados, informe final por
+% de misiones) por **un solo puntaje 0–100 por categoría**, calculado en el
+servidor.
+
+**Modelo 80/10/5/5** — cada categoría (1 a 6) suma hasta 100 puntos:
+
+| Componente | Tope | De dónde sale |
+|---|---|---|
+| Avance | 80 | % de misiones de campo completas de esa categoría (mismo criterio que `NivelManager.pct_nivel`) |
+| Comprensión | 10 | Quizzes acertados (primer intento, ver abajo) |
+| Decisiones | 5 | Opciones válidas elegidas en decisiones con criterio propio (Nivel 6) |
+| Sinergias | 5 | Acciones que suman a más de una categoría a la vez |
+
+El total del juego pondera cada categoría por el peso de la guía GreenMetric
+2024 (`{1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}`, ver `constraints.md` del
+spec) y divide entre 100.
+
+**Tablas nuevas:** `catalogo_misiones` (52 filas — espejo de
+`NivelManager.MISIONES_NIVEL`/`MISIONES_LEGADO`, ver abajo),
+`catalogo_sinergias`, `catalogo_decisiones` (los `id` de decisión y opción
+siguen `^[a-z0-9_]{1,60}$`), `detalles_estudiante` (las decisiones del
+Nivel 6, antes solo en `user://`) y `puntos_calidad` (comprensión/decisiones/
+sinergias ya otorgados, para no volver a pagarlos).
+
+**Funciones (`security definer`):** `puntaje_greenmetric()` (público — arma
+el desglose por categoría + total para el HUD/mapa de calor/resultados),
+`guardar_detalle`/`obtener_detalles` (sincronizan `detalles_estudiante`),
+`registrar_quiz(mision_id, aciertos)`, `registrar_decision(decision_id,
+opcion_id)`, `registrar_sinergia(accion_id)`. `_puntaje_greenmetric(p_user)`
+es la interna que arma el cálculo real; `autoload/puntaje_formula.gd` es su
+espejo en GDScript para mostrar el avance sin esperar la red.
+
+- **Regla del primer intento:** `registrar_quiz` solo otorga puntos de
+  Comprensión la primera vez que se resuelve una misión de quiz; reintentos
+  no vuelven a sumar (ni restan). Ver `puntos_calidad`.
+- **Regla Mixta (Decisiones, Tabla 15 de la tesis):** cada decisión tiene una
+  opción contraproducente (`catalogo_decisiones`) que **penaliza en vez de
+  sumar** — resta 1 punto, hasta 3 veces por decisión — y permite reintentar;
+  `registrar_decision` devuelve `{"ok": true, "contraproducente": true,
+  "penalizado": n}` en ese caso. Elegir después una opción válida **reemplaza
+  la anterior**, incluso si la decisión anterior había sumado a otra
+  categoría (no se acumulan intentos de la misma decisión).
+- **Espejo `catalogo_misiones` ↔ `NivelManager.MISIONES_NIVEL`:** el avance
+  (80 pts) depende de qué misiones existen por categoría; el servidor tiene
+  su propia copia en `catalogo_misiones` (52 filas) que debe seguir igual a
+  `MISIONES_NIVEL`/`MISIONES_LEGADO` del cliente. Si se agrega o saca una
+  misión de un nivel, **hay que actualizar las dos copias** o el % de avance
+  del HUD y el del servidor van a divergir.
+- Copia completa del SQL aplicado: `sql/puntaje_greenmetric.sql`. Migraciones
+  aplicadas: `puntaje_greenmetric_esquema`, `puntaje_greenmetric_funciones`,
+  `puntaje_greenmetric_ajustes`.
+- `SupabaseManager` agrega las señales `puntaje_recibido`, `puntaje_fallido`,
+  `calidad_respuesta` y `detalles_recibidos` para estos wrappers.
+- `SceneLogin` espera hasta 6 s la respuesta de `obtener_detalles` al iniciar
+  sesión, mezcla esos detalles con los locales y recién ahí llama a
+  `PuntajeManager.iniciar_sesion` — ver el pendiente sobre qué pasa si esa
+  espera falla, en la sección 8.
+
 ## 5. Estado por nivel — qué está verificado visualmente
 
 - **Nivel 1-3**: verificados jugando, colisiones chequeadas geométricamente
@@ -326,6 +401,44 @@ mecanismo técnico de escaneo → activación a distancia.
 
 ## 8. Pendientes conocidos
 
+- [x] **Las decisiones del Nivel 6 se guardaban solo en la computadora** —
+  resuelto el 2026-09-14 con el puntaje GreenMetric unificado (sección 4):
+  `NivelManager._detalles` ahora se sincroniza con la tabla
+  `detalles_estudiante` vía `guardar_detalle`/`obtener_detalles`, y
+  `SceneLogin` los mezcla con los locales al iniciar sesión. Antes, en otra
+  máquina o tras borrar datos del navegador, el informe final decía "Sin
+  datos".
+- [ ] **Cuentas con niveles completos ven 80% hasta ganar calidad** — al
+  pasar de "% de misiones" al modelo 80/10/5/5 (sección 4), una cuenta que ya
+  tenía un nivel al 100% pero nunca hizo un quiz, una decisión válida o una
+  sinergia en esa categoría ve el puntaje bajar a 80/100 (el tope de Avance)
+  hasta que gane algo de Comprensión/Decisiones/Sinergias. Es el
+  comportamiento esperado del nuevo modelo, pero conviene que quien lo vea
+  por primera vez lo sepa antes de asumir que es un bug.
+- [ ] **Si `obtener_detalles` falla al iniciar sesión, se suben todos los
+  detalles locales sin comparar** — `PuntajeManager.restaurar_detalles` sube
+  cualquier detalle local que el servidor no tenga, pero si la petición de
+  `obtener_detalles` falla (red caída, timeout de los 6 s en `SceneLogin`),
+  el cliente no sabe qué tiene el servidor y podría subir una copia vieja
+  encima de datos más nuevos guardados desde otra máquina.
+- [ ] **`resultados_greenmetric.gd` conserva su propia copia de los pesos**
+  por categoría (`{1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}`), en vez de
+  leerlos de `puntaje_formula.gd`. Si el peso de una categoría cambia hay que
+  actualizar los dos lugares.
+- [ ] **Textos "Impacto estimado" más largos podrían solaparse en botones**
+  del simulador de movilidad — no verificado visualmente todavía.
+- [ ] **Falta la verificación con la cuenta de prueba (Step 1 de Task 10) y
+  publicar (Step 5)** — no se hicieron en esta tarea por no tener las
+  credenciales de la cuenta de prueba a mano; ver el spec para el detalle de
+  qué falta confirmar (consola `SceneLogin: detalles N del servidor`, barra
+  del HUD = mapa de calor = resultados, quiz dos veces solo suma la primera).
+- [ ] **Proyectos B y C del puntaje GreenMetric, pendientes** — B (Nivel 5
+  rehecho con Plan de Movilidad y decisiones con opción contraproducente) y
+  C (minijuegos nuevos SI7, SI10, SI11, EC8, EC2, WS3, WR2) todavía no están
+  implementados. Diseño de alto nivel en
+  `docs/superpowers/specs/2026-09-14-puntaje-greenmetric-cruces-design.md`,
+  secciones 7 y 8 (cada uno recibe su propio documento detallado antes de
+  implementarse).
 - [ ] **Tweens sin guard** en `interior_bloque.gd` y `mision_solar.gd` —
   causan llamadas de red duplicadas (inofensivas gracias a la RPC
   idempotente, pero innecesarias). No arreglado a propósito, ver sección 6.
