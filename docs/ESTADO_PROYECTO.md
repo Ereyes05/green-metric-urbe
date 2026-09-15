@@ -518,10 +518,35 @@ mecanismo técnico de escaneo → activación a distancia.
 - [ ] **Al volver, el juego no dice "dónde quedaste"** — HU-002 pide
   devolver al estudiante "al punto exacto donde lo dejó"; hoy se restaura el
   progreso pero no la posición ni se le comunica nada.
-- [ ] **Decidir qué hacer con el conflicto pixel art vs Flat Design** — ver
-  brecha 4 de la sección 9. Es una decisión del equipo, no un bug: o se
-  ajusta el juego, o se justifica el desvío en la tesis. **Mientras no se
-  decida, no invertir más en arte pixel.**
+- [x] **Decidir qué hacer con el conflicto pixel art vs Flat Design** — decidido
+  2026-09-15: **estilo plano** (se probó una variante pixel art del HUD y se
+  descartó). Queda por reflejarlo en la tesis (brecha 4 de la sección 9).
+- [ ] 🟡 **PRÓXIMO AL RETOMAR: rediseño del HUD plano + rangos por nivel +
+  ranking** (aprobado 2026-09-15, en pausa por tokens hasta que el usuario diga
+  "arrancá"). Todo el detalle y las medidas en `docs/diseno/hud_plano_2b.md`.
+  Orden acordado, con subagentes y revisión por parte (plan en
+  `docs/superpowers/plans/` antes de programar):
+  1. **Rangos uno por nivel completado** (Semilla → Brote N1 → Árbol N2 →
+     Estratega N3 → Investigador N4 → EcoLíder con los 6). Hoy son por XP y
+     con ~2.800 XP totales nadie pasa de Árbol ("Nv.3 Árbol" en el último
+     nivel confunde).
+  2. **Ranking arreglado:** hoy sale vacío porque `cargar_ranking` lee
+     `progreso_estudiante` (tabla vieja) con la clave anónima y la RLS no deja
+     ver filas ajenas. Función pública nueva sobre `estudiantes` con nombre +
+     inicial, XP y título; nunca cédula ni correo. "(Tú)" por user_id. Borrar
+     de paso las constantes del proyecto viejo en `leaderboard.gd`.
+  3. **HUD plano según la especificación 2b:** tema centralizado
+     (`scenes/ui/hud_tema.gd`), fuente Rubik (OFL), ficha con nivel y rango
+     separados e índices adentro, panel GreenMetric 80/10/5/5 con desglose al
+     pasar el mouse y puntaje del campus, 5 botones con nombre y teclas 1–5,
+     banner de zona y aviso central con cola. Sin redibujos por cuadro.
+  4. **Verificación:** tests existentes, captura 1280×720 contra el mockup 2a,
+     prueba en la web con la cuenta del usuario, re-export y publicar con OK.
+- [ ] **Antes de publicar lo del proyecto A:** el build de `docs/juego` es
+  anterior a los últimos fixes (commit f3c6690) — re-exportar con
+  `python scripts/exportar_web.py`. La prueba del usuario en escritorio salió
+  bien el 2026-09-15 (categorías 80%, Energía 83% por quizzes, ambos quizzes
+  registrados en `puntos_calidad`).
 - [x] **El remoto de GitHub avisaba que el repo se movió** — resuelto
   2026-09-09: fue un cambio de username en GitHub (`thewasiii123` →
   `Ereyes05`), no un cambio de dueño. `origin` actualizado a
