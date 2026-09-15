@@ -1,7 +1,7 @@
 # Puntaje GreenMetric unificado, cruces entre categorías y rediseño de niveles
 
 - **Fecha:** 2026-09-14
-- **Estado:** Paso 0 y proyecto A implementados (2026-09-14); B y C pendientes.
+- **Estado:** Paso 0 y proyecto A implementados (2026-09-14); verificación en juego con cuenta real pendiente (Task 10 Step 1); B y C pendientes.
 - **Alcance de este documento:** hoja de ruta completa (0 → A → B → C), diseño
   detallado del **paso 0** y del **proyecto A**, y diseño de alto nivel de **B** y **C**.
   B y C reciben su propio documento detallado antes de implementarse.
@@ -245,6 +245,9 @@ La telemetría sigue siendo "disparar y olvidar"; **el puntaje nunca depende de 
    cambiar a otra opción válida reemplaza los puntos (upsert).
 5. `puntaje_greenmetric`: topes 80/10/5/5, nunca negativo, total ponderado correcto.
 6. Un usuario no puede leer detalles ni puntos de otro.
+   *(Verificado 2026-09-14: con una fila de detalle y una de puntos de la
+   cuenta de prueba, la sesión de la cuenta principal ve 0 y 0; la del dueño
+   ve 1 y 1. Bloque terminado en excepción, tablas en 0 filas al final.)*
 7. `get_advisors` sin alertas nuevas de seguridad.
 
 **Cliente:**
@@ -329,3 +332,15 @@ suma preguntas nuevas al quiz de su categoría para cubrir su indicador.
   Los capítulos 1–3 no se tocan.
 - **Reapertura de niveles:** los jugadores verán niveles antes completos otra vez
   pendientes; lo ya desbloqueado se mantiene.
+- **Avisos `authenticated_security_definer_function_executable` (6) intencionales:**
+  `get_advisors` marca las seis funciones del puntaje (`puntaje_greenmetric`,
+  `guardar_detalle`, `obtener_detalles`, `registrar_quiz`, `registrar_decision`,
+  `registrar_sinergia`) por ser `security definer` ejecutables por
+  `authenticated`. Es el mismo patrón que la tienda de EcoCredits: las tablas
+  no tienen permisos de escritura para el cliente y la única vía es la función,
+  que valida `auth.uid()` y los datos. No son alertas nuevas a corregir.
+- **Comprensión y Avance confían en datos enviados por el cliente:** los
+  aciertos de un quiz llegan como `p_aciertos` y las misiones completas en
+  `misiones_estudiante` vía `guardar_progreso_modulo`. El servidor acota
+  topes y rangos, pero no puede comprobar que el estudiante realmente jugó —
+  mismo modelo de confianza que el XP.

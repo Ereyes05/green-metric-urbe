@@ -10,6 +10,12 @@
 --
 -- ESPEJO: catalogo_misiones refleja NivelManager.MISIONES_NIVEL y los quizzes
 -- de SceneMapaMundo.QUIZ_POR_MISION. Si cambia uno, cambiar el otro.
+--
+-- REGISTRO, NO SCRIPT: este archivo es la copia de las migraciones ya
+-- aplicadas (puntaje_greenmetric_esquema, _funciones, _ajustes) para leer y
+-- revisar. No está pensado para re-ejecutarse completo sobre la base: las
+-- tablas usan "if not exists", pero "create policy" no es idempotente y
+-- fallaría. Los cambios nuevos van en una migración nueva.
 -- ============================================================
 
 -- ── Catálogos (solo se escriben por migración) ───────────────

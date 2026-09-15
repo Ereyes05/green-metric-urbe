@@ -235,8 +235,8 @@ servidor.
 | Sinergias | 5 | Acciones que suman a más de una categoría a la vez |
 
 El total del juego pondera cada categoría por el peso de la guía GreenMetric
-2024 (`{1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}`, ver `constraints.md` del
-spec) y divide entre 100.
+2024 (`{1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}`, ver
+`autoload/puntaje_formula.gd`) y divide entre 100.
 
 **Tablas nuevas:** `catalogo_misiones` (52 filas — espejo de
 `NivelManager.MISIONES_NIVEL`/`MISIONES_LEGADO`, ver abajo),
@@ -252,6 +252,11 @@ el desglose por categoría + total para el HUD/mapa de calor/resultados),
 opcion_id)`, `registrar_sinergia(accion_id)`. `_puntaje_greenmetric(p_user)`
 es la interna que arma el cálculo real; `autoload/puntaje_formula.gd` es su
 espejo en GDScript para mostrar el avance sin esperar la red.
+
+`get_advisors` muestra 6 avisos `authenticated_security_definer_function_executable`
+(uno por cada función de arriba). **Son intencionales**, mismo patrón que la
+tienda de EcoCredits: el cliente no puede escribir en las tablas y la única
+vía es la función, que valida `auth.uid()` y los datos.
 
 - **Regla del primer intento:** `registrar_quiz` solo otorga puntos de
   Comprensión la primera vez que se resuelve una misión de quiz; reintentos
@@ -276,11 +281,15 @@ espejo en GDScript para mostrar el avance sin esperar la red.
   aplicadas: `puntaje_greenmetric_esquema`, `puntaje_greenmetric_funciones`,
   `puntaje_greenmetric_ajustes`.
 - `SupabaseManager` agrega las señales `puntaje_recibido`, `puntaje_fallido`,
-  `calidad_respuesta` y `detalles_recibidos` para estos wrappers.
+  `calidad_respuesta`, `detalles_recibidos` y `detalles_fallidos` para estos
+  wrappers. Todos los fallos por acción (red caída o `request()` que no llega
+  a salir) pasan por `_emitir_fallo`, para que nadie quede esperando.
 - `SceneLogin` espera hasta 6 s la respuesta de `obtener_detalles` al iniciar
   sesión, mezcla esos detalles con los locales y recién ahí llama a
-  `PuntajeManager.iniciar_sesion` — ver el pendiente sobre qué pasa si esa
-  espera falla, en la sección 8.
+  `PuntajeManager.iniciar_sesion`. Si la petición falla o no llega a tiempo
+  **no** mezcla nada (consola: `detalles NO cargados (fallo o timeout)`):
+  subir los locales sin saber qué tiene el servidor podría pisar datos más
+  nuevos; se reintenta en el próximo login.
 
 ## 5. Estado por nivel — qué está verificado visualmente
 
@@ -418,16 +427,16 @@ mecanismo técnico de escaneo → activación a distancia.
   hasta que gane algo de Comprensión/Decisiones/Sinergias. Es el
   comportamiento esperado del nuevo modelo, pero conviene que quien lo vea
   por primera vez lo sepa antes de asumir que es un bug.
-- [ ] **Si `obtener_detalles` falla al iniciar sesión, se suben todos los
-  detalles locales sin comparar** — `PuntajeManager.restaurar_detalles` sube
-  cualquier detalle local que el servidor no tenga, pero si la petición de
-  `obtener_detalles` falla (red caída, timeout de los 6 s en `SceneLogin`),
-  el cliente no sabe qué tiene el servidor y podría subir una copia vieja
-  encima de datos más nuevos guardados desde otra máquina.
+- [x] **Si `obtener_detalles` fallaba al iniciar sesión, se subían todos los
+  detalles locales sin comparar** — resuelto el 2026-09-14: el fallo emite
+  `detalles_fallidos` (ya no `detalles_recibidos({})`, que era
+  indistinguible de "servidor vacío") y `SceneLogin` no llama a
+  `restaurar_detalles` ni ante fallo ni ante timeout.
 - [ ] **`resultados_greenmetric.gd` conserva su propia copia de los pesos**
-  por categoría (`{1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}`), en vez de
-  leerlos de `puntaje_formula.gd`. Si el peso de una categoría cambia hay que
-  actualizar los dos lugares.
+  por categoría (`{1: 15, 2: 21, 3: 18, 4: 10, 5: 18, 6: 18}`), pero ya solo
+  para la etiqueta "×N" de cada barra: el total mostrado sale de
+  `PuntajeManager.total`. Si el peso de una categoría cambia, la etiqueta
+  hay que actualizarla a mano.
 - [ ] **Textos "Impacto estimado" más largos podrían solaparse en botones**
   del simulador de movilidad — no verificado visualmente todavía.
 - [ ] **Falta la verificación con la cuenta de prueba (Step 1 de Task 10) y
