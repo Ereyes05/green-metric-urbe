@@ -59,7 +59,12 @@ func _crear_boton(i: int, d: Dictionary) -> Button:
 
 	btn.button_down.connect(func(): _escalar(btn, 0.96))
 	btn.button_up.connect(func(): _escalar(btn, 1.0))
-	btn.pressed.connect(func(): accion.emit(i))
+	# Sin esto, tras un click el botón queda enfocado y una Barra Espaciadora
+	# o Enter posteriores (p.ej. para cerrar el panel que el botón abrió) lo
+	# vuelven a disparar.
+	btn.pressed.connect(func():
+		accion.emit(i)
+		btn.release_focus())
 	add_child(btn)
 	return btn
 

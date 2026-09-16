@@ -6,8 +6,14 @@
 -- rango: ver autoload/rangos.gd) y el título de la tienda. NUNCA cédula,
 -- correo ni user_id: "es_yo" se calcula acá con auth.uid(), así el cliente
 -- no necesita ids ajenos para marcar "(Tú)".
--- Nivel completo = todas las misiones tipo 'mision' de esa categoría en
--- misiones_estudiante (mismo criterio que NivelManager.nivel_completo).
+-- Nivel completo = todas las misiones tipo 'mision' de esa categoría (según
+-- el catálogo ACTUAL, catalogo_misiones) que estén en misiones_estudiante.
+-- OJO: no es lo mismo que el rango que pinta el HUD. El servidor solo cuenta
+-- el conjunto vigente; el cliente usa NivelManager.nivel_superado(), que
+-- ADEMÁS acepta el conjunto de misiones legado (misiones_legado) para no
+-- des-completar a quien ya había pasado un nivel con IDs viejos. Un jugador
+-- que superó un nivel solo por el conjunto legado puede entonces mostrar un
+-- rango más alto en el HUD que en este ranking.
 -- ============================================================
 create or replace function public.ranking_publico()
 returns jsonb language sql stable security definer set search_path to 'public' as $$

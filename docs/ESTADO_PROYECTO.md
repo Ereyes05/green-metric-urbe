@@ -90,15 +90,15 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
   - `hud_aviso.gd` — aviso central con cola (máx. 2 pendientes).
   Pruebas: `timeout 120 "$GODOT" --headless --path . res://tests/<t>.tscn`
   con `t` = `test_rangos`, `test_hud_tema`, `test_hud_paneles`,
-  `test_hud_controles`. Captura de verificación 1280×720 (no headless,
-  necesita dibujar): `timeout 60 "$GODOT" --path . --resolution 1280x720
-  res://tests/captura_hud.tscn -- <ruta.png>`.
+  `test_hud_controles`, `test_hud_rango_aviso`. Captura de verificación
+  1280×720 (no headless, necesita dibujar): `timeout 60 "$GODOT" --path .
+  --resolution 1280x720 res://tests/captura_hud.tscn -- <ruta.png>`.
 - **`scenes/ui/tienda_conocimiento.gd`** — pantalla de la Tienda del
   Conocimiento (HU-012). Se abre con el botón 🛒 del HUD o sola, cuando una
   misión exige una herramienta que el estudiante no tiene
   (`SceneMapaMundo._verificar_herramienta`).
 - **`scenes/mapa/SceneMapaMundo.gd`** — el archivo más grande del proyecto
-  (~2900 líneas). Mapa, HUD, sidebar, spawns de las 40 misiones, panel de
+  (~2900 líneas). Mapa, HUD, spawns de las 40 misiones, panel de
   resultados, leaderboard, y el sistema legacy de NPCs/quiz (`ZONA_A_MISION`,
   `DATOS_NPCS` — ver sección 6). Punto de entrada para entender cómo se
   conecta todo.
@@ -331,6 +331,12 @@ sección 9 — "Eco-Ranger" si está vacío o tiene "@"), `xp_total`,
 por nombre). **Nunca expone** cédula, correo ni `user_id`: ninguno de esos
 campos sale de la función.
 
+**OJO — `niveles_completos` puede quedar por debajo del rango del HUD:** el
+servidor solo cuenta el catálogo vigente de misiones (`catalogo_misiones`),
+mientras que el cliente usa `NivelManager.nivel_superado()`, que además
+acepta el conjunto de misiones legado — un jugador que superó un nivel solo
+por el legado puede mostrar un rango más alto en el HUD que en este ranking.
+
 ## 5. Estado por nivel — qué está verificado visualmente
 
 - **Nivel 1-3**: verificados jugando, colisiones chequeadas geométricamente
@@ -544,12 +550,11 @@ mecanismo técnico de escaneo → activación a distancia.
   mejora sigue en el código y ya cobra EC en el servidor. Si se reactivan,
   hay que reconstruir su nivel desde `refs_zonas` al entrar (ver comentario
   en `EconomiaManager`), o el estudiante pierde lo pagado.
-- [ ] **`leaderboard.gd`: restos de otro proyecto** — constantes
-  `SUPABASE_URL`/`SUPABASE_KEY` de un proyecto anterior
-  (`qjuiwnwqkfmmfsdacpgd`). No se usan (el ranking pasa por
-  `SupabaseManager`) y la clave es anónima (pública), pero conviene
-  borrarlas. Además, el "(Tú)" del ranking nunca se marca: compara el
-  nombre mostrado (prefijo del user_id) con `nombre_usuario`.
+- [x] **`leaderboard.gd`: restos de otro proyecto** — resuelto el
+  2026-09-16: se borraron las constantes `SUPABASE_URL`/`SUPABASE_KEY` del
+  proyecto anterior (`qjuiwnwqkfmmfsdacpgd`) y el "(Tú)" del ranking ahora
+  se marca con el `es_yo` que devuelve el servidor (`auth.uid()`), no
+  comparando el nombre mostrado contra `nombre_usuario`.
 - [x] **El tutorial de onboarding casi nadie lo ve** — resuelto el
   2026-09-11: `NivelManager.ruta_usuario()` centraliza los archivos de
   estado local por cuenta, y `tutorial_visto`/`hints_vistas` ahora lo usan.
@@ -569,17 +574,16 @@ mecanismo técnico de escaneo → activación a distancia.
      Estratega N3 → Investigador N4-5 → EcoLíder con los 6) — `autoload/rangos.gd`.
   2. **Ranking arreglado** — `ranking_publico()` sobre `estudiantes`, nombre +
      inicial, XP, título y "(Tú)" por `user_id` (ver sección 4, "Ranking
-     público"). Pendiente: borrar las constantes del proyecto viejo en
-     `leaderboard.gd` (sigue listada más abajo en esta sección).
+     público").
   3. **HUD plano según la especificación 2b** — componentes
      `scenes/ui/hud_*.gd` (sección 3), tema centralizado, ficha con nivel y
      rango separados e índices adentro, panel GreenMetric 80/10/5/5 con
      desglose al pasar el mouse, 5 botones con teclas 1–5, banner de zona y
      aviso central con cola.
-  4. **Verificación:** los 7 tests headless (`test_compila`, `test_puntaje`,
+  4. **Verificación:** los 8 tests headless (`test_compila`, `test_puntaje`,
      `test_niveles`, `test_rangos`, `test_hud_tema`, `test_hud_paneles`,
-     `test_hud_controles`) pasan; captura 1280×720 revisada contra el mockup
-     2a (`tests/captura_hud.gd`/`.tscn`).
+     `test_hud_controles`, `test_hud_rango_aviso`) pasan; captura 1280×720
+     revisada contra el mockup 2a (`tests/captura_hud.gd`/`.tscn`).
      **Pendiente:** prueba en el juego con la cuenta real del usuario,
      re-export web (`python scripts/exportar_web.py`) y merge/publicación —
      ninguno se hizo todavía porque falta el OK del usuario.

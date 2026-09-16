@@ -17,8 +17,8 @@ prueba en el juego con cuenta real y re-export web.
 - **Rangos:** uno por nivel completado — Semilla (inicio), Brote (Nivel 1),
   Árbol (Nivel 2), Estratega (Nivel 3), Investigador (Nivel 4), EcoLíder
   (los 6 niveles). La ficha muestra "XP hacia <rango siguiente>" (el mockup
-  decía "Bosque", que no existe). Hoy son por XP y con ~2.800 XP totales en el
-  juego nadie pasa de Árbol/Estratega.
+  decía "Bosque", que no existe). Antes eran por XP y con ~2.800 XP totales
+  en el juego nadie pasaba de Árbol/Estratega.
 - **Nivel de misiones y rango separados:** "Nivel 6/6 · Educación" vs "Rango".
 - **Ranking:** nombre + inicial (ej. "Edward R."), XP y título de la tienda,
   vía función pública en Supabase que lee `estudiantes` sin exponer cédula ni

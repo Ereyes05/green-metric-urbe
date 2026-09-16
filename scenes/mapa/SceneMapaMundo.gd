@@ -724,6 +724,19 @@ func _hay_ui_modal_abierta() -> bool:
 	if _panel_contenedor and _panel_contenedor.visible: return true
 	if _panel_zona_mejora and _panel_zona_mejora.visible: return true
 	if is_instance_valid(_overlay_carga): return true
+	# UIs de misiones por nivel (2–6): abren su propio panel/quiz encima del
+	# mapa igual que _edificio_ui, así que también deben tragarse el 1–5.
+	if _plantar_ui and _plantar_ui.visible: return true
+	if _interior_ui and _interior_ui.visible: return true
+	if _solar_ui and _solar_ui.visible: return true
+	if _reciclar_ui and _reciclar_ui.visible: return true
+	if _captacion_ui and _captacion_ui.visible: return true
+	if _movilidad_ui and _movilidad_ui.visible: return true
+	if _bicicletero_ui and _bicicletero_ui.visible: return true
+	if _malla_verde_ui and _malla_verde_ui.visible: return true
+	if _comite_ui and _comite_ui.visible: return true
+	if _semana_verde_ui and _semana_verde_ui.visible: return true
+	if _informe_ui and _informe_ui.visible: return true
 	return false
 
 
@@ -1331,7 +1344,11 @@ func _mostrar_mision_completada(mision_id: String, xp_ganado: int) -> void:
 	_complete_panel.visible    = true
 	_complete_barra.size.x     = 0.0
 
-	var pct : float = clampf(float(_xp_total) / 12000.0, 0.0, 1.0)
+	# La barra ya no sigue una escala fija de XP (era herencia de los rangos
+	# viejos por XP, tope 12000) — ahora muestra el avance hacia el próximo
+	# rango, igual que la ficha del jugador (ver RANGOS.fraccion_siguiente).
+	var nm_mc = _nivel_mgr()
+	var pct : float = RANGOS.fraccion_siguiente(nm_mc) if nm_mc else 0.0
 	var tw := create_tween().set_ease(Tween.EASE_OUT)
 	tw.tween_property(_complete_panel, "modulate:a", 1.0, 0.22)
 	tw.parallel().tween_property(_complete_panel, "scale", Vector2(1.0, 1.0), 0.28)
