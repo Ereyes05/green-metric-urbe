@@ -42,6 +42,9 @@ signal progreso_guardado(mision_id: String, xp_otorgada: int, ya_registrada: boo
 # falló del todo (sin respuesta válida del servidor, ni siquiera duplicado).
 signal progreso_guardado_fallido(mision_id: String, xp_local: int)
 signal ranking_cargado(lista: Array)
+# La carga del ranking falló (red o HTTP). Sin esto la tabla quedaba en
+# "Cargando..." para siempre.
+signal ranking_fallido()
 signal error_red(mensaje: String)
 
 # ── Tienda / EcoCredits (HU-012, ver sql/tienda_ecocredits.sql) ──
@@ -206,6 +209,8 @@ func _emitir_fallo(accion: String, ctx: Dictionary) -> void:
 		emit_signal("detalles_fallidos")
 	elif accion == "puntaje":
 		emit_signal("puntaje_fallido")
+	elif accion == "cargar_ranking":
+		emit_signal("ranking_fallido")
 
 
 # ── LOGIN ─────────────────────────────────────────────────────
@@ -286,9 +291,13 @@ func cargar_misiones_estudiante() -> void:
 	_encolar("cargar_misiones", url, HTTPClient.METHOD_GET, _headers_auth())
 
 
+# RPC pública (sql/ranking_publico.sql): nombre + inicial, XP, niveles
+# completos, título y es_yo. Con sesión se manda el JWT para que el
+# servidor pueda marcar la fila propia.
 func cargar_ranking() -> void:
-	var url := SUPABASE_URL + "/rest/v1/progreso_estudiante?select=user_id,xp_ganada,completado&order=xp_ganada.desc"
-	_encolar("cargar_ranking", url, HTTPClient.METHOD_GET, _headers_anon())
+	var headers := _headers_anon() if jwt_token.is_empty() else _headers_auth()
+	_encolar("cargar_ranking", SUPABASE_URL + "/rest/v1/rpc/ranking_publico",
+			 HTTPClient.METHOD_POST, headers, "{}")
 
 
 # ── TIENDA / ECOCREDITS (HU-012) ─────────────────────────────
@@ -685,21 +694,9 @@ func _procesar_evento(code: int) -> void:
 
 func _procesar_ranking(code: int, datos: Variant) -> void:
 	if code == 200 and datos is Array:
-		# Agrupa xp por user_id del lado del cliente
-		var totales : Dictionary = {}
-		for fila in datos:
-			if fila is not Dictionary: continue
-			var uid : String = str(fila.get("user_id", ""))
-			var xp  : int    = int(fila.get("xp_ganada", 0))
-			totales[uid] = int(totales.get(uid, 0)) + xp
-		# Convierte a array ordenado
-		var lista : Array = []
-		for uid in totales.keys():
-			lista.append({"user_id": uid, "xp_total": totales[uid],
-						  "nombre": uid.left(8) + "…"})
-		lista.sort_custom(func(a, b): return int(a["xp_total"]) > int(b["xp_total"]))
-		emit_signal("ranking_cargado", lista)
+		emit_signal("ranking_cargado", datos)
 	else:
+		emit_signal("ranking_fallido")
 		emit_signal("error_red", "No se pudo cargar el ranking.")
 
 

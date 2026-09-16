@@ -28,6 +28,13 @@ func _ready() -> void:
 		# de red como el request() que no llega a salir (sin él, quien espera
 		# la respuesta queda trabado para siempre).
 		_check(sm.has_method("_emitir_fallo"), "SupabaseManager._emitir_fallo existe")
+		_check(sm.has_signal("ranking_fallido"), "SupabaseManager señal ranking_fallido existe")
+		var src : String = FileAccess.get_file_as_string("res://autoload/SupabaseManager.gd")
+		_check(src.contains("rpc/ranking_publico"), "cargar_ranking usa la RPC ranking_publico")
+		_check(not src.contains("progreso_estudiante?select=user_id,xp_ganada"), "ya no lee progreso_estudiante para el ranking")
+		var lb : String = FileAccess.get_file_as_string("res://scenes/ui/leaderboard.gd")
+		_check(not lb.contains("qjuiwnwqkfmmfsdacpgd"), "leaderboard sin credenciales del proyecto viejo")
+		_check(lb.contains("es_yo"), "leaderboard marca (Tú) con es_yo del servidor")
 	var pm = get_node_or_null("/root/PuntajeManager")
 	_check(pm != null, "PuntajeManager cargado como autoload")
 	if pm:
