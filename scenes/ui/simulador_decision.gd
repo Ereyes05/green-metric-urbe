@@ -1,9 +1,16 @@
 # ============================================================
 # simulador_decision.gd — URBE Rangers: Eco-Quest
 # Simulador de decisiones para Agua (M4) y Residuos (M3).
-# 3 opciones por escenario. Muestra el impacto estimado de cada opción y,
-# en la barra, el puntaje actual de la categoría (PuntajeManager).
-# Señal decision_tomada(modulo_id, delta_impacto).
+# MODO PRÁCTICA: no suma puntaje ni EcoCredits. Antes de elegir, las
+# opciones sólo muestran su texto (sin adelantar el impacto). Al elegir
+# y confirmar, se revela el impacto de TODAS las opciones (color según
+# qué tan buena es cada una), se marca la elegida y se explica la
+# consecuencia educativa; si la elegida no era la mejor, se indica cuál
+# lo era. El botón pasa entonces a "Siguiente caso →" para rotar entre
+# los escenarios de Agua (M4) y Residuos (M3).
+# La señal decision_tomada se conserva por compatibilidad de firma, pero
+# ya NO se emite: este simulador no afecta el puntaje GreenMetric ni los
+# EcoCredits.
 # ============================================================
 extends CanvasLayer
 
@@ -104,18 +111,20 @@ const ESCENARIOS : Array = [
 var _esc_actual    : Dictionary = {}
 var _escenario_idx : int        = 0
 var _opcion_sel    : int        = -1
+var _confirmado    : bool       = false
 
 var _overlay       : ColorRect   = null
 var _panel         : Panel       = null
+var _mg            : MarginContainer = null
 var _titulo_lbl    : Label       = null
 var _icono_lbl     : Label       = null
 var _ctx_lbl       : Label       = null
 var _pregunta_lbl  : Label       = null
 var _btn_ops       : Array       = []
-var _barra_preview : ColorRect   = null
-var _barra_fill    : ColorRect   = null
-var _delta_lbl     : Label       = null
+var _etq_ops       : Array       = []
+var _edu_box       : PanelContainer = null
 var _edu_lbl       : Label       = null
+var _mejor_lbl     : Label       = null
 var _btn_confirmar : Button      = null
 var _btn_cerrar    : Button      = null
 
@@ -144,6 +153,7 @@ func _poblar() -> void:
 	var e  : Dictionary = _esc_actual
 	var col : Color     = e["color"]
 
+	_confirmado = false
 	_panel.get_theme_stylebox("panel").border_color = col
 	_icono_lbl.text    = e["icono"]
 	_titulo_lbl.text   = e["titulo"]
@@ -151,10 +161,11 @@ func _poblar() -> void:
 	_ctx_lbl.text      = e["contexto"]
 	_pregunta_lbl.text = e["pregunta"]
 
-	_barra_fill.size.x = 0.0
-	_barra_fill.color  = Color(0.22, 0.72, 0.22)
-	_delta_lbl.text    = ""
-	_edu_lbl.text      = ""
+	_edu_lbl.text   = ""
+	_edu_box.visible = false
+	_mejor_lbl.text    = ""
+	_mejor_lbl.visible = false
+	_btn_confirmar.text     = "✓  Confirmar Decisión"
 	_btn_confirmar.disabled = true
 
 	var ops : Array = e["opciones"]
@@ -164,47 +175,99 @@ func _poblar() -> void:
 			_btn_ops[i].text     = "  %s  " % op["texto"]
 			_btn_ops[i].modulate = Color.WHITE
 			_btn_ops[i].disabled = false
-			var etq : Node = _btn_ops[i].get_node_or_null("Etiqueta")
-			if etq:
-				etq.text  = op["impacto"]
-				etq.add_theme_color_override("font_color", op["color"])
+			var s := StyleBoxFlat.new()
+			s.bg_color = Color(0.06, 0.10, 0.08)
+			s.border_color = Color(0.25, 0.35, 0.25)
+			s.set_border_width_all(2); s.set_corner_radius_all(10)
+			_btn_ops[i].add_theme_stylebox_override("normal", s)
+			var etq : Label = _etq_ops[i]
+			etq.text    = ""
+			etq.visible = false
+
+	call_deferred("_ajustar_alto")
 
 
 func _seleccionar(idx: int) -> void:
+	if _confirmado:
+		return
 	_opcion_sel = idx
-	var op   : Dictionary = _esc_actual["opciones"][idx]
 
 	for i in _btn_ops.size():
 		var s := StyleBoxFlat.new()
 		if i == idx:
 			s.bg_color     = Color(0.08, 0.22, 0.08)
-			s.border_color = _esc_actual["opciones"][i]["color"]
+			s.border_color = Color(0.30, 0.85, 0.95)
 		else:
 			s.bg_color     = Color(0.06, 0.10, 0.08)
 			s.border_color = Color(0.25, 0.35, 0.25)
 		s.set_border_width_all(2); s.set_corner_radius_all(10)
 		_btn_ops[i].add_theme_stylebox_override("normal", s)
 
-	# Barra animada con el puntaje actual de la categoría, el mismo número
-	# que el HUD. No se le suma el delta de la opción: esa ganancia ya no
-	# existe (el índice de impacto se eliminó) y mostraría otro número.
-	var pct : float = PuntajeManager.fraccion(int(_esc_actual["modulo"]))
-	_barra_fill.color = op["color"]
-	var tw := create_tween().set_ease(Tween.EASE_OUT)
-	tw.tween_property(_barra_fill, "size:x", 360.0 * pct, 0.40)
-
-	_delta_lbl.text = op["impacto"]
-	_delta_lbl.add_theme_color_override("font_color", op["color"])
-	_edu_lbl.text   = op["edu"]
 	_btn_confirmar.disabled = false
 
 
 func _confirmar() -> void:
-	if _opcion_sel < 0: return
-	var delta : float  = float(_esc_actual["opciones"][_opcion_sel]["delta"])
-	var mod_id : int   = int(_esc_actual["modulo"])
-	hide()
-	decision_tomada.emit(mod_id, delta)
+	if _opcion_sel < 0 or _confirmado:
+		return
+	_confirmado = true
+
+	var ops       : Array = _esc_actual["opciones"]
+	var mejor_idx : int   = 0
+	var mejor_delta : float = -INF
+	for i in ops.size():
+		var d : float = float(ops[i]["delta"])
+		if d > mejor_delta:
+			mejor_delta = d
+			mejor_idx   = i
+
+	for i in _btn_ops.size():
+		_btn_ops[i].disabled = true
+		if i < ops.size():
+			var op  : Dictionary = ops[i]
+			var etq : Label = _etq_ops[i]
+			var txt : String = op["impacto"]
+			if i == _opcion_sel:
+				txt += "   ·   Tu elección"
+			etq.text    = txt
+			etq.visible = true
+			etq.add_theme_color_override("font_color", op["color"])
+			var s := StyleBoxFlat.new()
+			s.bg_color     = Color(0.08, 0.22, 0.08) if i == _opcion_sel else Color(0.06, 0.10, 0.08)
+			s.border_color = op["color"]
+			s.set_border_width_all(2); s.set_corner_radius_all(10)
+			_btn_ops[i].add_theme_stylebox_override("normal", s)
+
+	var op_sel : Dictionary = ops[_opcion_sel]
+	_edu_lbl.text    = op_sel["edu"]
+	_edu_box.visible = true
+
+	if _opcion_sel != mejor_idx:
+		_mejor_lbl.text    = "💡 La mejor opción era: %s" % ops[mejor_idx]["texto"]
+		_mejor_lbl.visible = true
+	else:
+		_mejor_lbl.text    = ""
+		_mejor_lbl.visible = false
+
+	_btn_confirmar.text     = "Siguiente caso →"
+	_btn_confirmar.disabled = false
+
+	call_deferred("_ajustar_alto")
+
+
+func _on_btn_accion_pressed() -> void:
+	if not _confirmado:
+		_confirmar()
+	else:
+		mostrar()
+
+
+func _ajustar_alto() -> void:
+	if _mg == null or _panel == null:
+		return
+	var h : float = _mg.get_combined_minimum_size().y
+	h = clampf(h, 320.0, 660.0)
+	_panel.offset_top    = -h / 2.0
+	_panel.offset_bottom =  h / 2.0
 
 
 # ── Construcción UI ───────────────────────────────────────────
@@ -216,10 +279,10 @@ func _crear_ui() -> void:
 
 	_panel = Panel.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(720, 520)
+	_panel.custom_minimum_size = Vector2(720, 0)
 	_panel.offset_left   = -360.0
-	_panel.offset_top    = -260.0
 	_panel.offset_right  =  360.0
+	_panel.offset_top    = -260.0
 	_panel.offset_bottom =  260.0
 	var ps := StyleBoxFlat.new()
 	ps.bg_color     = Color(0.04, 0.07, 0.06, 0.99)
@@ -231,17 +294,37 @@ func _crear_ui() -> void:
 	_panel.add_theme_stylebox_override("panel", ps)
 	add_child(_panel)
 
-	var mg := MarginContainer.new()
-	mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_mg = MarginContainer.new()
+	_mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for m in ["margin_left","margin_right","margin_top","margin_bottom"]:
-		mg.add_theme_constant_override(m, 26)
-	_panel.add_child(mg)
+		_mg.add_theme_constant_override(m, 22)
+	_panel.add_child(_mg)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	mg.add_child(vbox)
+	vbox.add_theme_constant_override("separation", 7)
+	_mg.add_child(vbox)
 
-	# Encabezado
+	# Rótulo fijo de modo práctica
+	var modo_lbl := Label.new()
+	modo_lbl.text = "🔬 Simulador · Modo práctica"
+	modo_lbl.add_theme_font_size_override("font_size", 13)
+	modo_lbl.add_theme_color_override("font_color", Color(0.45, 0.85, 0.95))
+	vbox.add_child(modo_lbl)
+
+	var subtitulo_lbl := Label.new()
+	subtitulo_lbl.text = "Practicá decisiones reales del campus. No suma puntaje ni EcoCredits."
+	subtitulo_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	subtitulo_lbl.add_theme_font_size_override("font_size", 11)
+	subtitulo_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
+	vbox.add_child(subtitulo_lbl)
+
+	var sep0_s := StyleBoxFlat.new()
+	sep0_s.bg_color = Color(0.22, 0.55, 0.22, 0.20)
+	sep0_s.content_margin_top = 1.0; sep0_s.content_margin_bottom = 1.0
+	var sep0 := HSeparator.new(); sep0.add_theme_stylebox_override("separator", sep0_s)
+	vbox.add_child(sep0)
+
+	# Encabezado del escenario
 	var hdr := HBoxContainer.new()
 	vbox.add_child(hdr)
 
@@ -285,12 +368,14 @@ func _crear_ui() -> void:
 	_pregunta_lbl.add_theme_color_override("font_color", Color(0.92, 0.92, 0.92))
 	vbox.add_child(_pregunta_lbl)
 
-	# Opciones
+	# Opciones: botón + etiqueta de impacto DEBAJO (oculta hasta confirmar,
+	# nunca superpuesta al texto del botón).
 	_btn_ops.clear()
+	_etq_ops.clear()
 	for i in 3:
-		var op_row := HBoxContainer.new()
-		op_row.add_theme_constant_override("separation", 6)
-		vbox.add_child(op_row)
+		var op_col := VBoxContainer.new()
+		op_col.add_theme_constant_override("separation", 2)
+		vbox.add_child(op_col)
 
 		var btn := Button.new()
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -304,51 +389,46 @@ func _crear_ui() -> void:
 		btn.add_theme_stylebox_override("normal", s)
 		var ci := i
 		btn.pressed.connect(func(): _seleccionar(ci))
-		op_row.add_child(btn)
+		op_col.add_child(btn)
 
 		var etq := Label.new()
 		etq.name = "Etiqueta"
-		etq.custom_minimum_size = Vector2(100, 0)
-		etq.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		etq.autowrap_mode = TextServer.AUTOWRAP_WORD
+		etq.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		etq.add_theme_font_size_override("font_size", 11)
-		btn.add_child(etq)
+		etq.visible = false
+		op_col.add_child(etq)
 
 		_btn_ops.append(btn)
+		_etq_ops.append(etq)
 
-	# Barra de impacto preview
-	var imp_row := HBoxContainer.new()
-	imp_row.add_theme_constant_override("separation", 10)
-	vbox.add_child(imp_row)
+	# Caja de explicación educativa (visible sólo tras confirmar)
+	_edu_box = PanelContainer.new()
+	var edu_s := StyleBoxFlat.new()
+	edu_s.bg_color     = Color(0.05, 0.10, 0.07)
+	edu_s.border_color = Color(0.28, 0.55, 0.28)
+	edu_s.set_border_width_all(1); edu_s.set_corner_radius_all(8)
+	edu_s.content_margin_left = 10.0; edu_s.content_margin_right = 10.0
+	edu_s.content_margin_top = 6.0; edu_s.content_margin_bottom = 6.0
+	_edu_box.add_theme_stylebox_override("panel", edu_s)
+	_edu_box.visible = false
+	vbox.add_child(_edu_box)
 
-	var imp_lbl := Label.new()
-	imp_lbl.text = "Puntaje de la categoría:"
-	imp_lbl.add_theme_font_size_override("font_size", 11)
-	imp_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
-	imp_row.add_child(imp_lbl)
-
-	_barra_preview = ColorRect.new()
-	_barra_preview.custom_minimum_size = Vector2(360, 12)
-	_barra_preview.color = Color(0.10, 0.18, 0.12)
-	imp_row.add_child(_barra_preview)
-
-	_barra_fill = ColorRect.new()
-	_barra_fill.size  = Vector2(0, 12)
-	_barra_fill.color = Color(0.22, 0.72, 0.22)
-	_barra_preview.add_child(_barra_fill)
-
-	_delta_lbl = Label.new()
-	_delta_lbl.add_theme_font_size_override("font_size", 12)
-	imp_row.add_child(_delta_lbl)
-
-	# Explicación educativa
 	_edu_lbl = Label.new()
 	_edu_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	_edu_lbl.add_theme_font_size_override("font_size", 11)
 	_edu_lbl.add_theme_color_override("font_color", Color(0.62, 0.80, 0.62))
-	_edu_lbl.custom_minimum_size = Vector2(0, 36)
-	vbox.add_child(_edu_lbl)
+	_edu_box.add_child(_edu_lbl)
 
-	# Botón confirmar
+	# Línea "la mejor opción era..." (sólo si la elegida no fue la mejor)
+	_mejor_lbl = Label.new()
+	_mejor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_mejor_lbl.add_theme_font_size_override("font_size", 11)
+	_mejor_lbl.add_theme_color_override("font_color", Color(0.90, 0.80, 0.30))
+	_mejor_lbl.visible = false
+	vbox.add_child(_mejor_lbl)
+
+	# Botón de acción: Confirmar Decisión → Siguiente caso →
 	_btn_confirmar = Button.new()
 	_btn_confirmar.text = "✓  Confirmar Decisión"
 	_btn_confirmar.custom_minimum_size = Vector2(0, 44)
@@ -360,5 +440,5 @@ func _crear_ui() -> void:
 	_btn_confirmar.add_theme_stylebox_override("normal", s_ok)
 	var s_ok_h := s_ok.duplicate(); s_ok_h.bg_color = Color(0.10, 0.42, 0.12)
 	_btn_confirmar.add_theme_stylebox_override("hover", s_ok_h)
-	_btn_confirmar.pressed.connect(_confirmar)
+	_btn_confirmar.pressed.connect(_on_btn_accion_pressed)
 	vbox.add_child(_btn_confirmar)
