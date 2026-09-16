@@ -74,5 +74,15 @@ func _ready() -> void:
 	_check(mapa != null and mapa.get_script_method_list().any(func(m): return m["name"] == "_refrescar_progreso"),
 		"SceneMapaMundo._refrescar_progreso existe")
 
+	var mapa_src : String = FileAccess.get_file_as_string("res://scenes/mapa/SceneMapaMundo.gd")
+	_check(not mapa_src.contains("const NIVELES"), "SceneMapaMundo ya no tiene rangos por XP")
+	_check(not mapa_src.contains("func _construir_sidebar"), "sidebar viejo eliminado")
+	_check(not mapa_src.contains("func _actualizar_indicador_verde"), "índices viejos eliminados")
+	_check(mapa_src.contains("hud_ficha_jugador.gd") and mapa_src.contains("hud_panel_greenmetric.gd")
+		and mapa_src.contains("hud_acciones.gd") and mapa_src.contains("hud_banner_zona.gd")
+		and mapa_src.contains("hud_aviso.gd"), "SceneMapaMundo usa los componentes del HUD")
+	var escena = load("res://scenes/mapa/SceneMapaMundo.gd")
+	_check(escena != null and escena.can_instantiate(), "SceneMapaMundo compila")
+
 	print("test_compila: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

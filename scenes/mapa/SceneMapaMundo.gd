@@ -48,15 +48,13 @@ const MISION_SEMANA_VERDE_ESCENA:= preload("res://scenes/misiones/mision_semana_
 const PUNTO_INFORME_ESCENA      := preload("res://scenes/misiones/punto_informe_final.gd")
 const MISION_INFORME_ESCENA     := preload("res://scenes/misiones/mision_informe_final.gd")
 
-# ── Sistema de niveles ───────────────────────────────────────
-const NIVELES : Array = [
-	{"nombre": "Semilla",      "xp_min": 0,     "xp_max": 500},
-	{"nombre": "Brote",        "xp_min": 500,   "xp_max": 1500},
-	{"nombre": "Árbol",        "xp_min": 1500,  "xp_max": 3500},
-	{"nombre": "Estratega",    "xp_min": 3500,  "xp_max": 7000},
-	{"nombre": "Investigador", "xp_min": 7000,  "xp_max": 12000},
-	{"nombre": "EcoLíder",     "xp_min": 12000, "xp_max": 12000},
-]
+const RANGOS         := preload("res://autoload/rangos.gd")
+const HUD_TEMA       := preload("res://scenes/ui/hud_tema.gd")
+const HUD_FICHA      := preload("res://scenes/ui/hud_ficha_jugador.gd")
+const HUD_GREENMETRIC:= preload("res://scenes/ui/hud_panel_greenmetric.gd")
+const HUD_ACCIONES   := preload("res://scenes/ui/hud_acciones.gd")
+const HUD_BANNER     := preload("res://scenes/ui/hud_banner_zona.gd")
+const HUD_AVISO      := preload("res://scenes/ui/hud_aviso.gd")
 
 # ── Datos de los NPCs (uno por zona) — posiciones en nuevo mapa URBE ─
 var DATOS_NPCS : Array = [
@@ -375,29 +373,12 @@ var _minijuego_residuos : CanvasLayer = null
 
 # ── HUD principal ────────────────────────────────────────────
 var _hud_canvas      : CanvasLayer = null
-var _hud_nombre_lbl  : Label       = null
-var _hud_nivel_lbl   : Label       = null
-var _hud_barra_bg    : ColorRect   = null
-var _hud_barra_fill  : ColorRect   = null
-var _hud_xp_lbl      : Label       = null
-var _zona_panel      : Panel       = null
-var _zona_icono_lbl  : Label       = null
-var _zona_nombre_lbl : Label       = null
-var _zona_hint_lbl   : Label       = null
 var _celebracion_lbl : Label       = null
-var _hud_verde_fill  : ColorRect   = null
-var _hud_verde_lbl   : Label       = null
-var _hud_agua_fill   : ColorRect   = null
-var _hud_agua_lbl    : Label       = null
-var _hud_edu_fill    : ColorRect   = null
-var _hud_edu_lbl     : Label       = null
-
-# ── Sidebar de módulos ────────────────────────────────────────
-var _sidebar_fills  : Array = []   # Array[ColorRect]
-var _sidebar_pcts   : Array = []   # Array[Label]
-
-# ── Notificación de zona ──────────────────────────────────────
-var _notif_zona_lbl : Label = null
+var _hud_ficha    = null   # hud_ficha_jugador.gd
+var _hud_gm       = null   # hud_panel_greenmetric.gd
+var _hud_acciones = null   # hud_acciones.gd
+var _hud_banner   = null   # hud_banner_zona.gd
+var _hud_aviso    = null   # hud_aviso.gd
 
 # ── Panel de misión completada ────────────────────────────────
 var _complete_panel  : Panel  = null
@@ -451,8 +432,6 @@ var _crises_desbloqueadas : bool    = false
 var _menu_pausa_canvas    : CanvasLayer = null
 const _CRISIS_MIN         : float   = 90.0
 const _CRISIS_MAX         : float   = 180.0
-var _hud_creditos_lbl : Label       = null
-var _hud_energia_lbl  : Label       = null
 var _insignia_lbl     : Label       = null
 
 # ── Progreso de módulos (copia local para sidebar) ────────────
@@ -466,15 +445,6 @@ var _insignia_lbl     : Label       = null
 # directo. Ahora las tres fuentes arrancan iguales y solo suben con
 # logros verificables.
 var _progreso_modulos : Dictionary = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0, 6: 0.0}
-
-const SIDEBAR_MODULOS : Array = [
-	{"id": 1, "icono": "🌿", "nombre": "Entorno",    "color": Color(0.18, 0.55, 0.20)},
-	{"id": 2, "icono": "⚡", "nombre": "Energía",    "color": Color(0.90, 0.50, 0.00)},
-	{"id": 3, "icono": "♻", "nombre": "Residuos",   "color": Color(0.80, 0.65, 0.00)},
-	{"id": 4, "icono": "💧", "nombre": "Agua",       "color": Color(0.00, 0.45, 0.75)},
-	{"id": 5, "icono": "🚲", "nombre": "Transporte", "color": Color(0.10, 0.30, 0.80)},
-	{"id": 6, "icono": "📚", "nombre": "Educación",  "color": Color(0.40, 0.00, 0.70)},
-]
 
 
 func _ready() -> void:
@@ -493,7 +463,7 @@ func _ready() -> void:
 	# que vuelve a loguearse sin completar nada nuevo en esa sesión veía
 	# 0% en todos lados aunque NivelManager (ya repoblado desde el
 	# servidor en SceneLogin, ver iniciar_sesion()/repoblar_desde_servidor)
-	# tuviera el progreso real. Hay que sembrar ANTES de _construir_sidebar(),
+	# tuviera el progreso real. Hay que sembrar ANTES de _refrescar_progreso(),
 	# que pinta con lo que haya en _progreso_modulos en ese momento.
 	for mod_id in _progreso_modulos.keys():
 		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
@@ -501,8 +471,6 @@ func _ready() -> void:
 	PuntajeManager.sinergia_obtenida.connect(_on_sinergia_obtenida)
 
 	_construir_hud()
-	_construir_sidebar()
-	_construir_notificacion_zona()
 	_construir_panel_completado()
 	_construir_panel_zona_mejora()
 	_construir_panel_contenedor()
@@ -565,84 +533,6 @@ func _construir_hud() -> void:
 	_hud_canvas.layer = 5
 	add_child(_hud_canvas)
 
-	var panel_top := Panel.new()
-	panel_top.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	panel_top.offset_right  = 310.0
-	panel_top.offset_bottom = 96.0
-	var ps := StyleBoxFlat.new()
-	ps.bg_color     = Color(0.04, 0.07, 0.10, 0.92)
-	ps.border_color = Color(0.20, 0.68, 0.20)
-	ps.set_border_width_all(2)
-	ps.corner_radius_bottom_left  = 10
-	ps.corner_radius_bottom_right = 10
-	panel_top.add_theme_stylebox_override("panel", ps)
-	_hud_canvas.add_child(panel_top)
-
-	_hud_nombre_lbl = Label.new()
-	_hud_nombre_lbl.position = Vector2(10, 6)
-	_hud_nombre_lbl.add_theme_font_size_override("font_size", 13)
-	_hud_nombre_lbl.add_theme_color_override("font_color", Color(0.25, 0.90, 0.25))
-	_hud_canvas.add_child(_hud_nombre_lbl)
-
-	_hud_nivel_lbl = Label.new()
-	_hud_nivel_lbl.position = Vector2(130, 6)
-	_hud_nivel_lbl.add_theme_font_size_override("font_size", 11)
-	_hud_nivel_lbl.add_theme_color_override("font_color", Color(0.95, 0.80, 0.20))
-	_hud_canvas.add_child(_hud_nivel_lbl)
-
-	_hud_barra_bg = ColorRect.new()
-	_hud_barra_bg.position = Vector2(10, 32)
-	_hud_barra_bg.size     = Vector2(240, 12)
-	_hud_barra_bg.color    = Color(0.10, 0.14, 0.20)
-	_hud_canvas.add_child(_hud_barra_bg)
-
-	_hud_barra_fill = ColorRect.new()
-	_hud_barra_fill.position = Vector2(10, 32)
-	_hud_barra_fill.size     = Vector2(0, 12)
-	_hud_barra_fill.color    = Color(0.18, 0.78, 0.28)
-	_hud_canvas.add_child(_hud_barra_fill)
-
-	_hud_xp_lbl = Label.new()
-	_hud_xp_lbl.position = Vector2(256, 30)
-	_hud_xp_lbl.add_theme_font_size_override("font_size", 10)
-	_hud_xp_lbl.add_theme_color_override("font_color", Color(0.70, 0.70, 0.70))
-	_hud_canvas.add_child(_hud_xp_lbl)
-
-	# Panel de zona (centro inferior)
-	_zona_panel = Panel.new()
-	_zona_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_zona_panel.offset_top    = -72.0
-	_zona_panel.offset_bottom =   0.0
-	_zona_panel.offset_left   = 200.0
-	_zona_panel.offset_right  = -200.0
-	var zps := StyleBoxFlat.new()
-	zps.bg_color     = Color(0.04, 0.07, 0.10, 0.90)
-	zps.border_color = Color(0.20, 0.68, 0.20)
-	zps.set_border_width_all(2)
-	zps.corner_radius_top_left  = 10
-	zps.corner_radius_top_right = 10
-	_zona_panel.add_theme_stylebox_override("panel", zps)
-	_zona_panel.visible = false
-	_hud_canvas.add_child(_zona_panel)
-
-	_zona_icono_lbl = Label.new()
-	_zona_icono_lbl.position = Vector2(14, 8)
-	_zona_icono_lbl.add_theme_font_size_override("font_size", 22)
-	_zona_panel.add_child(_zona_icono_lbl)
-
-	_zona_nombre_lbl = Label.new()
-	_zona_nombre_lbl.position = Vector2(48, 8)
-	_zona_nombre_lbl.add_theme_font_size_override("font_size", 13)
-	_zona_nombre_lbl.add_theme_color_override("font_color", Color(0.25, 0.90, 0.25))
-	_zona_panel.add_child(_zona_nombre_lbl)
-
-	_zona_hint_lbl = Label.new()
-	_zona_hint_lbl.position = Vector2(48, 36)
-	_zona_hint_lbl.add_theme_font_size_override("font_size", 11)
-	_zona_hint_lbl.add_theme_color_override("font_color", Color(0.55, 0.90, 0.55))
-	_zona_hint_lbl.text = "🌿 N1 Plantar  ·  ⚡ N2 Energía"
-	_zona_panel.add_child(_zona_hint_lbl)
-
 	_celebracion_lbl = Label.new()
 	_celebracion_lbl.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_celebracion_lbl.offset_left   = -220
@@ -655,65 +545,30 @@ func _construir_hud() -> void:
 	_celebracion_lbl.visible = false
 	_hud_canvas.add_child(_celebracion_lbl)
 
-	# ── Índice Verde (barra de progreso nivel 1) ─────────────
-	var verde_bg := ColorRect.new()
-	verde_bg.position = Vector2(10, 80)
-	verde_bg.size     = Vector2(236, 12)
-	verde_bg.color    = Color(0.06, 0.14, 0.08)
-	_hud_canvas.add_child(verde_bg)
+	_hud_ficha = HUD_FICHA.new()
+	_hud_canvas.add_child(_hud_ficha)
+	_hud_gm = HUD_GREENMETRIC.new()
+	_hud_canvas.add_child(_hud_gm)
+	_hud_acciones = HUD_ACCIONES.new()
+	_hud_acciones.accion.connect(_on_hud_accion)
+	_hud_canvas.add_child(_hud_acciones)
+	_hud_banner = HUD_BANNER.new()
+	_hud_canvas.add_child(_hud_banner)
+	_hud_aviso = HUD_AVISO.new()
+	_hud_canvas.add_child(_hud_aviso)
 
-	_hud_verde_fill = ColorRect.new()
-	_hud_verde_fill.position = Vector2(10, 80)
-	_hud_verde_fill.size     = Vector2(0, 12)
-	_hud_verde_fill.color    = Color(0.22, 0.82, 0.28)
-	_hud_canvas.add_child(_hud_verde_fill)
 
-	_hud_verde_lbl = Label.new()
-	_hud_verde_lbl.position = Vector2(10, 92)
-	_hud_verde_lbl.add_theme_font_size_override("font_size", 9)
-	_hud_verde_lbl.add_theme_color_override("font_color", Color(0.55, 0.95, 0.55))
-	_hud_verde_lbl.text = "🌿 Índice Verde: 0%"
-	_hud_canvas.add_child(_hud_verde_lbl)
-
-	# ── Índice Agua (barra de progreso nivel 4) ──────────────
-	var agua_bg := ColorRect.new()
-	agua_bg.position = Vector2(10, 108)
-	agua_bg.size     = Vector2(236, 12)
-	agua_bg.color    = Color(0.05, 0.10, 0.14)
-	_hud_canvas.add_child(agua_bg)
-
-	_hud_agua_fill = ColorRect.new()
-	_hud_agua_fill.position = Vector2(10, 108)
-	_hud_agua_fill.size     = Vector2(0, 12)
-	_hud_agua_fill.color    = Color(0.18, 0.62, 0.90)
-	_hud_canvas.add_child(_hud_agua_fill)
-
-	_hud_agua_lbl = Label.new()
-	_hud_agua_lbl.position = Vector2(10, 120)
-	_hud_agua_lbl.add_theme_font_size_override("font_size", 9)
-	_hud_agua_lbl.add_theme_color_override("font_color", Color(0.55, 0.85, 0.98))
-	_hud_agua_lbl.text = "💧 Índice Agua: 0%"
-	_hud_canvas.add_child(_hud_agua_lbl)
-
-	# ── Índice Educación (barra de progreso nivel 6) ─────────
-	var edu_bg := ColorRect.new()
-	edu_bg.position = Vector2(10, 136)
-	edu_bg.size     = Vector2(236, 12)
-	edu_bg.color    = Color(0.09, 0.05, 0.14)
-	_hud_canvas.add_child(edu_bg)
-
-	_hud_edu_fill = ColorRect.new()
-	_hud_edu_fill.position = Vector2(10, 136)
-	_hud_edu_fill.size     = Vector2(0, 12)
-	_hud_edu_fill.color    = Color(0.62, 0.24, 0.90)
-	_hud_canvas.add_child(_hud_edu_fill)
-
-	_hud_edu_lbl = Label.new()
-	_hud_edu_lbl.position = Vector2(10, 148)
-	_hud_edu_lbl.add_theme_font_size_override("font_size", 9)
-	_hud_edu_lbl.add_theme_color_override("font_color", Color(0.82, 0.65, 0.98))
-	_hud_edu_lbl.text = "📚 Índice Educación: 0%"
-	_hud_canvas.add_child(_hud_edu_lbl)
+# Barra de acciones del HUD (botones o teclas 1–5).
+func _on_hud_accion(indice: int) -> void:
+	match indice:
+		0:
+			if mapa_campus and mapa_campus.has_method("toggle_mapa_calor"):
+				mapa_campus.toggle_mapa_calor()
+			_sfx("zona")
+		1: _abrir_resultados()
+		2: _leaderboard_ui.mostrar()
+		3: _abrir_simulador()
+		4: _abrir_tienda()
 
 
 func _spawn_npcs() -> void:
@@ -752,17 +607,13 @@ func _on_zona_activada(zona_key: String, modulo_id: int, nombre_modulo: String, 
 	_zona_activa   = zona_key
 	_modulo_activo = modulo_id
 	_nombre_activo = nombre_modulo
-	_zona_icono_lbl.text  = ZONA_ICONOS.get(modulo_id, "🌍")
-	_zona_nombre_lbl.text = nombre_modulo
-	_zona_panel.visible   = true
-	# Notificación de zona en pantalla
-	var icono_txt : String = ZONA_ICONOS.get(modulo_id, "🌍")
+	var icono : String = ZONA_ICONOS.get(modulo_id, "🌍")
 	var col : Color = _color
-	for info : Dictionary in SIDEBAR_MODULOS:
-		if int(info["id"]) == modulo_id:
-			col = info["color"]
-			break
-	_mostrar_notificacion_zona(icono_txt, nombre_modulo, col)
+	var sub : String = ""
+	if modulo_id >= 1 and modulo_id <= 6:
+		col = HUD_TEMA.CATEGORIAS[modulo_id]["color"]
+		sub = "Nivel %d · %s" % [modulo_id, HUD_TEMA.CATEGORIAS[modulo_id]["nombre"]]
+	_hud_banner.mostrar(icono, nombre_modulo, sub, col)
 	# Pista contextual: primera zona visitada
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
 	if hb:
@@ -770,7 +621,7 @@ func _on_zona_activada(zona_key: String, modulo_id: int, nombre_modulo: String, 
 			"📍 Presiona [E] para aceptar la misión de esta zona del campus.")
 
 func _on_zona_salida() -> void:
-	_zona_panel.visible = false
+	_hud_banner.ocultar()
 	_zona_activa        = ""
 	_modulo_activo      = -1
 	_nombre_activo      = ""
@@ -865,9 +716,6 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	if event.keycode != KEY_E:
-		return
-
 	# Si el menú de pausa está abierto no procesar E
 	if is_instance_valid(_menu_pausa_canvas) and _menu_pausa_canvas.visible:
 		return
@@ -888,6 +736,14 @@ func _input(event: InputEvent) -> void:
 	# Si hay una misión de reciclaje activa, no capturar el E
 	var reciclar_ui_node := get_tree().get_first_node_in_group("mision_reciclaje")
 	if reciclar_ui_node and reciclar_ui_node.visible:
+		return
+
+	# Atajos de la barra de acciones (1–5), solo sin otra UI abierta.
+	if _hud_acciones and _hud_acciones.tecla(event.keycode):
+		get_viewport().set_input_as_handled()
+		return
+
+	if event.keycode != KEY_E:
 		return
 
 	# E cierra la escena de edificio (funciona como "Salir")
@@ -1026,7 +882,6 @@ func _on_minijuego_completado(xp: int) -> void:
 	_mostrar_mision_completada("mision_residuos", xp)
 
 func _aplicar_xp(xp: int, mision_id: String) -> void:
-	var nivel_antes := _nivel_actual
 	_xp_total += xp
 	_actualizar_hud()
 	if xp > 0:
@@ -1034,10 +889,6 @@ func _aplicar_xp(xp: int, mision_id: String) -> void:
 		_sfx("xp_bonus" if xp >= 20 else "xp")
 
 	print("✅ XP ganada: %d  |  Total: %d  |  Misión: %s" % [xp, _xp_total, mision_id])
-
-	if _nivel_actual > nivel_antes:
-		_mostrar_celebracion(NIVELES[_nivel_actual]["nombre"])
-		_sfx("nivel")
 
 	# Actualiza progreso de la zona/misión completada y refresca mapa
 	for zona_key in ZONA_A_MISION.keys():
@@ -1091,7 +942,7 @@ func _on_progreso_guardado_fallido(mision_id: String, xp_local: int) -> void:
 func _mostrar_celebracion(nombre_nivel: String) -> void:
 	if not _celebracion_lbl:
 		return
-	_celebracion_lbl.text     = "⭐ ¡NIVEL SUBIDO!\n%s" % nombre_nivel.to_upper()
+	_celebracion_lbl.text     = nombre_nivel
 	_celebracion_lbl.modulate = Color(1, 1, 0.2, 0.0)
 	_celebracion_lbl.scale    = Vector2(0.5, 0.5)
 	_celebracion_lbl.visible  = true
@@ -1111,143 +962,16 @@ func _mostrar_celebracion(nombre_nivel: String) -> void:
 
 # ── Actualizar HUD ───────────────────────────────────────────
 func _actualizar_hud() -> void:
-	var nivel_idx : int = 0
-	for i in range(NIVELES.size()):
-		if _xp_total >= NIVELES[i]["xp_min"]:
-			nivel_idx = i
-	_nivel_actual = nivel_idx
-
-	var nivel_data : Dictionary = NIVELES[nivel_idx]
-	var es_max     : bool       = (nivel_idx == NIVELES.size() - 1)
-
-	if _hud_nombre_lbl:
-		_hud_nombre_lbl.text = "🌿 Eco-Ranger"
-	if _hud_nivel_lbl:
-		_hud_nivel_lbl.text = "Nv.%d  %s" % [nivel_idx + 1, nivel_data["nombre"]]
-
-	if _hud_barra_fill and _hud_xp_lbl:
-		var xp_en_nivel : int
-		var xp_para_sig : int
-		if es_max:
-			xp_en_nivel = 1
-			xp_para_sig = 1
-			_hud_xp_lbl.text = "MAX ✓"
-		else:
-			var sig : Dictionary = NIVELES[nivel_idx + 1]
-			xp_en_nivel = _xp_total - nivel_data["xp_min"]
-			xp_para_sig = sig["xp_min"] - nivel_data["xp_min"]
-			_hud_xp_lbl.text = "%d / %d XP" % [_xp_total, sig["xp_min"]]
-
-		var pct : float = clampf(float(xp_en_nivel) / float(xp_para_sig), 0.0, 1.0)
-		_hud_barra_fill.size = Vector2(240.0 * pct, 12)
-
-		var colores_barra : Array = [
-			Color(0.18, 0.78, 0.28),
-			Color(0.28, 0.88, 0.38),
-			Color(0.20, 0.60, 0.88),
-			Color(0.88, 0.65, 0.08),
-			Color(0.78, 0.28, 0.88),
-			Color(0.98, 0.78, 0.08),
-		]
-		_hud_barra_fill.color = colores_barra[nivel_idx]
-
-
-# ════════════════════════════════════════════════════════════
-# SIDEBAR DE MÓDULOS (lado derecho, siempre visible)
-# ════════════════════════════════════════════════════════════
-func _construir_sidebar() -> void:
-	var ANCHO : float = 175.0
-	var ALTO  : float = float(SIDEBAR_MODULOS.size()) * 34.0 + 30.0
-
-	var panel := Panel.new()
-	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	panel.offset_left   = -ANCHO
-	panel.offset_top    = 0.0
-	panel.offset_right  = 0.0
-	panel.offset_bottom = ALTO
-	var ps := StyleBoxFlat.new()
-	ps.bg_color     = Color(0.04, 0.07, 0.10, 0.97)
-	ps.border_color = Color(0.20, 0.62, 0.20)
-	ps.set_border_width_all(2)
-	ps.corner_radius_bottom_left  = 10
-	ps.corner_radius_top_left     = 0
-	panel.add_theme_stylebox_override("panel", ps)
-	_hud_canvas.add_child(panel)
-
-	var titulo := Label.new()
-	titulo.text = "GreenMetric"
-	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	titulo.position = Vector2(0, 6)
-	titulo.size     = Vector2(ANCHO, 18)
-	titulo.add_theme_font_size_override("font_size", 10)
-	titulo.add_theme_color_override("font_color", Color(0.40, 0.85, 0.42))
-	panel.add_child(titulo)
-
-	var sep := ColorRect.new()
-	sep.position = Vector2(8, 22)
-	sep.size     = Vector2(ANCHO - 16, 1)
-	sep.color    = Color(0.20, 0.62, 0.20, 0.50)
-	panel.add_child(sep)
-
-	for i in SIDEBAR_MODULOS.size():
-		var info : Dictionary = SIDEBAR_MODULOS[i]
-		var ry : float = 28.0 + i * 34.0
-		var col : Color = info["color"]
-
-		# Icono + nombre
-		var icono_lbl := Label.new()
-		icono_lbl.text = info["icono"]
-		icono_lbl.position = Vector2(6, ry)
-		icono_lbl.add_theme_font_size_override("font_size", 12)
-		panel.add_child(icono_lbl)
-
-		var nombre_lbl := Label.new()
-		nombre_lbl.text = info["nombre"]
-		nombre_lbl.position = Vector2(24, ry)
-		nombre_lbl.size = Vector2(ANCHO - 30, 14)
-		nombre_lbl.add_theme_font_size_override("font_size", 9)
-		nombre_lbl.add_theme_color_override("font_color", Color(0.78, 0.88, 0.80))
-		panel.add_child(nombre_lbl)
-
-		# Barra de progreso
-		var barra_bg := ColorRect.new()
-		barra_bg.position = Vector2(6, ry + 15)
-		barra_bg.size     = Vector2(ANCHO - 20, 8)
-		barra_bg.color    = Color(0.10, 0.14, 0.20)
-		panel.add_child(barra_bg)
-
-		var barra_fill := ColorRect.new()
-		barra_fill.position = Vector2(0, 0)
-		barra_fill.size     = Vector2(0, 8)
-		barra_fill.color    = col
-		barra_bg.add_child(barra_fill)
-		_sidebar_fills.append(barra_fill)
-
-		# Porcentaje
-		var pct_lbl := Label.new()
-		pct_lbl.position = Vector2(ANCHO - 28, ry + 14)
-		pct_lbl.size     = Vector2(22, 12)
-		pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		pct_lbl.add_theme_font_size_override("font_size", 9)
-		pct_lbl.add_theme_color_override("font_color", Color(0.60, 0.68, 0.62))
-		panel.add_child(pct_lbl)
-		_sidebar_pcts.append(pct_lbl)
-
-	_actualizar_sidebar()
-
-
-func _actualizar_sidebar() -> void:
-	for i in SIDEBAR_MODULOS.size():
-		var modulo_id : int   = SIDEBAR_MODULOS[i]["id"]
-		var pct       : float = clampf(float(_progreso_modulos.get(modulo_id, 0.0)), 0.0, 1.0)
-		var BAR_W     : float = 135.0   # ancho fijo de la barra bg
-		if i < _sidebar_fills.size():
-			var fill : ColorRect = _sidebar_fills[i]
-			var tw := create_tween().set_ease(Tween.EASE_OUT)
-			tw.tween_property(fill, "size:x", BAR_W * pct, 0.35)
-		if i < _sidebar_pcts.size():
-			var lbl : Label = _sidebar_pcts[i]
-			lbl.text = "%d%%" % int(pct * 100)
+	var nm = _nivel_mgr()
+	var completos : int = RANGOS.niveles_superados(nm) if nm else 0
+	_nivel_actual = RANGOS.indice(completos)
+	if not _hud_ficha:
+		return
+	var hechos : Array = []
+	for n in range(1, 7):
+		hechos.append(nm.nivel_superado(n) if nm else false)
+	_hud_ficha.set_nivel_misiones(nm.nivel_actual if nm else 1, hechos)
+	_hud_ficha.set_rango(completos, RANGOS.fraccion_siguiente(nm) if nm else 0.0, _xp_total)
 
 
 # Única vía para actualizar barras de categoría, índices del HUD y mapa de
@@ -1259,43 +983,24 @@ func _refrescar_progreso(_cats: Dictionary = {}, _total: float = 0.0) -> void:
 		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
 		if mapa_campus and mapa_campus.has_method("actualizar_modulo"):
 			mapa_campus.actualizar_modulo(mod_id, _progreso_modulos[mod_id])
-	_actualizar_sidebar()
-	_actualizar_indicador_verde()
-	_actualizar_indicador_agua()
-	_actualizar_indicador_edu()
+	if _hud_gm:
+		_hud_gm.actualizar(PuntajeManager.categorias, PuntajeManager.total)
+	if _hud_ficha:
+		_hud_ficha.set_indices({1: PuntajeManager.fraccion(1), 4: PuntajeManager.fraccion(4), 6: PuntajeManager.fraccion(6)})
+	_actualizar_hud()
 
 
 func _on_sinergia_obtenida(_accion_id: String, cats: Array) -> void:
-	var nm = _nivel_mgr()
-	var partes : PackedStringArray = []
+	var deltas : Array = []
 	for c in cats:
 		if c is Dictionary:
 			var cat : int = int(c.get("categoria", 0))
-			var icono : String = "•"
 			# Una categoría fuera de rango desde el servidor no debe romper el aviso.
-			if nm and cat >= 1 and cat < nm.ICONOS_NIVEL.size():
-				icono = nm.ICONOS_NIVEL[cat]
-			partes.append("%s +%d" % [icono, int(c.get("puntos", 0))])
-	_mostrar_notificacion_zona("✨", "Sinergia: " + "  ".join(partes), Color(0.75, 0.95, 1.0))
-
-
-# ════════════════════════════════════════════════════════════
-# NOTIFICACIÓN DE ZONA (centro pantalla, aparece y desaparece)
-# ════════════════════════════════════════════════════════════
-func _construir_notificacion_zona() -> void:
-	_notif_zona_lbl = Label.new()
-	_notif_zona_lbl.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_notif_zona_lbl.offset_left   = -250
-	_notif_zona_lbl.offset_top    = 40
-	_notif_zona_lbl.offset_right  =  250
-	_notif_zona_lbl.offset_bottom =  90
-	_notif_zona_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_notif_zona_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	_notif_zona_lbl.add_theme_font_size_override("font_size", 16)
-	_notif_zona_lbl.add_theme_color_override("font_color", Color.WHITE)
-	_notif_zona_lbl.modulate.a = 0.0
-	_notif_zona_lbl.visible    = true
-	_hud_canvas.add_child(_notif_zona_lbl)
+			if cat >= 1 and cat <= 6:
+				deltas.append({"texto": "%s +%d" % [HUD_TEMA.CATEGORIAS[cat]["icono"], int(c.get("puntos", 0))],
+							   "color": HUD_TEMA.CATEGORIAS[cat]["color"]})
+	if _hud_aviso:
+		_hud_aviso.avisar("✨ Sinergia", false, deltas)
 
 
 # ════════════════════════════════════════════════════════════
@@ -1382,14 +1087,9 @@ func _avisar_estado_carga() -> void:
 	vb.add_child(btn)
 
 
-func _mostrar_notificacion_zona(icono: String, nombre: String, col: Color) -> void:
-	if not is_instance_valid(_notif_zona_lbl): return
-	_notif_zona_lbl.text = "%s  %s" % [icono, nombre]
-	_notif_zona_lbl.add_theme_color_override("font_color", col)
-	var tw := create_tween()
-	tw.tween_property(_notif_zona_lbl, "modulate:a", 1.0, 0.22)
-	tw.tween_interval(1.4)
-	tw.tween_property(_notif_zona_lbl, "modulate:a", 0.0, 0.35)
+func _mostrar_notificacion_zona(icono: String, nombre: String, _col: Color) -> void:
+	if _hud_aviso:
+		_hud_aviso.avisar("%s  %s" % [icono, nombre])
 
 
 # ════════════════════════════════════════════════════════════
@@ -1706,30 +1406,6 @@ func _init_sistemas_eva() -> void:
 	_init_misiones_nivel()
 	_avisar_estado_carga()
 
-	# EcoCredits label (esquina superior derecha)
-	_hud_creditos_lbl = Label.new()
-	_hud_creditos_lbl.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_hud_creditos_lbl.offset_left   =  10
-	_hud_creditos_lbl.offset_top    =  58
-	_hud_creditos_lbl.offset_right  = 190
-	_hud_creditos_lbl.offset_bottom =  76
-	_hud_creditos_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_hud_creditos_lbl.add_theme_font_size_override("font_size", 11)
-	_hud_creditos_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.15))
-	_hud_canvas.add_child(_hud_creditos_lbl)
-
-	# Energía/Vidas label
-	_hud_energia_lbl = Label.new()
-	_hud_energia_lbl.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_hud_energia_lbl.offset_left   = 190
-	_hud_energia_lbl.offset_top    =  58
-	_hud_energia_lbl.offset_right  = 308
-	_hud_energia_lbl.offset_bottom =  76
-	_hud_energia_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_hud_energia_lbl.add_theme_font_size_override("font_size", 11)
-	_hud_energia_lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
-	_hud_canvas.add_child(_hud_energia_lbl)
-
 	# Insignia flotante (abajo centro)
 	_insignia_lbl = Label.new()
 	_insignia_lbl.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -1742,8 +1418,6 @@ func _init_sistemas_eva() -> void:
 	_insignia_lbl.add_theme_color_override("font_color", Color(1.0, 0.90, 0.20))
 	_insignia_lbl.visible = false
 	_hud_canvas.add_child(_insignia_lbl)
-
-	_crear_btn_mapa_calor()
 
 	# Señales EconomiaManager
 	EconomiaManager.ecocredits_cambiados.connect(_on_creditos_cambiados)
@@ -1775,27 +1449,19 @@ func _process(delta: float) -> void:
 
 
 func _actualizar_hud_economia() -> void:
-	if _hud_creditos_lbl:
-		_hud_creditos_lbl.text = "💰 %d EC" % EconomiaManager.ecocredits
-	if _hud_energia_lbl:
-		var a : int = EconomiaManager.energia_actual
-		var sv : String = ""
-		for i in EconomiaManager.MAX_ENERGIA:
-			sv += "♥" if i < a else "♡"
-		_hud_energia_lbl.text = sv
+	if _hud_ficha:
+		_hud_ficha.set_creditos(EconomiaManager.ecocredits)
+		_hud_ficha.set_energia(EconomiaManager.energia_actual, EconomiaManager.MAX_ENERGIA)
 
 
 func _on_creditos_cambiados(total: int) -> void:
-	if _hud_creditos_lbl:
-		_hud_creditos_lbl.text = "💰 %d EC" % total
+	if _hud_ficha:
+		_hud_ficha.set_creditos(total)
 
 
-func _on_energia_cambiada(actual: int, _maximo: int) -> void:
-	if _hud_energia_lbl:
-		var sv : String = ""
-		for i in EconomiaManager.MAX_ENERGIA:
-			sv += "♥" if i < actual else "♡"
-		_hud_energia_lbl.text = sv
+func _on_energia_cambiada(actual: int, maximo: int) -> void:
+	if _hud_ficha:
+		_hud_ficha.set_energia(actual, maximo)
 
 
 func _on_tutorial_completado() -> void:
@@ -1864,7 +1530,8 @@ func _verificar_zona_verde_cercana() -> void:
 		elif z.es_mia(nombre_j):
 			_mostrar_panel_zona(z)
 		else:
-			_mostrar_notificacion_zona("🔒", "Ya adoptada por " + z.adoptado_por, Color(0.80, 0.55, 0.20))
+			if _hud_aviso:
+				_hud_aviso.avisar("🔒  Ya adoptada por " + z.adoptado_por, true)
 		return
 
 
@@ -1895,52 +1562,6 @@ func _verificar_misiones_completadas() -> void:
 		_timer_crisis = _CRISIS_MIN
 	await get_tree().create_timer(1.5).timeout
 	_abrir_resultados()
-
-
-# ════════════════════════════════════════════════════════════
-# BOTÓN MAPA DE CALOR (HUD)
-# ════════════════════════════════════════════════════════════
-func _crear_btn_mapa_calor() -> void:
-	# ── Barra de herramientas: 3 botones en esquina inferior izquierda ──
-	var s_base := StyleBoxFlat.new()
-	s_base.bg_color = Color(0.04, 0.08, 0.06, 0.92)
-	s_base.set_border_width_all(2)
-	s_base.set_corner_radius_all(8)
-
-	var DEFS : Array = [
-		{"emoji": "🌡", "tip": "Mapa de calor energético",  "borde": Color(0.85, 0.38, 0.08),
-		 "accion": func():
-			if mapa_campus and mapa_campus.has_method("toggle_mapa_calor"):
-				mapa_campus.toggle_mapa_calor()
-			_sfx("zona")},
-		{"emoji": "📊", "tip": "Reporte GreenMetric",        "borde": Color(0.22, 0.80, 0.28),
-		 "accion": func(): _abrir_resultados()},
-		{"emoji": "🏆", "tip": "Tabla de clasificación",     "borde": Color(0.90, 0.72, 0.08),
-		 "accion": func(): _leaderboard_ui.mostrar()},
-		{"emoji": "🔬", "tip": "Simulador de decisiones",    "borde": Color(0.55, 0.22, 0.90),
-		 "accion": func(): _abrir_simulador()},
-		{"emoji": "🛒", "tip": "Tienda del Conocimiento",    "borde": Color(0.20, 0.80, 0.95),
-		 "accion": func(): _abrir_tienda()},
-	]
-
-	for i in DEFS.size():
-		var d  : Dictionary = DEFS[i]
-		var sx : float      = 8.0 + i * 48.0
-		var s  := s_base.duplicate() as StyleBoxFlat
-		s.border_color = d["borde"]
-		var btn := Button.new()
-		btn.text                = d["emoji"]
-		btn.tooltip_text        = d["tip"]
-		btn.custom_minimum_size = Vector2(42, 42)
-		btn.add_theme_font_size_override("font_size", 20)
-		btn.add_theme_stylebox_override("normal", s)
-		btn.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-		btn.offset_left   = sx
-		btn.offset_top    = -50
-		btn.offset_right  = sx + 42
-		btn.offset_bottom = -8
-		btn.pressed.connect(d["accion"])
-		_hud_canvas.add_child(btn)
 
 
 # ════════════════════════════════════════════════════════════
@@ -2612,8 +2233,9 @@ func _verificar_herramienta(tipo_mision: String, punto: Node) -> bool:
 	var nm = _nivel_mgr()
 	if nm and mid != null and nm.mision_completada_q(int(herramienta.get("modulo_id", 0)), str(mid)):
 		return true
-	_mostrar_notificacion_zona("🔒", "Necesitás el %s (%d EC)" % [
-		herramienta.get("nombre", "equipo"), int(herramienta.get("precio", 0))], Color(1.0, 0.80, 0.25))
+	if _hud_aviso:
+		_hud_aviso.avisar("🔒  Necesitás el %s (%d EC)" % [
+			herramienta.get("nombre", "equipo"), int(herramienta.get("precio", 0))], true)
 	_abrir_tienda(item_id)
 	return false
 
@@ -2683,33 +2305,6 @@ func _on_mision_plantar_completada(mision_id: String, xp: int, ec: int) -> void:
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
 	print("🌿 Plantación completada: %s | +%d XP | +%d EC" % [mision_id, xp, ec])
-
-
-func _actualizar_indicador_verde() -> void:
-	var pct : float = PuntajeManager.fraccion(1)
-	if _hud_verde_fill:
-		var tw := create_tween()
-		tw.tween_property(_hud_verde_fill, "size:x", 236.0 * pct, 0.4)
-	if _hud_verde_lbl:
-		_hud_verde_lbl.text = "🌿 Índice Verde: %.0f%%" % (pct * 100.0)
-
-
-func _actualizar_indicador_agua() -> void:
-	var pct : float = PuntajeManager.fraccion(4)
-	if _hud_agua_fill:
-		var tw := create_tween()
-		tw.tween_property(_hud_agua_fill, "size:x", 236.0 * pct, 0.4)
-	if _hud_agua_lbl:
-		_hud_agua_lbl.text = "💧 Índice Agua: %.0f%%" % (pct * 100.0)
-
-
-func _actualizar_indicador_edu() -> void:
-	var pct : float = PuntajeManager.fraccion(6)
-	if _hud_edu_fill:
-		var tw := create_tween()
-		tw.tween_property(_hud_edu_fill, "size:x", 236.0 * pct, 0.4)
-	if _hud_edu_lbl:
-		_hud_edu_lbl.text = "📚 Índice Educación: %.0f%%" % (pct * 100.0)
 
 
 func _on_interior_completado(mision_id: String, xp: int, ec: int) -> void:
@@ -2856,6 +2451,10 @@ func _on_informe_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_nivel_greenmetric_completado(nivel: int) -> void:
+	var rango_antes := _nivel_actual
+	_actualizar_hud()
+	if _nivel_actual > rango_antes and _hud_aviso:
+		_hud_aviso.avisar("⭐ Nuevo rango: %s" % RANGOS.NOMBRES[_nivel_actual])
 	var nm = _nivel_mgr()
 	var nombre = nm.NOMBRES_NIVEL[nivel] if nm else "Nivel %d" % nivel
 	var icono  = nm.ICONOS_NIVEL[nivel]  if nm else "⭐"
