@@ -40,12 +40,12 @@ func _ready() -> void:
 #
 # Ahora el campus se dibuja una sola vez (Godot guarda los comandos de
 # dibujo hasta el próximo queue_redraw, que solo ocurre cuando cambia el
-# progreso o el mapa de calor) y lo único que se redibuja por frame es esta
+# progreso o el mapa de avance) y lo único que se redibuja por frame es esta
 # capa, que son 18 líneas.
 #
 # Diferencia visual aceptada: al ser hija, la capa queda por encima del mapa
-# de calor; solo se nota si un pájaro pasa por la franja y=120-140 con el
-# mapa de calor activo.
+# de avance; solo se nota si un pájaro pasa por la franja y=120-140 con el
+# mapa de avance activo.
 var _capa_ambiente : Node2D = null
 
 class CapaAmbiente extends Node2D:
@@ -90,62 +90,85 @@ var impacto : Dictionary = {
 	4: 0.0, 5: 0.0, 6: 0.0
 }
 
-var mostrar_calor : bool = false
+var mostrar_avance : bool = false
 
-# Edificios con su módulo GreenMetric asociado — layout real URBE
-const EDIFICIOS_CALOR : Array = [
-	{"rect": Rect2(   0, 120, 220, 420), "mod": 5, "nombre": "Estac. M5"},
-	{"rect": Rect2( 280, 120, 200, 160), "mod": 3, "nombre": "Cafetín"},
-	{"rect": Rect2( 700, 120, 380, 300), "mod": 2, "nombre": "Bloque E"},
-	{"rect": Rect2(1120, 120, 288, 540), "mod": 1, "nombre": "Est. Dist."},
-	{"rect": Rect2( 280, 320, 200, 160), "mod": 2, "nombre": "Bloque D"},
-	{"rect": Rect2( 480, 120, 220, 360), "mod": 4, "nombre": "Patio"},
-	{"rect": Rect2( 280, 520, 180, 120), "mod": 2, "nombre": "Bloque C"},
-	{"rect": Rect2( 520, 520, 180, 120), "mod": 2, "nombre": "Bloque B"},
-	{"rect": Rect2( 740, 480, 320, 180), "mod": 6, "nombre": "Rectorado"},
-	{"rect": Rect2(   0, 580, 180, 120), "mod": 1, "nombre": "Fotocop."},
-	{"rect": Rect2( 280, 680, 420,  60), "mod": 2, "nombre": "Bloque A"},
+const HUD_TEMA := preload("res://scenes/ui/hud_tema.gd")
+
+# Zonas con su módulo GreenMetric asociado — layout real URBE.
+# NOTA: estos rects deben actualizarse cuando llegue el nuevo mapa del
+# campus (está en rediseño); "lugar" es solo referencia para quien edite.
+const ZONAS_AVANCE : Array = [
+	{"lugar": "Estac. M5",  "rect": Rect2(   0, 120, 220, 420), "mod": 5},
+	{"lugar": "Cafetín",    "rect": Rect2( 280, 120, 200, 160), "mod": 3},
+	{"lugar": "Bloque E",   "rect": Rect2( 700, 120, 380, 300), "mod": 2},
+	{"lugar": "Est. Dist.", "rect": Rect2(1120, 120, 288, 540), "mod": 1},
+	{"lugar": "Bloque D",   "rect": Rect2( 280, 320, 200, 160), "mod": 2},
+	{"lugar": "Patio",      "rect": Rect2( 480, 120, 220, 360), "mod": 4},
+	{"lugar": "Bloque C",   "rect": Rect2( 280, 520, 180, 120), "mod": 2},
+	{"lugar": "Bloque B",   "rect": Rect2( 520, 520, 180, 120), "mod": 2},
+	{"lugar": "Rectorado",  "rect": Rect2( 740, 480, 320, 180), "mod": 6},
+	{"lugar": "Fotocop.",   "rect": Rect2(   0, 580, 180, 120), "mod": 1},
+	{"lugar": "Bloque A",   "rect": Rect2( 280, 680, 420,  60), "mod": 2},
 ]
 
-func toggle_mapa_calor() -> void:
-	mostrar_calor = not mostrar_calor
+func toggle_mapa_avance() -> bool:
+	mostrar_avance = not mostrar_avance
 	queue_redraw()
+	return mostrar_avance
 
 func actualizar_modulo(modulo_id: int, nuevo_progreso: float) -> void:
 	impacto[modulo_id] = clampf(nuevo_progreso, 0.0, 1.0)
 	queue_redraw()
 
-func _dibujar_mapa_calor(font: Font) -> void:
-	for info : Dictionary in EDIFICIOS_CALOR:
+# Único lugar con los umbrales rojo/amarillo/verde del mapa de avance;
+# los usa tanto _dibujar_mapa_avance() como _color_indicador() (los puntos
+# sobre cada edificio) para no repetir los mismos números dos veces.
+static func color_nivel(pct: float) -> Color:
+	if pct < 0.40:   return Color(0.90, 0.18, 0.18)
+	elif pct < 0.75: return Color(0.92, 0.72, 0.08)
+	else:            return Color(0.18, 0.85, 0.18)
+
+func _dibujar_mapa_avance(font: Font) -> void:
+	# Overlay oscuro sobre todo el mapa para resaltar las zonas coloreadas.
+	draw_rect(Rect2(0, 0, 1408, 768), Color(0, 0, 0, 0.45))
+	for info : Dictionary in ZONAS_AVANCE:
 		var mod_id : int   = int(info["mod"])
 		var rect   : Rect2 = info["rect"]
-		var pct    : float = clampf(float(impacto.get(mod_id, 0.5)), 0.0, 1.0)
-		# Color: rojo → amarillo → verde según porcentaje
-		var col : Color
-		if pct < 0.5:
-			col = Color(0.90, pct * 1.8, 0.05, 0.42)
-		else:
-			col = Color((1.0 - pct) * 1.8, 0.85, 0.05, 0.42)
-		draw_rect(rect, col)
-		# Borde indicador
-		draw_rect(rect, Color(col.r, col.g, col.b, 0.70), false, 2.0)
-		# Porcentaje centrado
-		var txt  : String  = "%d%%" % int(pct * 100)
-		var tpos : Vector2 = rect.get_center() + Vector2(-10, -6)
-		draw_string(font, tpos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
-					Color(1, 1, 1, 0.90))
-	# Leyenda
-	var lx : float = 10.0
-	var ly : float = 168.0
-	draw_rect(Rect2(lx, ly, 100, 16), Color(0, 0, 0, 0.55))
-	draw_string(font, Vector2(lx + 3, ly + 12), "MAPA DE CALOR",
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 0.4, 0.90))
-	draw_rect(Rect2(lx,      ly + 18, 32, 8), Color(0.90, 0.15, 0.05, 0.75))
-	draw_string(font, Vector2(lx + 35, ly + 26), "Bajo", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color.WHITE)
-	draw_rect(Rect2(lx + 60, ly + 18, 32, 8), Color(0.90, 0.80, 0.05, 0.75))
-	draw_string(font, Vector2(lx + 95, ly + 26), "Medio", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color.WHITE)
-	draw_rect(Rect2(lx + 130,ly + 18, 32, 8), Color(0.15, 0.85, 0.15, 0.75))
-	draw_string(font, Vector2(lx + 165,ly + 26), "Alto", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color.WHITE)
+		var pct    : float = clampf(float(impacto.get(mod_id, 0.0)), 0.0, 1.0)
+		var col    : Color = color_nivel(pct)
+		draw_rect(rect, Color(col.r, col.g, col.b, 0.42))
+		draw_rect(rect, col, false, 2.0)
+		_dibujar_badge_avance(font, rect, mod_id, pct, col)
+
+
+# Insignia en la PARTE SUPERIOR del rect (nunca al centro, donde va el
+# nombre del edificio): "<icono> <categoría> <NN>%", con fondo redondeado.
+func _dibujar_badge_avance(font: Font, rect: Rect2, mod_id: int, pct: float, col: Color) -> void:
+	if mod_id < 0 or mod_id >= HUD_TEMA.CATEGORIAS.size():
+		return
+	var cat : Dictionary = HUD_TEMA.CATEGORIAS[mod_id]
+	if cat.is_empty():
+		return
+	var txt   : String = "%s %s %d%%" % [cat["icono"], cat["nombre"], int(pct * 100)]
+	var fsize : int     = 10
+	var tam   : Vector2 = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize)
+	var pad_h : float = 6.0
+	var pad_v : float = 3.0
+	var badge_w : float = tam.x + pad_h * 2.0
+	var badge_h : float = tam.y + pad_v * 2.0
+	var badge_x : float = rect.position.x + (rect.size.x - badge_w) * 0.5
+	var badge_y : float = rect.position.y + 6.0
+	var badge_rect := Rect2(badge_x, badge_y, badge_w, badge_h)
+
+	var caja := StyleBoxFlat.new()
+	caja.bg_color = Color(16 / 255.0, 28 / 255.0, 38 / 255.0, 0.9)
+	caja.border_color = col
+	caja.set_border_width_all(1)
+	caja.set_corner_radius_all(6)
+	draw_style_box(caja, badge_rect)
+
+	draw_string(font, Vector2(badge_x + pad_h, badge_y + badge_h - pad_v - 2.0), txt,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, fsize, Color(1, 1, 1, 0.95))
 
 func _color_edif(modulo_id: int, base: Color) -> Color:
 	if not impacto.has(modulo_id):
@@ -161,10 +184,7 @@ func _color_edif(modulo_id: int, base: Color) -> Color:
 func _color_indicador(modulo_id: int) -> Color:
 	if not impacto.has(modulo_id):
 		return Color.TRANSPARENT
-	var pct : float = impacto[modulo_id]
-	if pct < 0.40:   return Color(0.90, 0.18, 0.18)
-	elif pct < 0.75: return Color(0.92, 0.72, 0.08)
-	else:            return Color(0.18, 0.85, 0.18)
+	return color_nivel(impacto[modulo_id])
 
 
 func _draw() -> void:
@@ -361,9 +381,9 @@ func _draw() -> void:
 	draw_arc(Vector2(560, 754), 9, 0.0, TAU, 16, C_TECHO, 1.5)
 	_draw_str(font, "U", Vector2(560, 757), C_AZUL_OS, 7)
 
-	# ── MAPA DE CALOR (opcional, encima de todo) ──────────────
-	if mostrar_calor:
-		_dibujar_mapa_calor(font)
+	# ── MAPA DE AVANCE (opcional, encima de todo) ─────────────
+	if mostrar_avance:
+		_dibujar_mapa_avance(font)
 
 
 # ── CONTENEDORES DE RECICLAJE ─────────────────────────────

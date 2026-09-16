@@ -10,7 +10,7 @@ const TEMA := preload("res://scenes/ui/hud_tema.gd")
 signal accion(indice: int)
 
 const DEFS : Array = [
-	{"emoji": "🌡", "label": "Calor",   "tip": "Mapa de calor energético", "color": TEMA.NARANJA},
+	{"emoji": "🌡", "label": "Avance",  "tip": "Mapa de avance del campus", "color": TEMA.NARANJA},
 	{"emoji": "📊", "label": "Reporte", "tip": "Reporte GreenMetric",      "color": TEMA.CIAN},
 	{"emoji": "🏆", "label": "Ranking", "tip": "Tabla de clasificación",   "color": TEMA.DORADO},
 	{"emoji": "🔬", "label": "Simular", "tip": "Simulador de decisiones",  "color": TEMA.VIOLETA},
@@ -80,3 +80,13 @@ func tecla(keycode: int) -> bool:
 		return false
 	accion.emit(i)
 	return true
+
+
+# Estado "encendido" del botón (p.ej. mapa de avance activo): usa el mismo
+# fondo semitransparente que el hover para que se lea como presionado.
+func set_activo(indice: int, activo: bool) -> void:
+	if indice < 0 or indice >= botones.size():
+		return
+	var col : Color = DEFS[indice]["color"]
+	var bg  : Color = Color(col, 0.18) if activo else TEMA.PANEL_BG
+	botones[indice].add_theme_stylebox_override("normal", TEMA.caja(bg, col, 2, 10))

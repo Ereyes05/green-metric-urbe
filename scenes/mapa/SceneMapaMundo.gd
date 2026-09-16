@@ -55,6 +55,7 @@ const HUD_GREENMETRIC:= preload("res://scenes/ui/hud_panel_greenmetric.gd")
 const HUD_ACCIONES   := preload("res://scenes/ui/hud_acciones.gd")
 const HUD_BANNER     := preload("res://scenes/ui/hud_banner_zona.gd")
 const HUD_AVISO      := preload("res://scenes/ui/hud_aviso.gd")
+const HUD_LEYENDA    := preload("res://scenes/ui/hud_leyenda_avance.gd")
 
 # ── Datos de los NPCs (uno por zona) — posiciones en nuevo mapa URBE ─
 var DATOS_NPCS : Array = [
@@ -383,6 +384,7 @@ var _hud_gm       = null   # hud_panel_greenmetric.gd
 var _hud_acciones = null   # hud_acciones.gd
 var _hud_banner   = null   # hud_banner_zona.gd
 var _hud_aviso    = null   # hud_aviso.gd
+var _hud_leyenda  = null   # hud_leyenda_avance.gd
 
 # ── Panel de misión completada ────────────────────────────────
 var _complete_panel  : Panel  = null
@@ -561,14 +563,20 @@ func _construir_hud() -> void:
 	_hud_canvas.add_child(_hud_banner)
 	_hud_aviso = HUD_AVISO.new()
 	_hud_canvas.add_child(_hud_aviso)
+	_hud_leyenda = HUD_LEYENDA.new()
+	_hud_canvas.add_child(_hud_leyenda)
 
 
 # Barra de acciones del HUD (botones o teclas 1–5).
 func _on_hud_accion(indice: int) -> void:
 	match indice:
 		0:
-			if mapa_campus and mapa_campus.has_method("toggle_mapa_calor"):
-				mapa_campus.toggle_mapa_calor()
+			if mapa_campus and mapa_campus.has_method("toggle_mapa_avance"):
+				var estado : bool = mapa_campus.toggle_mapa_avance()
+				if _hud_leyenda:
+					_hud_leyenda.set_activo(estado)
+				if _hud_acciones:
+					_hud_acciones.set_activo(0, estado)
 			_sfx("zona")
 		1: _abrir_resultados()
 		2: _leaderboard_ui.mostrar()
@@ -1018,9 +1026,9 @@ func _actualizar_hud() -> void:
 
 
 # Única vía para actualizar barras de categoría, índices del HUD y mapa de
-# calor. Todos leen PuntajeManager (avance 80 + comprensión 10 + decisiones 5
+# avance. Todos leen PuntajeManager (avance 80 + comprensión 10 + decisiones 5
 # + sinergias 5). Antes cada pantalla tenía su propio número (índice de
-# impacto sin guardar, valores fijos del mapa de calor, % de misiones).
+# impacto sin guardar, valores fijos del mapa de avance, % de misiones).
 func _refrescar_progreso(_cats: Dictionary = {}, _total: float = 0.0) -> void:
 	for mod_id in _progreso_modulos.keys():
 		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
@@ -1437,7 +1445,6 @@ func _init_sistemas_eva() -> void:
 
 	_sim_decision_ui = SIMULADOR_ESCENA.new()
 	add_child(_sim_decision_ui)
-	_sim_decision_ui.decision_tomada.connect(_on_decision_tomada)
 
 	# Pantalla de resultados GreenMetric
 	_resultados_ui = RESULTADOS_ESCENA.new()
@@ -1522,10 +1529,6 @@ func _on_crisis_resulta(modulo_id: int, exito: bool) -> void:
 		EconomiaManager.otorgar_insignia("crisis_resuelta")
 	_timer_crisis = randf_range(_CRISIS_MIN, _CRISIS_MAX)
 
-
-func _on_decision_tomada(_modulo_id: int, delta: float) -> void:
-	if delta > 0.0:
-		EconomiaManager.ganar_creditos(15, "decision")
 
 
 # ════════════════════════════════════════════════════════════
