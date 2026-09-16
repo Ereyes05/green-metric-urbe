@@ -60,8 +60,11 @@ func _poblar_filas(data: Array) -> void:
 	_estado_lbl.visible = false
 	_rows_vbox.visible  = true
 
+	# free() inmediato: con queue_free las filas viejas seguían en la lista
+	# durante ese frame y se sumaban a las nuevas.
 	for child in _rows_vbox.get_children():
-		child.queue_free()
+		_rows_vbox.remove_child(child)
+		child.free()
 
 	for i in data.size():
 		var entrada : Dictionary = data[i] if data[i] is Dictionary else {}
@@ -70,10 +73,9 @@ func _poblar_filas(data: Array) -> void:
 		var nivel   : String     = RANGOS.nombre(int(entrada.get("niveles_completos", 0)))
 		var es_yo   : bool       = bool(entrada.get("es_yo", false))
 
-		var fila := HBoxContainer.new()
-		fila.add_theme_constant_override("separation", 12)
-
-		var bg := Panel.new()
+		# PanelContainer (no Panel): toma la altura de su contenido. Con Panel
+		# cada fila medía 0 px dentro del VBox y todas se dibujaban encimadas.
+		var bg := PanelContainer.new()
 		bg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var ps := StyleBoxFlat.new()
 		ps.bg_color = Color(0.25, 0.55, 0.10, 0.35) if es_yo else Color(0.05, 0.08, 0.12, 0.80)
@@ -84,7 +86,6 @@ func _poblar_filas(data: Array) -> void:
 		ps.set_corner_radius_all(8)
 		bg.add_theme_stylebox_override("panel", ps)
 		var row_mg := MarginContainer.new()
-		row_mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		for m in ["margin_left","margin_right","margin_top","margin_bottom"]:
 			row_mg.add_theme_constant_override(m, 6)
 		bg.add_child(row_mg)
