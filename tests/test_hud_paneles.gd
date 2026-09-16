@@ -58,6 +58,9 @@ func _ready() -> void:
 	_check(gm.popover.visible, "popover visible al pasar el mouse")
 	gm.ocultar_popover()
 	_check(not gm.popover.visible, "popover se oculta")
+	gm.mostrar_popover(1)
+	gm.mostrar_popover(2)
+	_check(gm._pop_vb.get_child_count() == 6, "popover libera su contenido antes de rearmarlo: %d" % gm._pop_vb.get_child_count())
 
 	print("test_hud_paneles: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

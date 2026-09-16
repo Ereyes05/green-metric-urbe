@@ -203,7 +203,8 @@ func texto_falta(datos: Dictionary) -> String:
 
 func mostrar_popover(cat: int) -> void:
 	for c in _pop_vb.get_children():
-		c.queue_free()
+		_pop_vb.remove_child(c)
+		c.free()
 	var info : Dictionary = TEMA.CATEGORIAS[cat]
 	var d : Dictionary = _datos.get(cat, {})
 	_pop_vb.add_child(TEMA.label("%s %s · %d/100" % [info["icono"], info["nombre"], roundi(float(d.get("total", 0.0)))], 11, TEMA.TEXTO, 600))
