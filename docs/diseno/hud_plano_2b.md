@@ -2,7 +2,9 @@
 
 Propuesta de Claude Design elegida por el usuario (mockup "HUD final — estilo
 plano (1a)", captura 2a). Se descartó la variante pixel art (3a) por estética.
-**Pendiente de implementar** — ver `docs/ESTADO_PROYECTO.md`, sección 8.
+**Implementado 2026-09-16** (plan
+`docs/superpowers/plans/2026-09-16-hud-plano-rangos-ranking.md`); falta
+prueba en el juego con cuenta real y re-export web.
 
 ## Decisiones tomadas junto con esta especificación
 
@@ -92,3 +94,32 @@ plano (1a)", captura 2a). Se descartó la variante pixel art (3a) por estética.
 - **Barra segmentada:** HBoxContainer (separation 2) con 4 Panel de stretch_ratio 80/10/5/5, cada uno con un ColorRect hijo; corner_radius solo en el primero y el último.
 - **Popover:** PanelContainer oculto, se muestra en mouse_entered / focus_entered de la fila; top_level = true.
 - **Texto tabular:** Label con fuente Rubik y OpenType feature tnum, o LabelSettings con fuente monoespaciada para los números.
+
+## Desvíos respecto de la spec
+
+Rulings de diseño tomados al escribir el plan y durante la implementación
+(no estaban en la especificación 2b original):
+
+- **Barra "hacia el siguiente rango":** los rangos ya no dependen del XP, así
+  que la barra muestra el avance de misiones del/los nivel(es) que faltan
+  para el siguiente rango (con 4 o 5 niveles completos, EcoLíder pide el 5 y
+  el 6). Texto izq. «Hacia Estratega», der. «1578 XP». Con EcoLíder: «Rango
+  máximo» y barra llena.
+- **Nombre + inicial:** primer nombre + inicial del primer apellido.
+  `estudiantes.nombre` guarda 3–4 palabras: con 4+ palabras el apellido es la
+  3.ª, con 2–3 es la 2.ª. Vacío o con "@" → "Eco-Ranger".
+- **Banner de zona:** queda visible mientras el jugador está en la zona (la
+  pista «E · interactuar» debe verse); se anima al entrar (0,18 s) y al salir
+  (0,25 s). La notificación central al entrar a una zona se elimina
+  (duplicaba el banner).
+- **Capas:** el HUD sigue en el CanvasLayer existente (layer 5) con el aviso
+  en el mismo canvas; no se crean CanvasLayer 1/2.
+- **Emoji de rango:** «⭐» (ya está en el recorte de NotoColorEmoji).
+- **Celebración:** la de "¡NIVEL SUBIDO!" por XP se elimina; al subir de
+  rango se muestra un aviso central «⭐ Nuevo rango: <nombre>».
+- **Aviso "Faltan N EC":** se muestra como bloqueo (borde rojo #E8556B), no
+  con el borde dorado por defecto — es un aviso que impide una acción, no una
+  notificación informativa.
+- **Colores de `CATEGORIAS`:** referencian los tokens de `hud_tema.gd` en vez
+  de repetir valores hex propios, para que un cambio de tema no desalinee
+  los colores de categoría del resto del HUD.

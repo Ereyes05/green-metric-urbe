@@ -4,8 +4,8 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-14 (puntaje GreenMetric unificado — ver
-secciones 3, 4 y 8).
+Última actualización: 2026-09-16 (HUD plano 2b + rangos por nivel + ranking
+público — ver secciones 3, 4, 8 y 9).
 
 > ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
 > [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
@@ -69,6 +69,30 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
     verdad. También sincroniza con el servidor los "detalles" de
     `NivelManager` (decisiones con criterio propio del Nivel 6), que antes
     vivían solo en el archivo local de la máquina.
+  - `rangos.gd` (nuevo, 2026-09-16) — rango por niveles de misiones
+    completados (Semilla → Brote N1 → Árbol N2 → Estratega N3 →
+    Investigador N4-5 → EcoLíder los 6), sin autoloads, testeable a solas.
+    Reemplaza el rango calculado por XP (con ~2.800 XP totales en el juego
+    nadie pasaba de Árbol/Estratega).
+- **`scenes/ui/hud_*.gd`** (nuevo, 2026-09-16) — HUD plano de la
+  especificación `docs/diseno/hud_plano_2b.md`, partido en componentes chicos
+  que solo muestran lo que les pasan (no leen autoloads); `SceneMapaMundo.gd`
+  los crea y les pasa los datos:
+  - `hud_tema.gd` — únicos tokens de color/fuente/radio del HUD.
+  - `hud_barra.gd` — barra de progreso genérica (fracción → ancho, con tween).
+  - `hud_ficha_jugador.gd` — nombre, vidas, nivel de misiones, rango,
+    EcoCredits, barra hacia el siguiente rango, índices del campus.
+  - `hud_panel_greenmetric.gd` — puntaje 0–100, 6 filas con barra partida
+    80/10/5/5 y popover de desglose por categoría al pasar el mouse.
+  - `hud_acciones.gd` — 5 botones con teclas 1–5, señal `accion(indice)`.
+  - `hud_banner_zona.gd` — banner de zona, visible mientras el jugador está
+    en ella.
+  - `hud_aviso.gd` — aviso central con cola (máx. 2 pendientes).
+  Pruebas: `timeout 120 "$GODOT" --headless --path . res://tests/<t>.tscn`
+  con `t` = `test_rangos`, `test_hud_tema`, `test_hud_paneles`,
+  `test_hud_controles`. Captura de verificación 1280×720 (no headless,
+  necesita dibujar): `timeout 60 "$GODOT" --path . --resolution 1280x720
+  res://tests/captura_hud.tscn -- <ruta.png>`.
 - **`scenes/ui/tienda_conocimiento.gd`** — pantalla de la Tienda del
   Conocimiento (HU-012). Se abre con el botón 🛒 del HUD o sola, cuando una
   misión exige una herramienta que el estudiante no tiene
@@ -290,6 +314,22 @@ vía es la función, que valida `auth.uid()` y los datos.
   **no** mezcla nada (consola: `detalles NO cargados (fallo o timeout)`):
   subir los locales sin saber qué tiene el servidor podría pisar datos más
   nuevos; se reintenta en el próximo login.
+
+### Ranking público
+
+Nuevo (2026-09-16). `ranking_publico()` (pública, `security definer`) arma el
+top 50 leyendo `estudiantes` directo (antes `cargar_ranking` leía
+`progreso_estudiante`, la tabla vieja, con la clave anónima, y la RLS solo
+dejaba ver filas propias — por eso el ranking salía vacío). Copia completa en
+`sql/ranking_publico.sql`.
+
+Devuelve, por fila: `nombre` (primer nombre + inicial del apellido, ver
+sección 9 — "Eco-Ranger" si está vacío o tiene "@"), `xp_total`,
+`niveles_completos` (para que el cliente calcule el rango con
+`autoload/rangos.gd`), `titulo` (el de la tienda, si compró
+`titulo_embajador`) y `es_yo` (calculado en el servidor con `auth.uid()`, no
+por nombre). **Nunca expone** cédula, correo ni `user_id`: ninguno de esos
+campos sale de la función.
 
 ## 5. Estado por nivel — qué está verificado visualmente
 
@@ -521,27 +561,28 @@ mecanismo técnico de escaneo → activación a distancia.
 - [x] **Decidir qué hacer con el conflicto pixel art vs Flat Design** — decidido
   2026-09-15: **estilo plano** (se probó una variante pixel art del HUD y se
   descartó). Queda por reflejarlo en la tesis (brecha 4 de la sección 9).
-- [ ] 🟡 **PRÓXIMO AL RETOMAR: rediseño del HUD plano + rangos por nivel +
-  ranking** (aprobado 2026-09-15, en pausa por tokens hasta que el usuario diga
-  "arrancá"). Todo el detalle y las medidas en `docs/diseno/hud_plano_2b.md`.
-  Orden acordado, con subagentes y revisión por parte (plan en
-  `docs/superpowers/plans/` antes de programar):
+- [x] **Rediseño del HUD plano + rangos por nivel + ranking** — implementado
+  el 2026-09-16 (aprobado 2026-09-15). Todo el detalle y las medidas en
+  `docs/diseno/hud_plano_2b.md` (sección "Desvíos respecto de la spec" para
+  lo que cambió respecto del mockup 2a). Hecho:
   1. **Rangos uno por nivel completado** (Semilla → Brote N1 → Árbol N2 →
-     Estratega N3 → Investigador N4 → EcoLíder con los 6). Hoy son por XP y
-     con ~2.800 XP totales nadie pasa de Árbol ("Nv.3 Árbol" en el último
-     nivel confunde).
-  2. **Ranking arreglado:** hoy sale vacío porque `cargar_ranking` lee
-     `progreso_estudiante` (tabla vieja) con la clave anónima y la RLS no deja
-     ver filas ajenas. Función pública nueva sobre `estudiantes` con nombre +
-     inicial, XP y título; nunca cédula ni correo. "(Tú)" por user_id. Borrar
-     de paso las constantes del proyecto viejo en `leaderboard.gd`.
-  3. **HUD plano según la especificación 2b:** tema centralizado
-     (`scenes/ui/hud_tema.gd`), fuente Rubik (OFL), ficha con nivel y rango
-     separados e índices adentro, panel GreenMetric 80/10/5/5 con desglose al
-     pasar el mouse y puntaje del campus, 5 botones con nombre y teclas 1–5,
-     banner de zona y aviso central con cola. Sin redibujos por cuadro.
-  4. **Verificación:** tests existentes, captura 1280×720 contra el mockup 2a,
-     prueba en la web con la cuenta del usuario, re-export y publicar con OK.
+     Estratega N3 → Investigador N4-5 → EcoLíder con los 6) — `autoload/rangos.gd`.
+  2. **Ranking arreglado** — `ranking_publico()` sobre `estudiantes`, nombre +
+     inicial, XP, título y "(Tú)" por `user_id` (ver sección 4, "Ranking
+     público"). Pendiente: borrar las constantes del proyecto viejo en
+     `leaderboard.gd` (sigue listada más abajo en esta sección).
+  3. **HUD plano según la especificación 2b** — componentes
+     `scenes/ui/hud_*.gd` (sección 3), tema centralizado, ficha con nivel y
+     rango separados e índices adentro, panel GreenMetric 80/10/5/5 con
+     desglose al pasar el mouse, 5 botones con teclas 1–5, banner de zona y
+     aviso central con cola.
+  4. **Verificación:** los 7 tests headless (`test_compila`, `test_puntaje`,
+     `test_niveles`, `test_rangos`, `test_hud_tema`, `test_hud_paneles`,
+     `test_hud_controles`) pasan; captura 1280×720 revisada contra el mockup
+     2a (`tests/captura_hud.gd`/`.tscn`).
+     **Pendiente:** prueba en el juego con la cuenta real del usuario,
+     re-export web (`python scripts/exportar_web.py`) y merge/publicación —
+     ninguno se hizo todavía porque falta el OK del usuario.
 - [ ] **Antes de publicar lo del proyecto A:** el build de `docs/juego` es
   anterior a los últimos fixes (commit f3c6690) — re-exportar con
   `python scripts/exportar_web.py`. La prueba del usuario en escritorio salió
@@ -641,6 +682,11 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
    y el login (2026-09-11) suma fondo pixel-art y fuente Press Start 2P.
    **Decisión pendiente y consciente del equipo**, no un descuido: o se
    ajusta el juego, o se justifica el desvío en la tesis.
+   **Actualización 2026-09-16:** el HUD del mapa (la pantalla que más tiempo
+   ve el estudiante) ya es Flat Design (`docs/diseno/hud_plano_2b.md`, y
+   sección 3 y 8 de este documento). Sigue pendiente el login y cualquier
+   otra pantalla en pixel art — la tesis tiene que reflejar el HUD nuevo y no
+   puede seguir afirmando sin matices que "el juego es pixel art".
 5. 🟡 **Requisito responsive/móvil.** La Tabla 1 concluye que es
    *"mandatorio adoptar un enfoque multi-plataforma"* (70% de la muestra usa
    móvil parcial o totalmente). Existe `touch_controls.gd` y está conectado,
