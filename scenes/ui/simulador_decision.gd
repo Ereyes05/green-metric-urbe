@@ -114,7 +114,7 @@ var _opcion_sel    : int        = -1
 var _confirmado    : bool       = false
 
 var _overlay       : ColorRect   = null
-var _panel         : Panel       = null
+var _panel         : PanelContainer = null
 var _mg            : MarginContainer = null
 var _titulo_lbl    : Label       = null
 var _icono_lbl     : Label       = null
@@ -180,11 +180,12 @@ func _poblar() -> void:
 			s.border_color = Color(0.25, 0.35, 0.25)
 			s.set_border_width_all(2); s.set_corner_radius_all(10)
 			_btn_ops[i].add_theme_stylebox_override("normal", s)
+			_btn_ops[i].remove_theme_color_override("font_color")
+			_btn_ops[i].remove_theme_color_override("font_disabled_color")
+			_btn_ops[i].remove_theme_stylebox_override("disabled")
 			var etq : Label = _etq_ops[i]
 			etq.text    = ""
 			etq.visible = false
-
-	call_deferred("_ajustar_alto")
 
 
 func _seleccionar(idx: int) -> void:
@@ -221,21 +222,40 @@ func _confirmar() -> void:
 			mejor_idx   = i
 
 	for i in _btn_ops.size():
-		_btn_ops[i].disabled = true
+		var btn : Button = _btn_ops[i]
+		btn.disabled = true
 		if i < ops.size():
 			var op  : Dictionary = ops[i]
 			var etq : Label = _etq_ops[i]
+			var es_elegida : bool = (i == _opcion_sel)
 			var txt : String = op["impacto"]
-			if i == _opcion_sel:
+			if es_elegida:
 				txt += "   ·   Tu elección"
 			etq.text    = txt
 			etq.visible = true
 			etq.add_theme_color_override("font_color", op["color"])
+
+			# La opción elegida mantiene su borde/fondo resaltado aun
+			# deshabilitada; las demás se atenúan para que "Tu elección"
+			# no sea sólo un texto chico sino visualmente evidente.
+			# Godot usa el stylebox "disabled" (no "normal") para un botón
+			# deshabilitado, así que hay que sobrescribir ambos.
 			var s := StyleBoxFlat.new()
-			s.bg_color     = Color(0.08, 0.22, 0.08) if i == _opcion_sel else Color(0.06, 0.10, 0.08)
-			s.border_color = op["color"]
-			s.set_border_width_all(2); s.set_corner_radius_all(10)
-			_btn_ops[i].add_theme_stylebox_override("normal", s)
+			if es_elegida:
+				s.bg_color     = Color(0.08, 0.22, 0.08)
+				s.border_color = op["color"]
+				s.set_border_width_all(3)
+			else:
+				s.bg_color     = Color(0.05, 0.07, 0.06)
+				s.border_color = Color(0.18, 0.22, 0.18)
+				s.set_border_width_all(1)
+			s.set_corner_radius_all(10)
+			btn.add_theme_stylebox_override("normal", s)
+			btn.add_theme_stylebox_override("disabled", s)
+
+			var col_txt : Color = Color(0.95, 0.95, 0.95) if es_elegida else Color(0.42, 0.45, 0.42)
+			btn.add_theme_color_override("font_color", col_txt)
+			btn.add_theme_color_override("font_disabled_color", col_txt)
 
 	var op_sel : Dictionary = ops[_opcion_sel]
 	_edu_lbl.text    = op_sel["edu"]
@@ -251,23 +271,12 @@ func _confirmar() -> void:
 	_btn_confirmar.text     = "Siguiente caso →"
 	_btn_confirmar.disabled = false
 
-	call_deferred("_ajustar_alto")
-
 
 func _on_btn_accion_pressed() -> void:
 	if not _confirmado:
 		_confirmar()
 	else:
 		mostrar()
-
-
-func _ajustar_alto() -> void:
-	if _mg == null or _panel == null:
-		return
-	var h : float = _mg.get_combined_minimum_size().y
-	h = clampf(h, 320.0, 660.0)
-	_panel.offset_top    = -h / 2.0
-	_panel.offset_bottom =  h / 2.0
 
 
 # ── Construcción UI ───────────────────────────────────────────
@@ -277,13 +286,14 @@ func _crear_ui() -> void:
 	_overlay.color = Color(0.0, 0.0, 0.0, 0.76)
 	add_child(_overlay)
 
-	_panel = Panel.new()
-	_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(720, 0)
-	_panel.offset_left   = -360.0
-	_panel.offset_right  =  360.0
-	_panel.offset_top    = -260.0
-	_panel.offset_bottom =  260.0
+	# CenterContainer + PanelContainer: el panel se ajusta automáticamente
+	# a la altura de su contenido (VBoxContainer) y queda centrado, tanto
+	# antes como después de confirmar — sin cálculos manuales de tamaño.
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
+
+	_panel = PanelContainer.new()
 	var ps := StyleBoxFlat.new()
 	ps.bg_color     = Color(0.04, 0.07, 0.06, 0.99)
 	ps.border_color = Color(0.22, 0.78, 0.22)
@@ -292,15 +302,15 @@ func _crear_ui() -> void:
 	ps.shadow_color = Color(0.12, 0.60, 0.18, 0.45)
 	ps.shadow_size  = 26
 	_panel.add_theme_stylebox_override("panel", ps)
-	add_child(_panel)
+	center.add_child(_panel)
 
 	_mg = MarginContainer.new()
-	_mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for m in ["margin_left","margin_right","margin_top","margin_bottom"]:
 		_mg.add_theme_constant_override(m, 22)
 	_panel.add_child(_mg)
 
 	var vbox := VBoxContainer.new()
+	vbox.custom_minimum_size = Vector2(676, 0)
 	vbox.add_theme_constant_override("separation", 7)
 	_mg.add_child(vbox)
 
