@@ -30,12 +30,12 @@ const SEPARADOR      := Color(1.0, 1.0, 1.0, 0.10)
 
 const CATEGORIAS : Array = [
 	{},
-	{"icono": "🌿", "nombre": "Entorno",    "color": Color("#62D06A")},
-	{"icono": "⚡", "nombre": "Energía",    "color": Color("#E8BE55")},
-	{"icono": "♻", "nombre": "Residuos",   "color": Color("#E5893E")},
-	{"icono": "💧", "nombre": "Agua",       "color": Color("#3FBEDC")},
-	{"icono": "🚲", "nombre": "Transporte", "color": Color("#9B77DF")},
-	{"icono": "📚", "nombre": "Educación",  "color": Color("#4FD1B0")},
+	{"icono": "🌿", "nombre": "Entorno",    "color": VERDE},
+	{"icono": "⚡", "nombre": "Energía",    "color": DORADO},
+	{"icono": "♻", "nombre": "Residuos",   "color": NARANJA},
+	{"icono": "💧", "nombre": "Agua",       "color": CIAN},
+	{"icono": "🚲", "nombre": "Transporte", "color": VIOLETA},
+	{"icono": "📚", "nombre": "Educación",  "color": TEAL},
 ]
 
 const EMOJIS_HUD : Array[String] = [
