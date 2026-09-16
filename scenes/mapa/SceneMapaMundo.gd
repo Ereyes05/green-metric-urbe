@@ -362,6 +362,10 @@ const QUIZ_POR_MISION : Dictionary = {
 # ── Estado ───────────────────────────────────────────────────
 var _xp_total           : int         = 0
 var _nivel_actual       : int         = 0
+# Último rango ya avisado con "⭐ Nuevo rango". -1 = todavía sin línea base:
+# la primera vez que _actualizar_hud() corre (arranque, progreso ya repoblado
+# desde el servidor en SceneLogin) no debe avisar — ver RANGOS.debe_anunciar().
+var _rango_anunciado    : int         = -1
 var _modulo_activo      : int         = -1
 var _nombre_activo      : String      = ""
 var _zona_activa        : String      = ""
@@ -397,6 +401,7 @@ var _tienda_ui        : CanvasLayer = null
 var _sim_decision_ui  : CanvasLayer = null
 var _resultados_ui    : CanvasLayer = null
 var _edificio_ui      : CanvasLayer = null
+var _overlay_carga    : ColorRect   = null   # aviso modal de _avisar_estado_carga(), si está visible
 # ── UIs de misiones por nivel ─────────────────────────────────
 var _plantar_ui       : CanvasLayer = null
 var _interior_ui      : CanvasLayer = null
@@ -705,6 +710,23 @@ func _toggle_menu_pausa() -> void:
 	_menu_pausa_canvas.visible = not _menu_pausa_canvas.visible
 
 
+# Cualquier panel/ventana modal que deba tragarse los atajos 1–5 de la
+# barra de acciones (además del menú de pausa y las UIs de misión/diálogo/
+# quiz/interior/reciclaje, que ya cortan _input antes de llegar acá).
+func _hay_ui_modal_abierta() -> bool:
+	if _tienda_ui and _tienda_ui.visible: return true
+	if _leaderboard_ui and _leaderboard_ui.visible: return true
+	if _sim_decision_ui and _sim_decision_ui.visible: return true
+	if _resultados_ui and _resultados_ui.visible: return true
+	if _tutorial_ui and _tutorial_ui.visible: return true
+	if _crisis_ui and _crisis_ui.visible: return true
+	if _edificio_ui and _edificio_ui.visible: return true
+	if _panel_contenedor and _panel_contenedor.visible: return true
+	if _panel_zona_mejora and _panel_zona_mejora.visible: return true
+	if is_instance_valid(_overlay_carga): return true
+	return false
+
+
 # ── Input ────────────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -738,8 +760,10 @@ func _input(event: InputEvent) -> void:
 	if reciclar_ui_node and reciclar_ui_node.visible:
 		return
 
-	# Atajos de la barra de acciones (1–5), solo sin otra UI abierta.
-	if _hud_acciones and _hud_acciones.tecla(event.keycode):
+	# Atajos de la barra de acciones (1–5), solo sin otra UI modal abierta
+	# (tienda, leaderboard, simulador, resultados, tutorial, crisis, edificio,
+	# panel de contenedor/zona de mejora, aviso de carga).
+	if _hud_acciones and not _hay_ui_modal_abierta() and _hud_acciones.tecla(event.keycode):
 		get_viewport().set_input_as_handled()
 		return
 
@@ -965,6 +989,12 @@ func _actualizar_hud() -> void:
 	var nm = _nivel_mgr()
 	var completos : int = RANGOS.niveles_superados(nm) if nm else 0
 	_nivel_actual = RANGOS.indice(completos)
+	# RANGOS.debe_anunciar() descarta la primera línea base (_rango_anunciado
+	# == -1: arranque o progreso recién repoblado desde el servidor) para no
+	# avisar un "ascenso" que en realidad ya venía de antes.
+	if RANGOS.debe_anunciar(_rango_anunciado, _nivel_actual) and _hud_aviso:
+		_hud_aviso.avisar("⭐ Nuevo rango: %s" % RANGOS.NOMBRES[_nivel_actual])
+	_rango_anunciado = _nivel_actual
 	if not _hud_ficha:
 		return
 	var hechos : Array = []
@@ -1033,6 +1063,7 @@ func _avisar_estado_carga() -> void:
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0.0, 0.0, 0.0, 0.75)
 	_hud_canvas.add_child(overlay)
+	_overlay_carga = overlay
 
 	var panel := Panel.new()
 	panel.custom_minimum_size = Vector2(460, 220)
@@ -1274,8 +1305,8 @@ func _on_btn_mejorar_zona() -> void:
 	var zona  : Node2D = _zona_en_panel
 	var costo : int    = zona.costo_siguiente()
 	if EconomiaManager.ecocredits < costo:
-		_mostrar_notificacion_zona("✗", "Faltan %d EC" % (costo - EconomiaManager.ecocredits),
-				Color(1.0, 0.35, 0.35))
+		if _hud_aviso:
+			_hud_aviso.avisar("✗  Faltan %d EC" % (costo - EconomiaManager.ecocredits), true)
 		return
 	EconomiaManager.gastar_creditos(costo, "mejora_zona", "%s:%d" % [zona.nombre_zona, zona.nivel + 1])
 	var lvl_antes : int = zona.nivel
@@ -2451,10 +2482,14 @@ func _on_informe_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_nivel_greenmetric_completado(nivel: int) -> void:
-	var rango_antes := _nivel_actual
+	# El aviso de "⭐ Nuevo rango" ya lo maneja _actualizar_hud() (ver
+	# RANGOS.debe_anunciar): PuntajeManager reacciona a
+	# NivelManager.mision_nivel_completada —que se emite ANTES que
+	# nivel_completado, la señal que dispara este handler— refrescando el
+	# HUD de forma síncrona, así que acá _nivel_actual ya está al día y
+	# comparar contra un "antes" tomado en este mismo momento nunca detecta
+	# el ascenso. _actualizar_hud() es idempotente: no hace daño repetirla.
 	_actualizar_hud()
-	if _nivel_actual > rango_antes and _hud_aviso:
-		_hud_aviso.avisar("⭐ Nuevo rango: %s" % RANGOS.NOMBRES[_nivel_actual])
 	var nm = _nivel_mgr()
 	var nombre = nm.NOMBRES_NIVEL[nivel] if nm else "Nivel %d" % nivel
 	var icono  = nm.ICONOS_NIVEL[nivel]  if nm else "⭐"

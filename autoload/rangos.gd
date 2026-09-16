@@ -53,3 +53,14 @@ static func fraccion_siguiente(nm: Object) -> float:
 	for n in niveles:
 		suma += 1.0 if nm.nivel_superado(n) else clampf(nm.pct_nivel(n), 0.0, 1.0)
 	return suma / niveles.size()
+
+
+# Decide si corresponde mostrar el aviso "⭐ Nuevo rango". `anunciado` es el
+# último índice de rango ya avisado (-1 = todavía sin línea base). Extraído
+# como función pura para que quien recalcula el rango en cada refresco del
+# HUD (que puede pasar varias veces por el mismo valor, o antes de tener una
+# línea base real —arranque, progreso recién repoblado desde el servidor—)
+# pueda decidir sin duplicar la lógica ni depender de CUÁNDO llega la señal
+# nivel_completado respecto de la que repinta el HUD.
+static func debe_anunciar(anunciado: int, nuevo: int) -> bool:
+	return anunciado >= 0 and nuevo > anunciado
