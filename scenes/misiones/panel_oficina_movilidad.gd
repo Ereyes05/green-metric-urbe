@@ -96,5 +96,6 @@ func _fila_consejo() -> Control:
 		for id in DATOS.ids_decisiones():
 			if not plan.resuelta(id):
 				faltan += 1
-		texto = "Consejo Universitario: faltan %d decisiones" % faltan
+		texto = ("Consejo Universitario: falta 1 decisión" if faltan == 1
+			else "Consejo Universitario: faltan %d decisiones" % faltan)
 	return UI.texto(texto, 12, color, 600)

@@ -411,6 +411,15 @@ static func decision(id: String) -> Dictionary:
 	return {}
 
 
+# Título legible de cualquier misión del Nivel 5, incluida tr_consejo (que no
+# está en DECISIONES). Usado por SceneMapaMundo para el aviso de misión
+# completada — antes mostraba el id crudo ("Tr Permisos", "Tr Consejo").
+static func titulo(mision_id: String) -> String:
+	if mision_id == DECISION_CONSEJO:
+		return "Consejo Universitario"
+	return str(decision(mision_id).get("titulo", ""))
+
+
 static func opcion(decision_id: String, opcion_id: String) -> Dictionary:
 	for o in decision(decision_id).get("opciones", []):
 		if o["id"] == opcion_id:
@@ -452,4 +461,4 @@ static func texto_sinergia(accion_id: String) -> String:
 	var s : Dictionary = SINERGIAS.get(accion_id, {})
 	if s.is_empty():
 		return ""
-	return "✨ Cruce: %s (se suma cuando el Consejo aprueba el plan)" % s["efecto"]
+	return "✨ Sinergia: %s (se suma cuando el Consejo aprueba el plan)" % s["efecto"]

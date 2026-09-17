@@ -116,6 +116,12 @@ func hay_panel_abierto() -> bool:
 	return false
 
 
+# Título legible de una misión del Nivel 5 (los 9 tr_*), para el aviso de
+# misión completada del mapa — ver DATOS.titulo().
+func titulo_mision(mision_id: String) -> String:
+	return DATOS.titulo(mision_id)
+
+
 func _crear_punto(clave: String, tipo: String, lugar: String, nombre: String) -> void:
 	var p = PUNTO.new()
 	p.mision_id = "" if tipo == "oficina" else clave
@@ -256,8 +262,13 @@ func _on_decision_resuelta(decision_id: String, _opcion_id: String, respuesta: D
 	if bool(respuesta.get("ok", false)):
 		plan.consejo["registrado"] = true
 		_guardar()
-		if panel_consejo.visible:
-			panel_consejo.abrir(plan)
+	# Se llega acá tanto si el registro salió bien como si falló — el panel
+	# necesita saber que YA llegó una respuesta (sea cual sea) para salir de
+	# "Registrando la calificación…" y, si falló, recién ahí mostrar el aviso
+	# naranja con el botón de reintento (I1: antes lo mostraba de una, antes
+	# de que llegara ninguna respuesta).
+	if panel_consejo.visible:
+		panel_consejo.marcar_registro_resuelto()
 
 
 # Sin re-pago (spec §11.1): quien completó el Nivel 5 viejo recibe 0 y 0;

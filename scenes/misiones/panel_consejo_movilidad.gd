@@ -30,6 +30,12 @@ var _resuelta : bool = false
 var _elegido : int = -1
 var _feedback : String = ""
 var _feedback_ok : bool = false
+# Ya se presentó el plan (o se pidió reintentar) y todavía no llegó la
+# primera respuesta del registro de la calificación (I1): mientras esto sea
+# true, la pantalla de resultado muestra un aviso neutral y no el aviso
+# naranja de "no registrada" ni el botón de reintento — ese solo aparece si
+# la respuesta, cuando llega, no fue exitosa (ver marcar_registro_resuelto()).
+var _esperando_registro : bool = false
 
 
 func _ready() -> void:
@@ -183,7 +189,25 @@ func _on_siguiente() -> void:
 func _terminar() -> void:
 	plan.presentar(_resultados)
 	fase = "resultado"
+	_esperando_registro = true
 	plan_presentado.emit()
+	_reconstruir()
+
+
+func _on_reintentar() -> void:
+	_esperando_registro = true
+	_reconstruir()
+	reintentar_registro.emit()
+
+
+# Conectado (indirectamente, vía nivel5_movilidad._on_decision_resuelta) a la
+# respuesta del registro de la calificación — llega tanto si salió bien como
+# si falló. No recibe el resultado: lo lee de plan.consejo["registrado"],
+# que el controlador ya actualizó antes de llamar acá.
+func marcar_registro_resuelto() -> void:
+	if fase != "resultado":
+		return
+	_esperando_registro = false
 	_reconstruir()
 
 
@@ -203,12 +227,14 @@ func _pintar_resultado() -> void:
 	if not sins.is_empty():
 		_vb.add_child(UI.separador())
 		for s in sins:
-			_vb.add_child(UI.texto("✨ Cruce ganado: %s" % DATOS.SINERGIAS.get(s, {}).get("efecto", ""), 12, TEMA.VERDE))
-	if not bool(c.get("registrado", false)):
+			_vb.add_child(UI.texto("✨ Sinergia ganada: %s" % DATOS.SINERGIAS.get(s, {}).get("efecto", ""), 12, TEMA.VERDE))
+	if _esperando_registro:
+		_vb.add_child(UI.texto("Registrando la calificación…", 12, TEMA.TEXTO_3))
+	elif not bool(c.get("registrado", false)):
 		_vb.add_child(UI.texto("La calificación todavía no quedó registrada en el servidor (sin conexión o sin sesión).", 12, TEMA.NARANJA))
 		var reintentar := UI.boton("Reintentar registro", TEMA.NARANJA, 34)
 		reintentar.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		reintentar.pressed.connect(func(): reintentar_registro.emit())
+		reintentar.pressed.connect(_on_reintentar)
 		_vb.add_child(reintentar)
 	var cerrar_btn := UI.boton("Cerrar", TEMA.VACIO, 34)
 	cerrar_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -77,6 +77,14 @@ func _ready() -> void:
 	_check(t.contains("Ciclovía con árboles · costo 22"), "tablero: decisión resuelta")
 	_check(t.contains("Pendiente · Garita del Estacionamiento M5"), "tablero: decisión pendiente con su lugar")
 	_check(t.contains("faltan 7 decisiones"), "tablero: estado del Consejo")
+	# I4: singular cuando falta exactamente una ("falta 1 decisión", no
+	# "faltan 1 decisiones"). tr_lote ya estaba resuelta arriba; resolvemos
+	# 6 más y dejamos tr_bici_cafetin pendiente.
+	for id in ["tr_permisos", "tr_carpool", "tr_shuttle", "tr_dia_sin_carros", "tr_flota", "tr_bici_bloque_e"]:
+		plan.aplicar_valida(id, MEJOR[id])
+	of.abrir(plan)
+	var t2 := _textos(of)
+	_check(t2.contains("falta 1 decisión") and not t2.contains("faltan 1"), "tablero: singular cuando falta una decisión (I4)")
 	of.cerrar()
 	_check(not of.visible, "Oficina se cierra")
 
@@ -133,16 +141,34 @@ func _ready() -> void:
 	var r0 : Dictionary = p2.consejo["objeciones"][0]
 	_check(r0["primer_argumento"] == mal and r0["correcto_primer_intento"] == false and r0["intentos"] == 2, "resultado de la primera objeción")
 	var tr := _textos(co)
-	_check(tr.contains("Aprobado") and tr.contains("4,60 de 5") and tr.contains("Reintentar registro"), "resultado con calificación y reintento de registro")
+	_check(tr.contains("Aprobado") and tr.contains("4,60 de 5"), "resultado con calificación")
+	# I1: recién presentado, todavía no llegó NINGUNA respuesta del registro
+	# (ni éxito ni falla) — debe verse un aviso neutral, sin el botón de
+	# reintento todavía (antes se mostraba el aviso naranja de "no
+	# registrada" de una, aunque el pedido siguiera en camino).
+	_check(tr.contains("Registrando la calificación") and not tr.contains("todavía no quedó registrada")
+		and _boton(co, "Reintentar registro") == null, "esperando la primera respuesta: aviso neutral, sin reintento")
+
+	# Llega la respuesta y falló (o no hay sesión): recién ahí el aviso
+	# naranja y el botón de reintento.
+	co.marcar_registro_resuelto()
+	var tr2 := _textos(co)
+	_check(tr2.contains("todavía no quedó registrada") and tr2.contains("Reintentar registro"), "respuesta fallida: aviso naranja y reintento")
 
 	var reintentos := [0]
 	co.reintentar_registro.connect(func(): reintentos[0] += 1)
 	_boton(co, "Reintentar registro").pressed.emit()
 	_check(reintentos[0] == 1, "reintento de registro manual")
+	_check(_textos(co).contains("Registrando la calificación") and _boton(co, "Reintentar registro") == null,
+		"reintento: vuelve al aviso neutral sin botón mientras espera de nuevo")
+
 	p2.consejo["registrado"] = true
-	co.abrir(p2)
+	co.marcar_registro_resuelto()
 	_check(co.fase == "resultado" and _boton(co, "Reintentar registro") == null, "registrado: sin botón de reintento")
-	_check(_textos(co).contains("Entorno +1"), "muestra los cruces")
+	var tr3 := _textos(co)
+	_check(tr3.contains("Entorno +1"), "muestra las sinergias")
+	# M4: vocabulario unificado a "Sinergia" (antes decía "Cruce ganado").
+	_check(tr3.contains("Sinergia ganada") and not tr3.contains("Cruce"), "sinergias con la palabra 'Sinergia', no 'Cruce'")
 	co.cerrar()
 
 	var p3 = _plan_completo()

@@ -1358,9 +1358,23 @@ func _on_btn_mejorar_zona() -> void:
 
 func _mostrar_mision_completada(mision_id: String, xp_ganado: int) -> void:
 	if not is_instance_valid(_complete_panel): return
+	# Misiones del Plan de Movilidad (tr_*): el id crudo capitalizado se lee
+	# mal ("Tr Permisos", "Tr Bici Bloque E", "Tr Consejo"). nivel5_movilidad
+	# conoce el título real de cada una (DATOS.decision(id)["titulo"], y
+	# "Consejo Universitario" para tr_consejo) — se usa cuando existe.
 	var nombre_mision : String = mision_id.replace("_", " ").capitalize()
+	if _nivel5 and mision_id.begins_with("tr_"):
+		var titulo_real : String = str(_nivel5.titulo_mision(mision_id))
+		if titulo_real != "":
+			nombre_mision = titulo_real
 	_complete_titulo.text = "✓ MISIÓN COMPLETADA\n" + nombre_mision
-	_complete_xp.text     = "+%d XP   (Total: %d XP)" % [xp_ganado, _xp_total]
+	# I3: quien ya había completado el Nivel 5 viejo no cobra de nuevo por
+	# las tr_* (ver nivel5_movilidad._completar(), spec §11.1) — xp_ganado
+	# llega en 0 para esas nueve misiones. Mostrar "+0 XP (Total: ...)" en
+	# cada una era ruido sin información; se oculta la línea entera.
+	_complete_xp.visible = xp_ganado > 0
+	if xp_ganado > 0:
+		_complete_xp.text = "+%d XP   (Total: %d XP)" % [xp_ganado, _xp_total]
 
 	_complete_panel.modulate.a = 0.0
 	_complete_panel.scale      = Vector2(0.7, 0.7)

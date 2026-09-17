@@ -95,9 +95,22 @@ func _ready() -> void:
 	for s in DATOS.SINERGIAS.keys():
 		_check(re.search(s) != null and int(DATOS.SINERGIAS[s]["categoria"]) in [1, 2, 6], "sinergia %s válida" % s)
 		_check(DATOS.texto_sinergia(s).contains(str(DATOS.SINERGIAS[s]["efecto"])), "texto de sinergia %s" % s)
+		# M4: vocabulario unificado a "Sinergia" en los textos de jugador del
+		# Nivel 5 (el HUD ya decía "✨ Sinergia"; los paneles decían "Cruce").
+		_check(DATOS.texto_sinergia(s).contains("Sinergia") and not DATOS.texto_sinergia(s).contains("Cruce"),
+			"texto de sinergia %s usa 'Sinergia', no 'Cruce'" % s)
 	_check(DATOS.NOMBRE_LUGAR.has("oficina_movilidad") and DATOS.NOMBRE_LUGAR.has("rectorado"), "nombres de Oficina y Rectorado")
 	_check(DATOS.opcion("tr_lote", "no_existe").is_empty() and DATOS.decision("x").is_empty(), "consultas inexistentes devuelven {}")
 	_check(DATOS.ENCARGO.contains("100"), "el encargo menciona el presupuesto")
+
+	# I2: título legible de cada misión del Nivel 5 (antes SceneMapaMundo
+	# mostraba el id crudo capitalizado: "Tr Permisos", "Tr Consejo").
+	for id in DATOS.MISIONES:
+		_check(DATOS.titulo(id) != "", "%s: título no vacío" % id)
+	_check(DATOS.titulo("tr_consejo") == "Consejo Universitario", "título de tr_consejo")
+	_check(DATOS.titulo("tr_bici_bloque_e") == "Bicicletero del Bloque E", "título del bicicletero del Bloque E")
+	_check(DATOS.titulo("tr_bici_cafetin") == "Bicicletero del Cafetín", "título del bicicletero del Cafetín")
+	_check(DATOS.titulo("no_existe") == "", "título de un id inexistente es vacío")
 
 	print("test_plan_datos: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

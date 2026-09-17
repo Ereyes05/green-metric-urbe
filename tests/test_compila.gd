@@ -148,6 +148,16 @@ func _ready() -> void:
 	var i_inp := mapa_src.find("if _nivel5 and _nivel5.hay_panel_abierto():\n\t\tget_viewport().set_input_as_handled()")
 	_check(i_inp != -1, "E: con un panel del Plan abierto la tecla se marca consumida")
 
+	# I2/I3 (revisión final): el aviso de misión completada usa el título
+	# real de las tr_* (no el id crudo capitalizado) y oculta la línea de XP
+	# cuando xp_ganado es 0 (quien ya cobró el Nivel 5 viejo no ve "+0 XP").
+	var i_comp := mapa_src.find("func _mostrar_mision_completada")
+	var cuerpo_comp := mapa_src.substr(i_comp, 1400)
+	_check(i_comp != -1 and cuerpo_comp.contains("_nivel5.titulo_mision(mision_id)"),
+		"aviso de misión: usa el título real del Plan de Movilidad")
+	_check(cuerpo_comp.contains("_complete_xp.visible = xp_ganado > 0"),
+		"aviso de misión: oculta la línea de XP cuando xp_ganado es 0")
+
 	var escena = load("res://scenes/mapa/SceneMapaMundo.gd")
 	_check(escena != null and escena.can_instantiate(), "SceneMapaMundo compila")
 
