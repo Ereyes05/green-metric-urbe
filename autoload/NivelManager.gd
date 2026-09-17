@@ -33,7 +33,7 @@ const TOTAL_MISIONES : Dictionary = {
 	2: 8,   # 6 LED + 2 paneles solares
 	3: 6,   # 6 puntos de donación y reciclaje
 	4: 8,   # 6 llaves abiertas + 2 captación de agua de lluvia
-	5: 8,   # 6 decisiones de movilidad + 2 bicicleteros
+	5: 9,   # Plan de Movilidad: 6 decisiones + 2 bicicleteros + Consejo
 	6: 4,   # malla_verde + comite_ambiental + semana_verde + informe_final
 }
 
@@ -51,16 +51,31 @@ const MISIONES_NIVEL : Dictionary = {
 		"reciclar_oeste", "reciclar_sur", "reciclar_este"],
 	4: ["llave_bloque_c", "llave_bloque_a", "llave_corredor_n", "llave_patio_e",
 		"llave_este", "llave_bloque_b", "captacion_biblioteca", "captacion_bloque_c"],
-	5: ["mov_parqueo", "mov_shuttle", "mov_ciclovia", "mov_dia_sin_carros",
-		"mov_zev", "mov_carpool", "bicicletero_bloque_e", "bicicletero_cafetin"],
+	# Plan de Movilidad (sql/nivel5_plan_movilidad.sql). ESPEJO también de
+	# scenes/misiones/plan_movilidad_datos.gd MISIONES.
+	5: ["tr_permisos", "tr_lote", "tr_carpool", "tr_shuttle", "tr_dia_sin_carros",
+		"tr_flota", "tr_bici_bloque_e", "tr_bici_cafetin", "tr_consejo"],
 	6: ["malla_verde", "comite_ambiental", "semana_verde", "informe_final"],
 }
 
 # Conjunto con el que cada nivel se consideraba completo ANTES de cambiarle
 # las misiones. Quien ya lo había superado no pierde el desbloqueo del
-# siguiente nivel aunque el nivel se reabra. Hoy es igual a MISIONES_NIVEL;
-# el Nivel 5 nuevo y los minijuegos lo harán distinto.
-const MISIONES_LEGADO : Dictionary = MISIONES_NIVEL
+# siguiente nivel aunque el nivel se reabra. El Nivel 5 cambió al Plan de
+# Movilidad (2026-09-17): su legado son los 8 IDs del Nivel 5 viejo. Los
+# minijuegos del proyecto C harán lo mismo con sus niveles.
+const MISIONES_LEGADO : Dictionary = {
+	1: ["plantar_rectorado", "plantar_patio", "plantar_este",
+		"plantar_corredores", "plantar_norte", "plantar_oeste"],
+	2: ["led_bloque_a", "led_bloque_b", "led_bloque_c", "led_bloque_d",
+		"led_bloque_e", "led_bloque_f", "solar_rectorado", "solar_estacionamiento"],
+	3: ["reciclar_corredor_n", "reciclar_patio_e", "reciclar_bloque_e",
+		"reciclar_oeste", "reciclar_sur", "reciclar_este"],
+	4: ["llave_bloque_c", "llave_bloque_a", "llave_corredor_n", "llave_patio_e",
+		"llave_este", "llave_bloque_b", "captacion_biblioteca", "captacion_bloque_c"],
+	5: ["mov_parqueo", "mov_shuttle", "mov_ciclovia", "mov_dia_sin_carros",
+		"mov_zev", "mov_carpool", "bicicletero_bloque_e", "bicicletero_cafetin"],
+	6: ["malla_verde", "comite_ambiental", "semana_verde", "informe_final"],
+}
 
 # Copias editables (las pruebas las reemplazan; el juego no las toca).
 var misiones_nivel  : Dictionary = MISIONES_NIVEL.duplicate(true)
@@ -167,6 +182,17 @@ func nivel_superado(n: int) -> bool:
 	if nivel_completo(n): return true
 	var legado : Array = misiones_legado.get(n, [])
 	return not legado.is_empty() and _contar_hechas(n, legado) >= legado.size()
+
+# El nivel cambió de misiones y el jugador había completado el conjunto
+# VIEJO. Decisión del usuario (spec Nivel 5 §11.1): a esos jugadores las
+# misiones nuevas no les vuelven a pagar XP ni EcoCredits (ni el bono de
+# nivel); igual cuentan para el Avance y para completar el nivel. Con legado
+# igual al actual (niveles sin cambios) siempre es false.
+func legado_completo(n: int) -> bool:
+	var legado : Array = misiones_legado.get(n, [])
+	if legado.is_empty() or legado == misiones_nivel.get(n, []):
+		return false
+	return _contar_hechas(n, legado) >= legado.size()
 
 func pct_nivel(n: int) -> float:
 	var ids : Array = misiones_nivel.get(n, [])
