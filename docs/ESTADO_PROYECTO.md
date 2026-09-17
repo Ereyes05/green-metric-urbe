@@ -557,17 +557,20 @@ mecanismo técnico de escaneo → activación a distancia.
   sección 3 (archivos) y sección 4 (backend, "Plan de Movilidad") de este
   documento. **Pendiente, en este orden y con OK del usuario, antes de dar por
   cerrado el proyecto:**
-  1. Aplicar la migración `nivel5_plan_movilidad_misiones`
+  1. Re-exportar el cliente web: `python scripts/exportar_web.py`.
+  2. Verificar el `.pck` (que no lleve nada sensible, ver sección 10 más
+     abajo).
+  3. Aplicar la migración `nivel5_plan_movilidad_misiones`
      (`sql/nivel5_plan_movilidad.sql`, sección 10.2 del diseño).
-  2. Re-exportar el cliente web: `python scripts/exportar_web.py`.
-  3. Prueba con la cuenta real del usuario (checklist del informe de la
-     Task 13, `.superpowers/sdd/2026-09-17-nivel5-plan-movilidad/task-13-report.md`).
-  4. Merge/publicación.
-  **Hacer el paso 1 antes del 2 dejaría el juego publicado (que todavía
-  guarda misiones `mov_*`) leyendo el catálogo nuevo: el Avance de Transporte
-  de todos los jugadores activos caería a 0** hasta que se publicara el
-  cliente que guarda `tr_*` — por eso los dos pasos van juntos y no antes de
-  la prueba con cuenta real.
+  4. Prueba con la cuenta real del usuario — checklist completa en
+     `docs/pruebas/checklist_nivel5_plan_movilidad.md`.
+  5. Push/merge/publicación.
+  **Aplicar la migración del paso 3 mucho antes del push/merge del paso 5
+  dejaría el juego ya publicado (que todavía guarda misiones `mov_*`) leyendo
+  el catálogo nuevo: el Avance de Transporte de todos los jugadores activos
+  caería a 0** hasta que el cliente que guarda `tr_*` quedara publicado — por
+  eso los pasos 3-5 se hacen seguidos, sin dejarlos para otro día (detalle
+  completo en `docs/pruebas/checklist_nivel5_plan_movilidad.md`).
   - [ ] **Tarea de seguimiento — unificar a tuteo los textos con voseo que ya
     existían en el juego** (spec `2026-09-17-nivel5-plan-movilidad-design.md`
     §17; no se tocan en este proyecto, solo los textos nuevos usan tuteo).
