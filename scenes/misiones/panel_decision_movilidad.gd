@@ -229,6 +229,8 @@ func _construir() -> void:
 	vb.add_child(UI.separador())
 	_pregunta = UI.texto("", 13, TEMA.TEXTO, 600)
 	vb.add_child(_pregunta)
+	_estado_lbl = UI.texto("", 12, TEMA.TEXTO_3, 600)
+	vb.add_child(_estado_lbl)
 	_botones.clear()
 	_detalles.clear()
 	for i in 3:
@@ -240,8 +242,6 @@ func _construir() -> void:
 		var det := UI.texto("", 11, TEMA.TEXTO_3)
 		vb.add_child(det)
 		_detalles.append(det)
-	_estado_lbl = UI.texto("", 12, TEMA.TEXTO_3, 600)
-	vb.add_child(_estado_lbl)
 	_accion = UI.boton("Confirmar decisión", TEMA.VERDE, 42)
 	_accion.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_accion.pressed.connect(_on_accion)
