@@ -4,8 +4,9 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-16 (HUD plano 2b + rangos por nivel + ranking
-público — ver secciones 3, 4, 8 y 9).
+Última actualización: 2026-09-17 (Nivel 5 — Plan de Movilidad, proyecto B del
+puntaje GreenMetric, implementado en el cliente; migración de misiones,
+re-export y prueba con cuenta real pendientes — ver secciones 3, 4 y 8).
 
 > ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
 > [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
@@ -93,6 +94,37 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
   `test_hud_controles`, `test_hud_rango_aviso`. Captura de verificación
   1280×720 (no headless, necesita dibujar): `timeout 60 "$GODOT" --path .
   --resolution 1280x720 res://tests/captura_hud.tscn -- <ruta.png>`.
+- **Nivel 5 — Plan de Movilidad** (nuevo, 2026-09-17; proyecto B del puntaje
+  GreenMetric, ver sección 4). Reemplaza los seis escenarios y los dos
+  bicicleteros viejos por un plan con presupuesto de 100 puntos. Diseño
+  completo en `docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md`.
+  - `scenes/mapa/lugares_campus.gd` — lugares del campus por nombre
+    (coordenadas provisionales hasta que llegue el mapa rediseñado).
+  - `scenes/mapa/cambios_movilidad.gd` — cambios visibles en el mapa según lo
+    elegido (ciclovía, buseta, vehículo eléctrico, etc.), anclados a lugares.
+  - `scenes/misiones/plan_movilidad_datos.gd` — contenido (decisiones,
+    opciones, objeciones del Consejo); copia literal de la spec, espejo de
+    `sql/nivel5_plan_movilidad.sql`.
+  - `plan_movilidad.gd` — reglas puras del plan (presupuesto, decisiones,
+    Consejo, regla Mixta), sin autoloads.
+  - `punto_movilidad.gd` — un solo script para los 4 tipos de punto (Oficina,
+    decisión, bicicletero, Consejo), grupo `punto_movilidad`.
+  - `ui_movilidad.gd` — helpers de interfaz sobre `hud_tema.gd`.
+  - `panel_decision_movilidad.gd` — panel de decisión (revela consecuencias
+    solo tras confirmar; la contraproducente penaliza y permite reintentar).
+  - `panel_oficina_movilidad.gd` — encargo y tablero del plan (presupuesto
+    comprometido/restante, estado de cada decisión).
+  - `panel_consejo_movilidad.gd` — revisión (hasta 2 cambios), 3 objeciones y
+    calificación del plan.
+  - `nivel5_movilidad.gd` — controlador del nivel: conecta puntos y paneles,
+    guarda el detalle `plan_movilidad`, registra decisiones/sinergias y
+    respeta la regla de sin re-pago a quien ya tenía el Nivel 5 viejo completo
+    (sección 8).
+  Pruebas: `timeout 120 "$GODOT" --headless --path . res://tests/<t>.tscn`
+  con `t` = `test_lugares_campus`, `test_cambios_movilidad`,
+  `test_plan_movilidad`, `test_punto_movilidad`, `test_ui_movilidad`,
+  `test_panel_decision_movilidad`, `test_panel_consejo_movilidad`,
+  `test_nivel5_movilidad`.
 - **`scenes/ui/tienda_conocimiento.gd`** — pantalla de la Tienda del
   Conocimiento (HU-012). Se abre con el botón 🛒 del HUD o sola, cuando una
   misión exige una herramienta que el estudiante no tiene
@@ -337,6 +369,33 @@ mientras que el cliente usa `NivelManager.nivel_superado()`, que además
 acepta el conjunto de misiones legado — un jugador que superó un nivel solo
 por el legado puede mostrar un rango más alto en el HUD que en este ranking.
 
+### Plan de Movilidad (proyecto B del puntaje GreenMetric)
+
+Nuevo (2026-09-17). Diseño completo en
+`docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md`. Reemplaza
+el Nivel 5 (seis escenarios de "Continuar" y dos bicicleteros) por un plan con
+presupuesto de 100 puntos y, en cada decisión, una opción contraproducente que
+penaliza y permite reintentar (regla Mixta, sección 4).
+
+**Aplicado:** `catalogo_decisiones` (28 filas, categoría 5: 6 decisiones × 3
+opciones + 2 bicicleteros × 3 opciones + 4 calificaciones de `tr_consejo`) y
+`catalogo_sinergias` (4 filas nuevas, todas con `requisito_mision = 'tr_consejo'`:
+`ciclovia_lote` → Entorno, `flota_electrica` → Energía,
+`dia_sin_carros_feria` → Educación, `bicicletero_techado_solar` → Energía).
+Copia versionada: `sql/nivel5_plan_movilidad.sql`.
+
+**Pendiente de aplicar al publicar:** la migración
+`nivel5_plan_movilidad_misiones` — borra de `catalogo_misiones` los 8 IDs
+viejos (`mov_parqueo`, `mov_shuttle`, `mov_ciclovia`, `mov_dia_sin_carros`,
+`mov_zev`, `mov_carpool`, `bicicletero_bloque_e`, `bicicletero_cafetin`) e
+inserta los 9 `tr_*` nuevos — se aplica **junto con el re-export web**, nunca
+antes: ver sección 8 para el orden exacto y la consecuencia de adelantarla.
+
+**Cliente:** el detalle `plan_movilidad` (presupuesto, decisiones, Consejo,
+sinergias ganadas) se guarda en `detalles_estudiante` con
+`NivelManager.guardar_detalle`, mismo mecanismo que las decisiones del
+Nivel 6.
+
 ## 5. Estado por nivel — qué está verificado visualmente
 
 - **Nivel 1-3**: verificados jugando, colisiones chequeadas geométricamente
@@ -490,13 +549,59 @@ mecanismo técnico de escaneo → activación a distancia.
   credenciales de la cuenta de prueba a mano; ver el spec para el detalle de
   qué falta confirmar (consola `SceneLogin: detalles N del servidor`, barra
   del HUD = mapa de calor = resultados, quiz dos veces solo suma la primera).
-- [ ] **Proyectos B y C del puntaje GreenMetric, pendientes** — B (Nivel 5
-  rehecho con Plan de Movilidad y decisiones con opción contraproducente) y
-  C (minijuegos nuevos SI7, SI10, SI11, EC8, EC2, WS3, WR2) todavía no están
-  implementados. Diseño de alto nivel en
+- [x] **Proyecto B — Nivel 5 nuevo** — implementado el 2026-09-17: Plan de
+  Movilidad con presupuesto de 100 puntos, 6 decisiones con opción
+  contraproducente (regla Mixta), 2 bicicleteros con decisión de tipo y
+  Consejo Universitario (3 objeciones, calificación). Diseño detallado en
+  `docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md`; ver
+  sección 3 (archivos) y sección 4 (backend, "Plan de Movilidad") de este
+  documento. **Pendiente, en este orden y con OK del usuario, antes de dar por
+  cerrado el proyecto:**
+  1. Aplicar la migración `nivel5_plan_movilidad_misiones`
+     (`sql/nivel5_plan_movilidad.sql`, sección 10.2 del diseño).
+  2. Re-exportar el cliente web: `python scripts/exportar_web.py`.
+  3. Prueba con la cuenta real del usuario (checklist del informe de la
+     Task 13, `.superpowers/sdd/2026-09-17-nivel5-plan-movilidad/task-13-report.md`).
+  4. Merge/publicación.
+  **Hacer el paso 1 antes del 2 dejaría el juego publicado (que todavía
+  guarda misiones `mov_*`) leyendo el catálogo nuevo: el Avance de Transporte
+  de todos los jugadores activos caería a 0** hasta que se publicara el
+  cliente que guarda `tr_*` — por eso los dos pasos van juntos y no antes de
+  la prueba con cuenta real.
+  - [ ] **Tarea de seguimiento — unificar a tuteo los textos con voseo que ya
+    existían en el juego** (spec `2026-09-17-nivel5-plan-movilidad-design.md`
+    §17; no se tocan en este proyecto, solo los textos nuevos usan tuteo).
+    Ejemplos encontrados: `SceneMapaMundo._verificar_herramienta` ("Necesitás
+    el %s"), `leaderboard.gd` ("Probá con ↻ Actualizar"),
+    `simulador_decision.gd` ("Practicá decisiones reales del campus…") y los
+    del HUD/Tienda. Buscar con
+    `grep -rnE "(ás|és|ís)|á |Probá|Practicá|Necesitás" scenes autoload`.
+- [ ] **Proyecto C del puntaje GreenMetric, pendiente** — minijuegos nuevos
+  SI7, SI10, SI11, EC8, EC2, WS3, WR2 todavía no están implementados. Diseño
+  de alto nivel en
   `docs/superpowers/specs/2026-09-14-puntaje-greenmetric-cruces-design.md`,
-  secciones 7 y 8 (cada uno recibe su propio documento detallado antes de
+  sección 8 (cada uno recibe su propio documento detallado antes de
   implementarse).
+- [ ] **`tests/test_lugares_campus.gd`: la lista `IGNORADAS` todavía nombra
+  constantes que ya no existen** — el Nivel 5 nuevo eliminó
+  `DATOS_PUNTOS_BICICLETERO`/`DATOS_OFICINA_MOVILIDAD` y las constantes
+  `mov_*` que la prueba de solapamientos excluía a propósito; los nombres
+  viejos quedaron en la lista de exclusión sin efecto (no rompen la prueba,
+  simplemente no apuntan a nada). Limpiarlos cuando se toque ese archivo de
+  nuevo.
+- [ ] **El ranking cuenta niveles por el catálogo vigente; el HUD acepta
+  también el legado** — con el Nivel 5 nuevo esto ya no es solo teórico: un
+  jugador que superó el Nivel 5 solo por las misiones `mov_*`/bicicleteros
+  viejas (legado) ve un rango más alto en el HUD (`nivel_superado`, sección 4
+  "Ranking público" más arriba) que el nivel que `ranking_publico()` le
+  cuenta (solo `catalogo_misiones` vigente, sin los `tr_*`). Limitación ya
+  documentada en `sql/ranking_publico.sql` y en el diseño (§17); no se corrige
+  en este proyecto.
+- [ ] **Íconos de autos reducidos en el mapa, tamaño no verificado a simple
+  vista con el zoom real del juego** — `cambios_movilidad.gd` los dibuja del
+  mismo tamaño que otros íconos del mapa, pero nadie confirmó todavía si se
+  distinguen bien al zoom con el que se juega normalmente (no solo en la
+  captura de prueba). Pendiente de mirar en el editor o en una partida real.
 - [ ] **Tweens sin guard** en `interior_bloque.gd` y `mision_solar.gd` —
   causan llamadas de red duplicadas (inofensivas gracias a la RPC
   idempotente, pero innecesarias). No arreglado a propósito, ver sección 6.

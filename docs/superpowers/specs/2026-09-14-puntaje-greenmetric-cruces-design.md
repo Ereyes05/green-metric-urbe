@@ -1,7 +1,7 @@
 # Puntaje GreenMetric unificado, cruces entre categorías y rediseño de niveles
 
 - **Fecha:** 2026-09-14
-- **Estado:** Paso 0 y proyecto A implementados (2026-09-14); verificación en juego con cuenta real pendiente (Task 10 Step 1); B y C pendientes.
+- **Estado:** Paso 0 y proyecto A implementados (2026-09-14); proyecto B implementado en el cliente (2026-09-17; migración de misiones y prueba con cuenta real pendientes, ver docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md); C pendiente.
 - **Alcance de este documento:** hoja de ruta completa (0 → A → B → C), diseño
   detallado del **paso 0** y del **proyecto A**, y diseño de alto nivel de **B** y **C**.
   B y C reciben su propio documento detallado antes de implementarse.

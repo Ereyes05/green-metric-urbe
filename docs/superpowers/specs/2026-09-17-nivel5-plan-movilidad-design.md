@@ -1,8 +1,7 @@
 # Nivel 5 nuevo — Plan de Movilidad (Proyecto B, diseño detallado)
 
 - **Fecha:** 2026-09-17
-- **Estado:** Diseño detallado listo para implementar (plan:
-  `docs/superpowers/plans/2026-09-17-nivel5-plan-movilidad.md`). Nada implementado.
+- **Estado:** Implementado en el cliente y catálogos aplicados (2026-09-17); pendientes: migración 2 al publicar, re-export web y prueba con cuenta real.
 - **Depende de:** Proyecto A (puntaje único en servidor, `registrar_decision`,
   `registrar_sinergia`, `detalles_estudiante`, `MISIONES_LEGADO`), ya implementado.
 - **Diseño de alto nivel (vinculante):**
