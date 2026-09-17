@@ -56,6 +56,8 @@ y `punto_bicicletero.gd`.
 | R10 | Migración del catálogo de misiones | Dos migraciones: **catálogos de decisiones/sinergias** (se aplica al implementar) y **cambio de misiones del Nivel 5** (se aplica recién cuando se publica el cliente nuevo) | Aplicar el cambio de misiones antes dejaría el juego publicado (que todavía guarda `mov_*`) con el avance de Transporte en 0 |
 | R11 | Lugar del Consejo | Entrada oeste del Rectorado (`rectorado`), no la plaza norte | La plaza norte ya tiene al Rector, el panel solar y el bicicletero del Bloque E a < 60 px |
 | R12 | Emoji | Solo los de `HUD_TEMA.EMOJIS_HUD` (el recorte de NotoColorEmoji) | Cualquier otro se ve como cuadradito en la web |
+| R13 | Re-pago a quien completó el Nivel 5 viejo | **No** se paga XP ni EcoCredits (por misión ni bono de nivel) si el conjunto legado del Nivel 5 está completo; las misiones `tr_*` igual se completan y cuentan para el Avance (§11.1) | Decisión del usuario 2: ya cobró por el Nivel 5 |
+| R14 | Tratamiento | Tuteo en todos los textos nuevos ("tienes", "elige", "puedes") | Decisión del usuario 7 |
 
 ## 3. Lugares con nombre (`scenes/mapa/lugares_campus.gd`)
 
@@ -108,7 +110,7 @@ Cualquier orden:
   decisión ──► 3 opciones con costo ──► elegir ──► Confirmar ──► registrar_decision
       ├─ contraproducente ─► revela solo esa + "-1" + presupuesto intacto ─► Reintentar
       ├─ válida ───────────► revela las 3 ─► misión completa (1.ª vez: XP/EC) ─► mapa cambia
-      └─ error de red ─────► "no se aplicó nada, volvé a confirmar" (sin reintento automático)
+      └─ error de red ─────► "no se aplicó nada, vuelve a confirmar" (sin reintento automático)
   bicicletero ─► exige kit_bicicletero (Tienda) ─► misma interfaz de decisión (tipo)
 8 resueltas ──► Consejo (Rectorado): pendiente
 Consejo ──► Revisión (hasta 2 cambios si alcanza) ──► Presentar
@@ -147,9 +149,9 @@ opción elegida con su costo) y el estado del Consejo.
 ## 6. Las decisiones
 
 Cifras de contexto **ilustrativas** (datos mixtos, Tabla 16); validarlas con la
-Dirección de Sustentabilidad (ver Preguntas). "Aceptación" es la reacción esperable
+Dirección de Sustentabilidad (decisión del usuario 1: quedan ilustrativas). "Aceptación" es la reacción esperable
 de la comunidad; alimenta las objeciones del Consejo. Las opciones se listan **en
-el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HUD.
+el orden en que aparecen en pantalla**. Textos para el jugador con **tuteo** (decisión del usuario 7).
 
 ### 6.1 `tr_permisos` — Permisos de estacionamiento
 
@@ -159,7 +161,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   que puestos, y en la hora pico de la mañana la cola llega hasta la avenida.
   GreenMetric (TR1) mide cuántos vehículos entran al campus por cada persona de la
   comunidad universitaria."
-- **Pregunta:** "¿Qué política de permisos llevás al plan?"
+- **Pregunta:** "¿Qué política de permisos llevas al plan?"
 
 | Opción (id · corto) | Texto | Costo | Transp. | Aceptación | Contrap. | Explicación GreenMetric | Cruce |
 |---|---|---|---|---|---|---|---|
@@ -174,7 +176,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   capacidad para 60 carros que casi nunca pasa de 15. Con lluvia se inunda y en
   sequía levanta polvo. GreenMetric premia reducir el área de estacionamiento en
   superficie (TR5) y tener un programa documentado para hacerlo (TR6)."
-- **Pregunta:** "¿Qué hacés con el lote?"
+- **Pregunta:** "¿Qué haces con el lote?"
 
 | Opción | Texto | Costo | Transp. | Aceptación | Contrap. | Explicación GreenMetric | Cruce |
 |---|---|---|---|---|---|---|---|
@@ -189,7 +191,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   estudiantes viven en las mismas urbanizaciones y salen a la misma hora. Una
   iniciativa de viajes compartidos cuenta para GreenMetric como iniciativa para
   disminuir los vehículos privados en el campus (TR7)."
-- **Pregunta:** "¿Qué incentivo proponés?"
+- **Pregunta:** "¿Qué incentivo propones?"
 
 | Opción | Texto | Costo | Transp. | Aceptación | Contrap. | Explicación GreenMetric | Cruce |
 |---|---|---|---|---|---|---|---|
@@ -204,7 +206,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   Muchos estudiantes llegan en por puesto o autobús hasta la avenida y caminan el
   resto bajo el sol, o prefieren venir en carro. GreenMetric (TR2) evalúa si el
   campus ofrece transporte interno y qué tan útil es."
-- **Pregunta:** "¿Cómo reorganizás la buseta?"
+- **Pregunta:** "¿Cómo reorganizas la buseta?"
 
 | Opción | Texto | Costo | Transp. | Aceptación | Contrap. | Explicación GreenMetric | Cruce |
 |---|---|---|---|---|---|---|---|
@@ -219,7 +221,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   al mes. En URBE la idea genera dudas: ¿cómo llega quien vive lejos? El portón de
   la avenida es el único acceso de carros. Una jornada así cuenta como iniciativa
   para disminuir los vehículos privados (TR7)."
-- **Pregunta:** "¿Cómo lo organizás?"
+- **Pregunta:** "¿Cómo lo organizas?"
 
 | Opción | Texto | Costo | Transp. | Aceptación | Contrap. | Explicación GreenMetric | Cruce |
 |---|---|---|---|---|---|---|---|
@@ -234,7 +236,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   gasolina con más de diez años que fallan seguido. GreenMetric evalúa si hay
   vehículos de cero emisiones en el campus —eléctricos o de pedal— (TR3) y cuántos
   hay por persona (TR4)."
-- **Pregunta:** "¿Qué hacés con la flota?"
+- **Pregunta:** "¿Qué haces con la flota?"
 
 | Opción | Texto | Costo | Transp. | Aceptación | Contrap. | Explicación GreenMetric | Cruce |
 |---|---|---|---|---|---|---|---|
@@ -249,7 +251,7 @@ el orden en que aparecen en pantalla**. Textos de interfaz con voseo, como el HU
   sigue siendo menor que lo que pagan las 6 decisiones (6 × 12 = 72 EC).
 - **Indicador:** TR7 (iniciativa para disminuir vehículos privados). La secuencia
   de "Continuar" desaparece: la instalación es la decisión de tipo.
-- **Pregunta (ambos):** "¿Qué tipo de bicicletero instalás con el kit?"
+- **Pregunta (ambos):** "¿Qué tipo de bicicletero instalas con el kit?"
 
 `tr_bici_bloque_e` — lugar `bicicletero_bloque_e`. **Contexto:** "Entre el Bloque E
 y el Rectorado pasan cientos de estudiantes, pero no hay dónde dejar una bicicleta
@@ -428,7 +430,7 @@ de confirmar), con estados:
 |---|---|---|
 | `eligiendo` | Contexto, pregunta, 3 botones con texto; debajo de cada uno **solo "Costo: N"** (si la decisión ya estaba resuelta: las consecuencias de las 3, ya vistas). Descartadas: "Descartada: es contraproducente." Sin presupuesto: "No alcanza el presupuesto (faltan N)." | "Confirmar decisión" / "Cambiar decisión" (deshabilitado sin elección o si es la opción actual) |
 | `esperando` | "Registrando tu decisión…"; opciones y cerrar deshabilitados | "Registrando…" (deshabilitado) |
-| `revelado_contra` | Consecuencias **solo** de la elegida + "Opción contraproducente: -1 en Decisiones de Transporte. El presupuesto no se gastó; podés reintentar." (variantes: sin penalización extra por tope de 3; sin sesión) | "Reintentar" |
+| `revelado_contra` | Consecuencias **solo** de la elegida + "Opción contraproducente: -1 en Decisiones de Transporte. El presupuesto no se gastó; puedes reintentar." (variantes: sin penalización extra por tope de 3; sin sesión) | "Reintentar" |
 | `revelado_valida` | "Decisión registrada. Así quedan las tres opciones:" + consecuencias de las 3, la elegida resaltada | "Listo" |
 | `solo_lectura` | Plan presentado, o modo Consejo sin cambios disponibles | "Listo" |
 
@@ -444,7 +446,7 @@ cruce, `✨ Cruce: 📚 Educación +1 (se suma cuando el Consejo aprueba el plan
 | `{ok:true, contraproducente:true, penalizado:false}` | Igual, con "ya tenías el máximo de 3 penalizaciones" |
 | `{ok:true, contraproducente:false}` | `plan.aplicar_valida`, `revelado_valida` |
 | `{ok:false, error:"sin_sesion"}` | Modo local (escena corrida desde el editor): usa la marca `contraproducente` de los datos, sin penalización |
-| `{ok:false, error:otro}` (red, HTTP, `opcion_inexistente`) | Vuelve a `eligiendo`, **no aplica nada**, mensaje "No se pudo registrar la decisión… volvé a confirmar"; **nunca reintenta solo** |
+| `{ok:false, error:otro}` (red, HTTP, `opcion_inexistente`) | Vuelve a `eligiendo`, **no aplica nada**, mensaje "No se pudo registrar la decisión… vuelve a confirmar"; **nunca reintenta solo** |
 
 Si el servidor y los datos locales discrepan sobre `contraproducente`, manda el
 servidor (la prueba de espejo evita que pase).
@@ -588,8 +590,41 @@ para los jugadores actuales.
   (primera opción válida; el Consejo al presentar). Sin cambios en
   `guardar_progreso_modulo` ni en `acreditar_mision` (validan por ID registrado, no
   por catálogo).
-- **Jugadores con el Nivel 5 viejo completo** cobran de nuevo XP/EC por las 9
-  misiones nuevas y el bono de nivel al completarlo (ver Preguntas).
+- **Jugadores con el Nivel 5 viejo completo no cobran de nuevo** (decisión del
+  usuario 2; detalle en §11.1).
+
+### 11.1 Sin re-pago de XP/EC a quien completó el Nivel 5 viejo
+
+**Regla.** Si `NivelManager.legado_completo(5)` es verdadero, las misiones `tr_*`
+**no pagan XP ni EcoCredits** y completar el Nivel 5 nuevo **no paga el bono de
+nivel**. Todo lo demás es igual: la misión se marca completa, se guarda en el
+servidor (Avance de Transporte, requisito `tr_consejo` de los cruces), cuenta para
+`nivel_completo(5)`, suma decisiones/sinergias y muestra el aviso de misión.
+
+**`NivelManager.legado_completo(n) -> bool`** (nuevo): verdadero si
+`misiones_legado[n]` es distinto de `misiones_nivel[n]` y todas las misiones del
+legado están hechas. Para los niveles 1–4 y 6 (legado = actual) siempre es falso,
+así que su bono no cambia. Como las misiones `mov_*` ya no se pueden completar con
+el cliente nuevo, el valor no cambia durante la partida: da igual evaluarlo antes o
+después de empezar el plan.
+
+**Dónde se decide (cliente, en el momento de pagar):**
+
+| Paso | Archivo | Con legado completo | Sin legado completo |
+|---|---|---|---|
+| Monto de la misión | `nivel5_movilidad.gd` `_completar()` | emite `mision_completada(id, 0, 0)` | emite `mision_completada(id, 35, 12)` |
+| XP local | `SceneMapaMundo._on_movilidad_completado` | no llama `aplicar_bono_xp` ni `_aplicar_xp` | igual que hoy |
+| EC | `SceneMapaMundo._on_movilidad_completado` | **no llama** `EconomiaManager.acreditar_mision` → nunca se encola la RPC `acreditar_mision` (es la única vía por la que el servidor paga EC de misión) | igual que hoy |
+| Progreso | `SupabaseManager.guardar_progreso(5, id, pct, xp, completo)` | **se llama siempre**, con `xp = 0` → `guardar_progreso_modulo` registra la misión y no suma XP | con el XP de la misión |
+| Aviso | `_mostrar_mision_completada(id, xp)` | se muestra con "+0 XP" | igual que hoy |
+| Bono de nivel | `SceneMapaMundo._on_nivel_greenmetric_completado` | no llama `ganar_creditos(bonus, "nivel", "5")`; la celebración sí se muestra | igual que hoy |
+
+Regla en `SceneMapaMundo`: `xp <= 0 and ec <= 0` = misión sin pago. No se cambia
+ninguna función del servidor.
+
+**Limitación:** es una decisión del cliente (mismo modelo de confianza que el XP);
+un cliente modificado podría cobrar. Para quien tenía el Nivel 5 viejo a medias
+(legado incompleto) se paga normal, aunque haya cobrado algunas `mov_*`.
 
 ## 12. Cambios visibles en el mapa
 
@@ -628,7 +663,7 @@ Colores de acento tomados de `hud_tema.gd`. Las contraproducentes nunca se dibuj
   por tipo (caseta, cartel, bicicletero, edificio con columnas) con estado
   `bloqueado` (gris, sin brillo), `pendiente` (brillo que late) o `resuelto` (tilde
   verde). Cartel flotante con `HUD_TEMA.caja` y textos "E · Decidir — …", "E ·
-  Revisar decisión — …", "🔒 Primero pasá por la Oficina de Movilidad", "🔒 El Consejo
+  Revisar decisión — …", "🔒 Primero pasa por la Oficina de Movilidad", "🔒 El Consejo
   recibe el plan con las 8 decisiones listas", etc. Solo el estado `pendiente`
   redibuja cada frame (rendimiento web).
 - **Paneles** (`panel_decision_movilidad.gd`, `panel_oficina_movilidad.gd`,
@@ -643,8 +678,9 @@ Colores de acento tomados de `hud_tema.gd`. Las contraproducentes nunca se dibuj
 - **Controlador** (`scenes/misiones/nivel5_movilidad.gd`, `Node`): tiene el plan,
   crea los 10 puntos y el nodo de cambios, abre los paneles, guarda el detalle,
   completa misiones, registra decisiones/sinergias/telemetría y emite
-  `mision_completada(mision_id, xp, ec)`, que SceneMapaMundo conecta a su
-  `_on_movilidad_completado` (XP, EC, `guardar_progreso`, aviso). Dependencias
+  `mision_completada(mision_id, xp, ec)` (0 y 0 si `legado_completo(5)`, §11.1), que
+  SceneMapaMundo conecta a su `_on_movilidad_completado` (XP y EC solo si hay pago;
+  `guardar_progreso` y aviso siempre). Dependencias
   inyectadas (`configurar(mapa, NivelManager, PuntajeManager, SupabaseManager)`) para
   probarlo sin red.
 
@@ -678,7 +714,8 @@ Disparar y olvidar; el puntaje nunca depende de la telemetría.
 | Calificación del Consejo sin registrar | Botón "Reintentar registro" (manual) |
 | Sin sesión (escena desde el editor) | Todo funciona en local con los datos; sin puntos ni penalizaciones en servidor |
 | Detalle restaurado tarde | El plan se recarga en la primera interacción si el local está vacío |
-| Jugador con Nivel 5 viejo completo | Nivel 6 sigue desbloqueado; Nivel 5 reabierto con 10 puntos nuevos |
+| Jugador con Nivel 5 viejo completo | Nivel 6 sigue desbloqueado; Nivel 5 reabierto con 10 puntos nuevos; misiones y bono de nivel sin XP/EC (§11.1), Avance y puntaje normales |
+| Jugador con Nivel 5 viejo a medias | Paga XP/EC normal por las `tr_*` |
 | Respuestas de `decision_resuelta` de otra decisión | El panel las ignora (compara decision_id y opcion_id y el estado `esperando`) |
 
 ## 16. Criterios de aceptación
@@ -728,6 +765,11 @@ Disparar y olvidar; el puntaje nunca depende de la telemetría.
 - No quedan referencias a los 4 scripts eliminados.
 - Con Nivel 4 superado aparecen los 10 puntos; con el Nivel 5 viejo completo el 6
   sigue desbloqueado.
+- **Sin re-pago (§11.1):** `legado_completo(5)` probado (legado completo, a medias,
+  niveles con legado igual al actual); el controlador emite 35/12 sin legado y 0/0
+  con legado; `SceneMapaMundo` omite `_aplicar_xp`, `acreditar_mision` y el bono de
+  nivel cuando no hay pago, y siempre llama `guardar_progreso`.
+- Todos los textos nuevos para el jugador usan tuteo (sin "podés", "tenés", "elegí"…).
 - **Prueba del usuario con cuenta real** (tras publicar): plan completo, número de
   Transporte igual en HUD, mapa de avance, resultados e informe; decisiones y plan
   visibles en `detalles_estudiante`; sinergias en Entorno/Energía/Educación.
@@ -744,6 +786,11 @@ Disparar y olvidar; el puntaje nunca depende de la telemetría.
 - Re-export web, merge y publicación (con OK del usuario).
 - Capítulo 4 de la tesis (se actualiza aparte; la matriz y `ESTADO_PROYECTO.md` sí
   se tocan en este proyecto).
+- **Seguimiento (tarea chica aparte):** unificar a tuteo los textos con voseo que ya
+  existen en el juego, por ejemplo "Necesitás el …" (`SceneMapaMundo._verificar_herramienta`),
+  "Practicá decisiones reales del campus…" (`simulador_decision.gd`), "Probá con ↻
+  Actualizar" (`leaderboard.gd`) y los del HUD/Tienda. Buscar con
+  `grep -rnE "(ás|és|ís)|á |Probá|Practicá|Necesitás" scenes autoload`.
 
 ## 18. Riesgos y limitaciones
 
@@ -755,28 +802,21 @@ Disparar y olvidar; el puntaje nunca depende de la telemetría.
   oficiales de URBE.
 - **Espejo de datos:** si alguien cambia `plan_movilidad_datos.gd` sin migración, la
   prueba del controlador falla.
-- **Doble pago de XP/EC** a jugadores del Nivel 5 viejo (Preguntas).
+- **Sin re-pago decidido en el cliente** (§11.1): el servidor no lo impide.
 - **Ventana entre migraciones:** si se aplica la migración 2 sin publicar el cliente,
   el Avance de Transporte de todos baja; por eso se aplica junto con la publicación.
 
-## 19. Preguntas para el usuario
+## 19. Decisiones del usuario (2026-09-17)
 
-Cada una con el valor que se usa si no hay respuesta.
-
-1. **Cifras del contexto** (60 puestos del lote, 2 carritos de más de 10 años, una
-   vuelta de buseta, "por puesto" en la avenida): ¿se validan con la Dirección de
-   Sustentabilidad o quedan ilustrativas? — *Por defecto:* ilustrativas, marcadas
-   así en el código y en la tesis.
-2. **Doble XP/EC** para quien completó el Nivel 5 viejo: ¿pagar las 9 misiones nuevas
-   y el bono de nivel? — *Por defecto:* sí (es contenido nuevo; en el ranking
-   favorece a quien vuelve a jugar).
-3. **Peso del Consejo** en Decisiones (1,00 de 5): — *Por defecto:* 1,00.
-4. **Plan cerrado tras el Consejo** (sin volver a presentar): — *Por defecto:* cerrado.
-5. **Plan de 5,00 cuesta exactamente 100** (sin margen): ¿dejar margen (p. ej. 95)?
-   — *Por defecto:* exactamente 100.
-6. **Momento de la migración 2** (cambio de misiones en el catálogo): — *Por defecto:*
-   junto con el re-export web del cliente nuevo, antes de la prueba con cuenta real.
-7. **Tuteo o voseo** en los textos nuevos (el HUD usa voseo; los escenarios viejos,
-   tuteo): — *Por defecto:* voseo, como el HUD.
-8. **Consejo con 0 aciertos** se llama "Aprobado con condiciones" y completa la
-   misión igual: — *Por defecto:* así.
+1. **Cifras del contexto:** ilustrativas y documentadas así en el código y en la tesis.
+2. **Sin re-pago de XP/EC** a quien completó el Nivel 5 viejo (conjunto legado completo):
+   las `tr_*` cuentan para Avance, puntaje y completar el nivel, pero no pagan XP ni
+   EcoCredits por misión ni bono de nivel. Quien no lo había completado cobra normal.
+   Diseño en §11.1.
+3. **Peso del Consejo:** 1,00 de los 5 puntos de Decisiones de Transporte.
+4. **Plan cerrado tras el Consejo:** no se vuelve a presentar.
+5. **El plan de 5,00 cuesta exactamente 100.**
+6. **Migración 2:** se aplica junto con el re-export web, antes de la prueba con cuenta real.
+7. **Tuteo** en todos los textos nuevos para el jugador ("tienes", "elige", "presiona",
+   "puedes"). Unificar el voseo existente queda como tarea aparte (§17).
+8. **Consejo con 0 aciertos:** "Aprobado con condiciones"; la misión se completa igual.

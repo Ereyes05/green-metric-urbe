@@ -20,7 +20,7 @@
 - Nada de push, merge, publicación ni re-export web. No tocar `docs/juego/`.
 - Interfaz: tokens de `scenes/ui/hud_tema.gd` a través de `scenes/misiones/ui_movilidad.gd`. **Ningún `Color(` literal en los tres paneles** (las pruebas lo verifican). Emoji solo de `HUD_TEMA.EMOJIS_HUD`. El dibujo del mapa (`punto_movilidad.gd` ícono, `cambios_movilidad.gd`) puede usar colores propios como `mapa_campus.gd`.
 - Ubicación: nada del Nivel 5 lleva coordenadas propias; todo sale de `lugares_campus.gd` (+ desplazamiento chico).
-- Textos de interfaz en español con voseo (como el HUD). Commits en español, terminando con línea en blanco + `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`. `git add` por ruta, nunca `-A`; si falla por `index.lock` (tareas en paralelo), esperar unos segundos y reintentar.
+- Textos para el jugador en español con **tuteo** ("tienes", "elige", "puedes"; decisión del usuario 7): nunca "tenés", "elegí", "podés". Commits en español, terminando con línea en blanco + `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`. `git add` por ruta, nunca `-A`; si falla por `index.lock` (tareas en paralelo), esperar unos segundos y reintentar.
 - El contenido de `plan_movilidad_datos.gd` es copia literal de la spec §6–7. Si una tarea detecta diferencia entre spec y código del plan, manda el código del plan y se reporta.
 - Tareas en paralelo pueden correr Godot a la vez: si aparece un error de importación/`.godot` no relacionado con la tarea, volver a correr la prueba.
 - Pruebas existentes que deben seguir pasando al final de cada tarea que las afecte: `test_compila`, `test_niveles`, `test_rangos`, `test_puntaje`, `test_simulador`, `test_hud_*`, `test_mapa_avance`.
@@ -33,6 +33,7 @@
 - **Respuesta:** el panel escucha `decision_resuelta` y descarta respuestas que no correspondan a la decisión/opción en espera.
 - **Un script de punto** para los 4 tipos, grupo `punto_movilidad`, propiedad `_jugador_cerca` (la usa el selector del más cercano de SceneMapaMundo).
 - **Cruces:** se registran después de completar `tr_consejo` (la cola de SupabaseManager es FIFO, así `guardar_progreso` llega antes).
+- **Sin re-pago (spec §11.1):** `NivelManager.legado_completo(5)` decide; el controlador emite `mision_completada(id, 0, 0)` y `SceneMapaMundo` interpreta `xp <= 0 and ec <= 0` como "sin pago": no da XP, no llama `acreditar_mision`, no paga el bono de nivel, pero siempre llama `guardar_progreso` (con xp 0).
 
 ## Olas (paralelismo)
 
@@ -409,7 +410,7 @@ const CATEGORIA := 5
 const PRESUPUESTO := 100
 const DECISION_CONSEJO := "tr_consejo"
 
-const ENCARGO := "La Dirección de Sustentabilidad y el Rectorado te encargan un Plan de Movilidad para URBE, que vas a presentar ante el Consejo Universitario. Tenés un presupuesto de 100 puntos para seis decisiones repartidas por el campus (en el orden que quieras) y dos bicicleteros (necesitás el kit de la Tienda). Antes de elegir solo vas a ver el costo de cada opción: sus efectos se conocen al confirmar. Una opción contraproducente según GreenMetric resta 1 punto en Decisiones de Transporte, no gasta presupuesto y te deja reintentar. Cuando tengas todo listo, presentá el plan en el Rectorado."
+const ENCARGO := "La Dirección de Sustentabilidad y el Rectorado te encargan un Plan de Movilidad para URBE, que vas a presentar ante el Consejo Universitario. Tienes un presupuesto de 100 puntos para seis decisiones repartidas por el campus (en el orden que quieras) y dos bicicleteros (necesitas el kit de la Tienda). Antes de elegir solo vas a ver el costo de cada opción: sus efectos se conocen al confirmar. Una opción contraproducente según GreenMetric resta 1 punto en Decisiones de Transporte, no gasta presupuesto y te deja reintentar. Cuando tengas todo listo, presenta el plan en el Rectorado."
 
 const ACEPTACION_TEXTO : Dictionary = {
 	"alta": "Aceptación alta", "media": "Aceptación media", "baja": "Aceptación baja",
@@ -456,7 +457,7 @@ const DECISIONES : Array = [
 		"id": "tr_permisos", "tipo": "decision", "lugar": "garita_m5", "indicador": "TR1",
 		"titulo": "Permisos de estacionamiento",
 		"contexto": "En la garita del Estacionamiento M5 se entregan los permisos anuales. Hoy cualquiera que lo pida recibe uno: hay más carros y motos con permiso que puestos, y en la hora pico de la mañana la cola llega hasta la avenida. GreenMetric (TR1) mide cuántos vehículos entran al campus por cada persona de la comunidad universitaria.",
-		"pregunta": "¿Qué política de permisos llevás al plan?",
+		"pregunta": "¿Qué política de permisos llevas al plan?",
 		"opciones": [
 			{"id": "lectoras_de_placas", "corto": "Lectoras de placas",
 			 "texto": "Instalar cámaras lectoras de placas y una barrera automática para que la entrada sea más rápida",
@@ -476,7 +477,7 @@ const DECISIONES : Array = [
 		"id": "tr_lote", "tipo": "decision", "lugar": "lote_este", "indicador": "TR5 · TR6",
 		"titulo": "El lote poco usado",
 		"contexto": "Detrás de Estudios a Distancia hay un lote de tierra y granzón con capacidad para 60 carros que casi nunca pasa de 15. Con lluvia se inunda y en sequía levanta polvo. GreenMetric premia reducir el área de estacionamiento en superficie (TR5) y tener un programa documentado para hacerlo (TR6).",
-		"pregunta": "¿Qué hacés con el lote?",
+		"pregunta": "¿Qué haces con el lote?",
 		"opciones": [
 			{"id": "asfaltar_lote", "corto": "Asfaltar el lote",
 			 "texto": "Asfaltarlo y demarcarlo para que por fin se use y descongestione el M5",
@@ -496,7 +497,7 @@ const DECISIONES : Array = [
 		"id": "tr_carpool", "tipo": "decision", "lugar": "estacionamiento_m5", "indicador": "TR7",
 		"titulo": "Viajes compartidos",
 		"contexto": "En el M5 casi todos los carros llegan con una sola persona. Muchos estudiantes viven en las mismas urbanizaciones y salen a la misma hora. Una iniciativa de viajes compartidos cuenta para GreenMetric como iniciativa para disminuir los vehículos privados en el campus (TR7).",
-		"pregunta": "¿Qué incentivo proponés?",
+		"pregunta": "¿Qué incentivo propones?",
 		"opciones": [
 			{"id": "app_carpool", "corto": "App de carpool",
 			 "texto": "Pagar una aplicación de viajes compartidos con cuentas URBE y un grupo por urbanización",
@@ -516,7 +517,7 @@ const DECISIONES : Array = [
 		"id": "tr_shuttle", "tipo": "decision", "lugar": "parada_rectorado", "indicador": "TR2",
 		"titulo": "Servicio de buseta",
 		"contexto": "URBE tiene una buseta que hace una sola vuelta por la mañana. Muchos estudiantes llegan en por puesto o autobús hasta la avenida y caminan el resto bajo el sol, o prefieren venir en carro. GreenMetric (TR2) evalúa si el campus ofrece transporte interno y qué tan útil es.",
-		"pregunta": "¿Cómo reorganizás la buseta?",
+		"pregunta": "¿Cómo reorganizas la buseta?",
 		"opciones": [
 			{"id": "bono_gasolina", "corto": "Bono de gasolina",
 			 "texto": "Eliminar la buseta, que va medio vacía, y con ese dinero dar un bono de gasolina al personal",
@@ -536,7 +537,7 @@ const DECISIONES : Array = [
 		"id": "tr_dia_sin_carros", "tipo": "decision", "lugar": "porton_vehicular", "indicador": "TR7",
 		"titulo": "Día sin carros",
 		"contexto": "Varias universidades del ranking cierran su portón vehicular un día al mes. En URBE la idea genera dudas: ¿cómo llega quien vive lejos? El portón de la avenida es el único acceso de carros. Una jornada así cuenta como iniciativa para disminuir los vehículos privados (TR7).",
-		"pregunta": "¿Cómo lo organizás?",
+		"pregunta": "¿Cómo lo organizas?",
 		"opciones": [
 			{"id": "cierre_semanal", "corto": "Viernes sin carros",
 			 "texto": "Cerrar el portón a los carros particulares todos los viernes desde el mes que viene, con busetas de refuerzo contratadas",
@@ -556,7 +557,7 @@ const DECISIONES : Array = [
 		"id": "tr_flota", "tipo": "decision", "lugar": "zona_mantenimiento", "indicador": "TR3 · TR4",
 		"titulo": "Flota de mantenimiento",
 		"contexto": "La cuadrilla de mantenimiento recorre el campus en dos carritos a gasolina con más de diez años que fallan seguido. GreenMetric evalúa si hay vehículos de cero emisiones en el campus, eléctricos o de pedal (TR3), y cuántos hay por persona (TR4).",
-		"pregunta": "¿Qué hacés con la flota?",
+		"pregunta": "¿Qué haces con la flota?",
 		"opciones": [
 			{"id": "triciclos_de_carga", "corto": "Triciclos de carga",
 			 "texto": "Comprar tres triciclos de carga a pedal para los trabajos cortos y dejar un solo carrito a gasolina",
@@ -576,7 +577,7 @@ const DECISIONES : Array = [
 		"id": "tr_bici_bloque_e", "tipo": "bicicletero", "lugar": "bicicletero_bloque_e", "indicador": "TR7",
 		"titulo": "Bicicletero del Bloque E",
 		"contexto": "Entre el Bloque E y el Rectorado pasan cientos de estudiantes, pero no hay dónde dejar una bicicleta segura: quien viene en bici la amarra a una baranda. Un bicicletero forma parte de las iniciativas para disminuir los vehículos privados (TR7).",
-		"pregunta": "¿Qué tipo de bicicletero instalás con el kit?",
+		"pregunta": "¿Qué tipo de bicicletero instalas con el kit?",
 		"opciones": [
 			{"id": "simple_con_candado", "corto": "Simple, sin techo",
 			 "texto": "Estructura simple de tubos en U, sin techo, junto a un poste de luz existente",
@@ -596,7 +597,7 @@ const DECISIONES : Array = [
 		"id": "tr_bici_cafetin", "tipo": "bicicletero", "lugar": "bicicletero_cafetin", "indicador": "TR7",
 		"titulo": "Bicicletero del Cafetín",
 		"contexto": "Al borde del M5, camino al Cafetín, llegan estudiantes y personal desde las urbanizaciones cercanas. Con el sol de la tarde, una bicicleta dejada a la intemperie se recalienta y el asiento se daña. Un bicicletero forma parte de las iniciativas para disminuir los vehículos privados (TR7).",
-		"pregunta": "¿Qué tipo de bicicletero instalás con el kit?",
+		"pregunta": "¿Qué tipo de bicicletero instalas con el kit?",
 		"opciones": [
 			{"id": "sobre_el_sendero", "corto": "Ganchos en el sendero",
 			 "texto": "Colgar ganchos en la baranda del pasillo techado peatonal, sin estructura nueva",
@@ -1092,6 +1093,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Produces: `NivelManager.MISIONES_NIVEL[5]` = `["tr_permisos", "tr_lote", "tr_carpool", "tr_shuttle", "tr_dia_sin_carros", "tr_flota", "tr_bici_bloque_e", "tr_bici_cafetin", "tr_consejo"]`; `TOTAL_MISIONES[5] = 9`; `MISIONES_LEGADO[5]` = los 8 IDs viejos; niveles 1–4 y 6 sin cambios.
+- Produces: `NivelManager.legado_completo(n: int) -> bool` — verdadero si `misiones_legado[n]` difiere de `misiones_nivel[n]` y todas las del legado están hechas (spec §11.1). Consumido por Tasks 11 y 12.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1133,6 +1135,21 @@ En `tests/test_niveles.gd`, justo antes de `nm.free()` / `print("test_niveles: .
 	nm.free()
 	nm = _nm_con(con_nuevo)
 	_check(nm.nivel_completo(5) and nm.nivel_desbloqueado(6), "las 9 nuevas completan el Nivel 5")
+	_check(not nm.legado_completo(5), "sin las viejas: legado incompleto (se paga XP/EC)")
+
+	# Sin re-pago (spec §11.1): legado_completo.
+	nm.free()
+	nm = _nm_con(con_viejo)
+	_check(nm.legado_completo(5), "Nivel 5 viejo completo: legado_completo(5)")
+	_check(not nm.legado_completo(1) and not nm.legado_completo(4), "niveles con legado igual al actual: nunca legado_completo")
+	var a_medias := hasta4.duplicate(true)
+	a_medias["5"] = {"mov_parqueo": true, "mov_shuttle": true}
+	nm.free()
+	nm = _nm_con(a_medias)
+	_check(not nm.legado_completo(5), "Nivel 5 viejo a medias: se paga normal")
+	nm.free()
+	nm = _nm_con({})
+	_check(not nm.legado_completo(5), "jugador nuevo: se paga normal")
 ```
 (El `nm.free()` final que ya existe libera este último `nm`.)
 
@@ -1195,6 +1212,20 @@ const MISIONES_LEGADO : Dictionary = {
 	6: ["malla_verde", "comite_ambiental", "semana_verde", "informe_final"],
 }
 ```
+Debajo de `func nivel_superado(n: int) -> bool:` (después de su `return`), agregar:
+```gdscript
+
+# El nivel cambió de misiones y el jugador había completado el conjunto
+# VIEJO. Decisión del usuario (spec Nivel 5 §11.1): a esos jugadores las
+# misiones nuevas no les vuelven a pagar XP ni EcoCredits (ni el bono de
+# nivel); igual cuentan para el Avance y para completar el nivel. Con legado
+# igual al actual (niveles sin cambios) siempre es false.
+func legado_completo(n: int) -> bool:
+	var legado : Array = misiones_legado.get(n, [])
+	if legado.is_empty() or legado == misiones_nivel.get(n, []):
+		return false
+	return _contar_hechas(n, legado) >= legado.size()
+```
 
 - [ ] **Step 4: Run tests**
 
@@ -1204,7 +1235,7 @@ Run: `test_niveles.tscn`, `test_rangos.tscn`, `test_puntaje.tscn`, `test_compila
 
 ```bash
 git add autoload/NivelManager.gd tests/test_niveles.gd
-git commit -m "niveles: Nivel 5 pasa a las 9 misiones del Plan de Movilidad con legado
+git commit -m "niveles: Nivel 5 pasa a las 9 misiones del Plan de Movilidad con legado y sin re-pago
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ```
@@ -2087,7 +2118,7 @@ func texto_prompt() -> String:
 	if estado == "bloqueado":
 		if tipo == "consejo":
 			return "🔒 El Consejo recibe el plan con las 8 decisiones listas"
-		return "🔒 Primero pasá por la Oficina de Movilidad"
+		return "🔒 Primero pasa por la Oficina de Movilidad"
 	var pendiente := estado == "pendiente"
 	match tipo:
 		"oficina":
@@ -2428,7 +2459,7 @@ func recibir_respuesta(id: String, opcion_id: String, respuesta: Dictionary) -> 
 	var sin_sesion := str(respuesta.get("error", "")) == "sin_sesion"
 	if not ok and not sin_sesion:
 		estado = "eligiendo"
-		_estado_lbl.text = "No se pudo registrar la decisión (sin conexión o error del servidor). No se aplicó nada: volvé a confirmar cuando tengas conexión."
+		_estado_lbl.text = "No se pudo registrar la decisión (sin conexión o error del servidor). No se aplicó nada: vuelve a confirmar cuando tengas conexión."
 		_estado_lbl.add_theme_color_override("font_color", TEMA.NARANJA)
 		_pintar()
 		return
@@ -2439,11 +2470,11 @@ func recibir_respuesta(id: String, opcion_id: String, respuesta: Dictionary) -> 
 		plan.registrar_contraproducente(decision_id, opcion_id)
 		estado = "revelado_contra"
 		if penalizado:
-			_estado_lbl.text = "Opción contraproducente: -1 en Decisiones de Transporte. El presupuesto no se gastó; podés reintentar."
+			_estado_lbl.text = "Opción contraproducente: -1 en Decisiones de Transporte. El presupuesto no se gastó; puedes reintentar."
 		elif sin_sesion:
-			_estado_lbl.text = "Opción contraproducente (sin sesión: no se registró penalización). El presupuesto no se gastó; podés reintentar."
+			_estado_lbl.text = "Opción contraproducente (sin sesión: no se registró penalización). El presupuesto no se gastó; puedes reintentar."
 		else:
-			_estado_lbl.text = "Opción contraproducente. Ya tenías el máximo de 3 penalizaciones en esta decisión. El presupuesto no se gastó; podés reintentar."
+			_estado_lbl.text = "Opción contraproducente. Ya tenías el máximo de 3 penalizaciones en esta decisión. El presupuesto no se gastó; puedes reintentar."
 		_estado_lbl.add_theme_color_override("font_color", TEMA.VIDAS)
 	else:
 		plan.aplicar_valida(decision_id, opcion_id, modo_consejo)
@@ -2847,7 +2878,7 @@ func _fila_consejo() -> Control:
 		texto = "Consejo Universitario: %s" % DATOS.calificacion(int(plan.consejo.get("aciertos", 0)))["nombre"]
 		color = TEMA.VERDE
 	elif plan.todas_resueltas():
-		texto = "Plan completo: presentalo en el Rectorado"
+		texto = "Plan completo: preséntalo en el Rectorado"
 		color = TEMA.DORADO
 	else:
 		var faltan := 0
@@ -2929,7 +2960,7 @@ func _reconstruir() -> void:
 func _pintar_revision() -> void:
 	_vb.add_child(UI.texto("Revisión antes de presentar", 17, TEMA.TEXTO, 700))
 	var disponibles : int = PLAN.MAX_CAMBIOS_CONSEJO - int(plan.cambios_en_consejo)
-	_vb.add_child(UI.texto("Podés cambiar hasta %d decisiones si el presupuesto alcanza. Cambios disponibles: %d. Quedan %d de presupuesto." % [
+	_vb.add_child(UI.texto("Puedes cambiar hasta %d decisiones si el presupuesto alcanza. Cambios disponibles: %d. Quedan %d de presupuesto." % [
 		PLAN.MAX_CAMBIOS_CONSEJO, disponibles, plan.restante()], 12, TEMA.TEXTO_2))
 	for d in DATOS.DECISIONES:
 		var fila := HBoxContainer.new()
@@ -2991,7 +3022,7 @@ func _pintar_objecion() -> void:
 	var d := DATOS.decision(obj["decision"])
 	_vb.add_child(UI.texto("Objeción %d de %d · %s" % [_idx + 1, _objeciones.size(), d["titulo"]], 12, TEMA.TEXTO_3, 600))
 	_vb.add_child(UI.texto(obj["texto"], 15, TEMA.TEXTO, 600))
-	_vb.add_child(UI.texto("Elegí el argumento con el que respondés:", 12, TEMA.TEXTO_2))
+	_vb.add_child(UI.texto("Elige el argumento con el que respondes:", 12, TEMA.TEXTO_2))
 	var args : Array = obj["argumentos"]
 	for i in args.size():
 		var b := UI.boton(str(args[i]["texto"]))
@@ -3421,13 +3452,13 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - Test: `tests/test_nivel5_movilidad.gd`, `tests/test_nivel5_movilidad.tscn`
 
 **Interfaces:**
-- Consumes: todo lo anterior; `NivelManager` (`nivel_desbloqueado`, `mision_completada_q`, `completar_mision`, `guardar_detalle`, `obtener_detalle`, `XP_POR_MISION`, `EC_POR_MISION`), `PuntajeManager` (`registrar_decision`, `registrar_sinergia`, `signal decision_resuelta`), `SupabaseManager.registrar_evento`.
+- Consumes: todo lo anterior; `NivelManager` (`legado_completo` de la Task 4, `nivel_desbloqueado`, `mision_completada_q`, `completar_mision`, `guardar_detalle`, `obtener_detalle`, `XP_POR_MISION`, `EC_POR_MISION`), `PuntajeManager` (`registrar_decision`, `registrar_sinergia`, `signal decision_resuelta`), `SupabaseManager.registrar_evento`.
 - Produces (`const NIVEL5_MOVILIDAD := preload("res://scenes/misiones/nivel5_movilidad.gd")`, `Node`):
   - `configurar(mapa: Node, nivel_mgr: Node, puntaje_mgr: Node, supa: Node)` — llamar después de `add_child(controlador)`.
   - `activar()` — idempotente; crea los 10 puntos y el nodo de cambios si el Nivel 5 está desbloqueado.
   - `hay_panel_abierto() -> bool`
   - `var verificar_herramienta : Callable` — `(tipo: String, punto: Node) -> bool`
-  - `signal mision_completada(mision_id: String, xp: int, ec: int)`
+  - `signal mision_completada(mision_id: String, xp: int, ec: int)` — `xp = 0, ec = 0` cuando `NivelManager.legado_completo(5)` (sin re-pago, spec §11.1); si no, `XP_POR_MISION[5]` y `EC_POR_MISION[5]`.
   - Para pruebas: `plan`, `panel_decision`, `panel_oficina`, `panel_consejo`, `_puntos` (claves `"oficina"`, cada decision_id, `"tr_consejo"`), `_on_interaccion(punto)`.
 - Consumed by: Task 12.
 
@@ -3555,7 +3586,10 @@ func _ready() -> void:
 	add_child(ctrl)
 	ctrl.configurar(mapa, nm, pm, sm)
 	var completadas := []
-	ctrl.mision_completada.connect(func(id, _xp, _ec): completadas.append(id))
+	var pagos := []
+	ctrl.mision_completada.connect(func(id, xp, ec):
+		completadas.append(id)
+		pagos.append([xp, ec]))
 	ctrl.activar()
 	ctrl.activar()
 
@@ -3598,6 +3632,7 @@ func _ready() -> void:
 
 	_decidir(ctrl, pm, "tr_carpool", "app_carpool", {"ok": true, "contraproducente": false})
 	_check(nm.mision_completada_q(5, "tr_carpool") and completadas == ["tr_carpool"], "válida completa la misión")
+	_check(pagos == [[35, 12]], "jugador sin el Nivel 5 viejo: paga XP y EC")
 	_check(ctrl._puntos["tr_carpool"].estado == "resuelto", "punto resuelto")
 	ev = _eventos(sm, "decision_tomada")
 	_check(ev.size() == 2 and ev[1]["correcto"] == true and int(ev[1]["detalle"]["costo"]) == 26
@@ -3640,6 +3675,7 @@ func _ready() -> void:
 		ctrl.panel_consejo._on_siguiente()
 	_check(ctrl.plan.presentado() and ctrl.plan.consejo["calificacion"] == "consejo_3", "presentado con 3 aciertos")
 	_check(nm.mision_completada_q(5, "tr_consejo") and completadas.size() == 9, "tr_consejo completa")
+	_check(pagos.size() == 9 and pagos.back() == [35, 12], "el Consejo también paga normal")
 	_check(pm.decisiones.back() == ["tr_consejo", "consejo_3"], "calificación registrada")
 	_check(pm.sinergias == ["ciclovia_lote", "dia_sin_carros_feria", "flota_electrica", "bicicletero_techado_solar"], "cruces del plan registrados")
 	_check(nm.nivel_completo(5), "Nivel 5 completo con las 9 misiones")
@@ -3676,10 +3712,36 @@ func _ready() -> void:
 	_check(ctrl2.plan.presentado() and ctrl2._puntos["tr_consejo"].estado == "resuelto", "el plan se recarga en la primera interacción")
 	ctrl2.panel_oficina.cerrar()
 
+	# ── Sin re-pago a quien completó el Nivel 5 viejo ───────
+	var nm3 : Node = load("res://autoload/NivelManager.gd").new()
+	nm3._misiones = nm._misiones.duplicate(true)
+	var viejo5 := {}
+	for id in nm3.MISIONES_LEGADO[5]:
+		viejo5[id] = true
+	nm3._misiones["5"] = viejo5
+	var mapa3 := Node2D.new()
+	add_child(mapa3)
+	var ctrl3 : Node = CTRL.new()
+	add_child(ctrl3)
+	var pm3 := FakePuntaje.new()
+	add_child(pm3)
+	ctrl3.configurar(mapa3, nm3, pm3, sm)
+	ctrl3.activar()
+	var pagos3 := []
+	ctrl3.mision_completada.connect(func(id, xp, ec): pagos3.append([id, xp, ec]))
+	ctrl3._on_interaccion(ctrl3._puntos["oficina"])
+	ctrl3.panel_oficina._on_aceptar()
+	ctrl3.panel_oficina.cerrar()
+	_decidir(ctrl3, pm3, "tr_lote", "ciclovia_arborizada", {"ok": true, "contraproducente": false})
+	_check(pagos3 == [["tr_lote", 0, 0]], "Nivel 5 viejo completo: la misión se completa sin XP ni EC")
+	_check(nm3.mision_completada_q(5, "tr_lote") and nm3.nivel_desbloqueado(6), "igual cuenta como completa y el 6 sigue abierto")
+	_check(pm3.decisiones.back() == ["tr_lote", "ciclovia_arborizada"], "igual registra la decisión (puntaje)")
+
 	_verificar_espejo_sql()
 
 	nm.free()
 	nm2.free()
+	nm3.free()
 	print("test_nivel5_movilidad: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)
 ```
@@ -3923,10 +3985,14 @@ func _on_decision_resuelta(decision_id: String, _opcion_id: String, respuesta: D
 			panel_consejo.abrir(plan)
 
 
+# Sin re-pago (spec §11.1): quien completó el Nivel 5 viejo recibe 0 y 0;
+# SceneMapaMundo interpreta eso como "no dar XP ni EC" pero igual guarda el
+# progreso (Avance de Transporte y requisito de los cruces).
 func _completar(mision_id: String) -> void:
+	var sin_pago : bool = _nm.legado_completo(NIVEL)
 	_nm.completar_mision(NIVEL, mision_id)
-	var xp : int = int(_nm.XP_POR_MISION.get(NIVEL, 35))
-	var ec : int = int(_nm.EC_POR_MISION.get(NIVEL, 12))
+	var xp : int = 0 if sin_pago else int(_nm.XP_POR_MISION.get(NIVEL, 35))
+	var ec : int = 0 if sin_pago else int(_nm.EC_POR_MISION.get(NIVEL, 12))
 	mision_completada.emit(mision_id, xp, ec)
 
 
@@ -3962,7 +4028,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - Delete: `scenes/misiones/mision_movilidad.gd`, `scenes/misiones/oficina_movilidad.gd`, `scenes/misiones/mision_bicicletero.gd`, `scenes/misiones/punto_bicicletero.gd` (y sus `.gd.uid`)
 
 **Interfaces:**
-- Consumes: `NIVEL5_MOVILIDAD` (Task 11): `configurar`, `activar`, `hay_panel_abierto`, `verificar_herramienta`, `mision_completada`.
+- Consumes: `NIVEL5_MOVILIDAD` (Task 11): `configurar`, `activar`, `hay_panel_abierto`, `verificar_herramienta`, `mision_completada` (0/0 = sin pago); `NivelManager.legado_completo` (Task 4).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -3977,6 +4043,16 @@ En `tests/test_compila.gd`, en la lista del `for ruta in [...]`, reemplazar `"re
 		_check(not mapa_src.contains(viejo), "SceneMapaMundo sin %s" % viejo)
 	for ruta_vieja in ["mision_movilidad.gd", "oficina_movilidad.gd", "mision_bicicletero.gd", "punto_bicicletero.gd"]:
 		_check(not FileAccess.file_exists("res://scenes/misiones/" + ruta_vieja), "borrado %s" % ruta_vieja)
+	# Sin re-pago a quien completó el Nivel 5 viejo (spec §11.1).
+	var i_mov := mapa_src.find("func _on_movilidad_completado")
+	var cuerpo_mov := mapa_src.substr(i_mov, 1400)
+	_check(i_mov != -1 and cuerpo_mov.contains("var pagar := xp > 0 or ec > 0")
+		and cuerpo_mov.find("if pagar:") < cuerpo_mov.find("EconomiaManager.acreditar_mision")
+		and cuerpo_mov.contains("SupabaseManager.guardar_progreso(5, mision_id"), "movilidad: sin pago no acredita pero guarda progreso")
+	var i_niv := mapa_src.find("func _on_nivel_greenmetric_completado")
+	var cuerpo_niv := mapa_src.substr(i_niv, 1600)
+	_check(i_niv != -1 and cuerpo_niv.contains("nm.legado_completo(nivel)")
+		and cuerpo_niv.find("legado_completo(nivel)") < cuerpo_niv.find("EconomiaManager.ganar_creditos(bonus_ec"), "bono de nivel omitido con legado completo")
 ```
 
 Run: `timeout 120 "$GODOT" --headless --path . res://tests/test_compila.tscn; echo exit=$?` → Expected: FALLA en esas líneas, exit=1.
@@ -4103,9 +4179,37 @@ por
 
 - [ ] **Step 6: Borrar funciones viejas**
 
-Borrar completas (desde su `func` hasta la línea en blanco antes de la función siguiente): `_spawn_oficina_movilidad`, `_spawn_puntos_bicicletero`, `_on_movilidad_solicitada`, `_on_bicicletero_solicitado`, `_on_bicicletero_completado`. Mantener `_on_movilidad_completado` y cambiar solo su `print`:
+Borrar completas (desde su `func` hasta la línea en blanco antes de la función siguiente): `_spawn_oficina_movilidad`, `_spawn_puntos_bicicletero`, `_on_movilidad_solicitada`, `_on_bicicletero_solicitado`, `_on_bicicletero_completado`. Reemplazar la función `_on_movilidad_completado` completa por:
 ```gdscript
-	print("🚲 Plan de Movilidad: misión %s | +%d XP | +%d EC" % [mision_id, xp, ec])
+func _on_movilidad_completado(mision_id: String, xp: int, ec: int) -> void:
+	# xp = 0 y ec = 0: el jugador ya había completado el Nivel 5 viejo y no
+	# cobra de nuevo (spec Nivel 5 §11.1). Sin acreditar_mision el servidor
+	# nunca paga EC; guardar_progreso con xp 0 registra la misión sin XP.
+	var pagar := xp > 0 or ec > 0
+	if pagar:
+		xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
+		_aplicar_xp(xp, mision_id)
+		EconomiaManager.acreditar_mision(mision_id, ec)
+	var nm = _nivel_mgr()
+	var pct : float = nm.pct_nivel(5) if nm else 0.0
+	_refrescar_progreso()
+	SupabaseManager.guardar_progreso(5, mision_id, int(pct * 100), xp, nm.nivel_completo(5) if nm else false)
+	_mostrar_mision_completada(mision_id, xp)
+	_sfx("mision")
+	print("🚲 Plan de Movilidad: misión %s | +%d XP | +%d EC%s" % [mision_id, xp, ec, "" if pagar else " (ya cobrado con el Nivel 5 viejo)"])
+```
+En `_on_nivel_greenmetric_completado`, reemplazar
+```gdscript
+	var bonus_ec : int = int(nm.XP_NIVEL_BONUS.get(nivel, 150)) / 5 if nm else 30
+	EconomiaManager.ganar_creditos(bonus_ec, "nivel", str(nivel))
+```
+por
+```gdscript
+	# Sin re-pago del bono a quien ya había completado el nivel con sus
+	# misiones viejas (spec Nivel 5 §11.1). Niveles sin cambios: siempre paga.
+	if not (nm and nm.legado_completo(nivel)):
+		var bonus_ec : int = int(nm.XP_NIVEL_BONUS.get(nivel, 150)) / 5 if nm else 30
+		EconomiaManager.ganar_creditos(bonus_ec, "nivel", str(nivel))
 ```
 Verificar: `grep -n "_movilidad_ui\|_bicicletero_ui\|MISION_MOVILIDAD\|OFICINA_MOVILIDAD\|PUNTO_BICICLETERO\|MISION_BICICLETERO\|_on_bicicletero\|_on_movilidad_solicitada" scenes/mapa/SceneMapaMundo.gd` → sin resultados.
 
@@ -4127,7 +4231,7 @@ Además, humo del mapa: `timeout 60 "$GODOT" --headless --path . res://scenes/ma
 
 ```bash
 git add scenes/mapa/SceneMapaMundo.gd tests/test_compila.gd
-git commit -m "mapa: Nivel 5 usa el Plan de Movilidad; se eliminan los escenarios y bicicleteros viejos
+git commit -m "mapa: Nivel 5 usa el Plan de Movilidad sin re-pago; se eliminan los escenarios y bicicleteros viejos
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ```
@@ -4161,7 +4265,7 @@ Si la tabla-resumen por categoría o el texto de la sección de Transporte menci
 
 - §3 (arquitectura del cliente): agregar un bloque "Nivel 5 — Plan de Movilidad" con una línea por archivo: `scenes/mapa/lugares_campus.gd` (lugares con nombre, provisional hasta el mapa nuevo), `scenes/mapa/cambios_movilidad.gd`, `scenes/misiones/plan_movilidad_datos.gd` (contenido; espejo del SQL), `plan_movilidad.gd` (reglas puras), `punto_movilidad.gd`, `ui_movilidad.gd`, `panel_decision_movilidad.gd`, `panel_oficina_movilidad.gd`, `panel_consejo_movilidad.gd`, `nivel5_movilidad.gd` (controlador); y las pruebas nuevas con el comando para correrlas.
 - §4 (backend): subsección "Plan de Movilidad" — catálogos de decisiones (28 filas) y sinergias (4, requisito `tr_consejo`) aplicados; migración `nivel5_plan_movilidad_misiones` **pendiente de aplicar al publicar** (sql/nivel5_plan_movilidad.sql); detalle `plan_movilidad` en `detalles_estudiante`.
-- §8 (pendientes): marcar "Proyecto B — Nivel 5 nuevo" como implementado con la fecha del día (`date +%F`), y dejar pendiente, en este orden y con OK del usuario: (1) aplicar la migración 2, (2) re-export `python scripts/exportar_web.py`, (3) prueba con cuenta real (checklist del Step 4), (4) merge/publicación; más las "Preguntas para el usuario" de la spec que sigan abiertas.
+- §8 (pendientes): marcar "Proyecto B — Nivel 5 nuevo" como implementado con la fecha del día (`date +%F`), y dejar pendiente, en este orden y con OK del usuario: (1) aplicar la migración 2, (2) re-export `python scripts/exportar_web.py`, (3) prueba con cuenta real (checklist del Step 4), (4) merge/publicación; y agregar la tarea de seguimiento "unificar a tuteo los textos con voseo existentes" (spec §17).
 
 - [ ] **Step 3: Estados de las specs**
 
@@ -4179,7 +4283,8 @@ Incluir en el informe al usuario, para después de aplicar la migración 2 y re-
 4. Bicicletero sin kit: aviso y Tienda; con kit: decisión de tipo.
 5. Consejo: 3 objeciones; un argumento incorrecto permite reintentar.
 6. Tras presentar: avisos "✨ Sinergia" en Entorno/Energía/Educación según el plan; mismo número de Transporte en HUD, mapa de avance, resultados e informe.
-7. Supabase: `detalles_estudiante` con clave `plan_movilidad`; `puntos_calidad` con `decision:tr_*`, `penal:tr_*:1`, `sinergia:*`; `eventos_aprendizaje` con `decision_tomada`, `argumento_consejo`, `plan_presentado`.
+7. Con una cuenta que tenía el Nivel 5 viejo completo: las misiones `tr_*` y el nivel no suben XP ni EcoCredits, pero el Avance de Transporte sí sube; con una cuenta nueva sí suben.
+8. Supabase: `detalles_estudiante` con clave `plan_movilidad`; `puntos_calidad` con `decision:tr_*`, `penal:tr_*:1`, `sinergia:*`; `eventos_aprendizaje` con `decision_tomada`, `argumento_consejo`, `plan_presentado`.
 
 - [ ] **Step 5: Commit**
 
@@ -4207,6 +4312,8 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 | §2 R10 dos migraciones | 3 (aplica 1, prueba 2 sin aplicar), 13 (pendiente al publicar) |
 | §2 R11 lugar del Consejo · §3 lugares | 1 |
 | §2 R12 emoji | Global Constraints; textos de 2, 7, 8, 9 usan solo 🚲 🔒 🏆 ✨ 🌿 ⚡ 📚 |
+| §2 R13 / §11.1 sin re-pago | 4 (`legado_completo` + pruebas: completo, a medias, nuevo, niveles sin cambio), 11 (0/0 vs 35/12, probado), 12 (`_on_movilidad_completado`, bono de nivel; verificado en `test_compila`) |
+| §2 R14 tuteo | 2, 7, 8, 9 (textos revisados); seguimiento del voseo existente en 13 |
 | §4 flujo | 7 (bloqueos), 9 (Oficina/Consejo), 11 |
 | §6 decisiones · §7.3 objeciones | 2 (copia literal) |
 | §7.1 revisión con 2 cambios | 6 (`aplicar_valida(..., true)`), 9 (`Cambiar`), 11 (volver al Consejo) |
@@ -4229,6 +4336,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - `plan_movilidad.gd` API (T6) = usos en T8 (`opcion_actual`, `alcanza`, `faltante`, `descartada`, `registrar_contraproducente`, `aplicar_valida`, `presentado`, `puede_cambiar_en_consejo`, `restante`, `resuelta`), T9 (`costo_comprometido`, `todas_resueltas`, `puede_presentar`, `objeciones`, `presentar`, `calificacion_estimada`, `cambios_en_consejo`, `consejo`), T10 (`opcion_actual`), T11 (`cargar`, `a_detalle`, `vacio`, `encargo_aceptado`, `sinergias` vía `consejo.sinergias`).
 - Señales de paneles (T8, T9) = conexiones en T11 con la misma cantidad de argumentos.
 - `NivelManager.MISIONES_NIVEL[5]` (T4) = `DATOS.MISIONES` (T2), verificado en T11.
+- `NivelManager.legado_completo` (T4) = usos en T11 (`_completar`) y T12 (`_on_nivel_greenmetric_completado`); contrato 0/0 = sin pago igual en T11 y T12.
 - Estados del punto `bloqueado|pendiente|resuelto` y grupo `punto_movilidad` = T7, T11, T12.
 
 **Riesgos de ejecución anotados:** Godot corriendo en paralelo en olas 1 y 3 (reintentar si falla la importación); la Task 3 necesita MCP de Supabase; la migración 2 queda deliberadamente sin aplicar.
