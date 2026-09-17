@@ -35,10 +35,7 @@ const MISION_RECICLAR_ESCENA    := preload("res://scenes/misiones/mision_recicla
 const LLAVE_AGUA_ESCENA         := preload("res://scenes/misiones/llave_agua.gd")
 const PUNTO_CAPTACION_ESCENA    := preload("res://scenes/misiones/punto_captacion.gd")
 const MISION_CAPTACION_ESCENA   := preload("res://scenes/misiones/mision_captacion.gd")
-const OFICINA_MOVILIDAD_ESCENA  := preload("res://scenes/misiones/oficina_movilidad.gd")
-const MISION_MOVILIDAD_ESCENA   := preload("res://scenes/misiones/mision_movilidad.gd")
-const PUNTO_BICICLETERO_ESCENA  := preload("res://scenes/misiones/punto_bicicletero.gd")
-const MISION_BICICLETERO_ESCENA := preload("res://scenes/misiones/mision_bicicletero.gd")
+const NIVEL5_MOVILIDAD          := preload("res://scenes/misiones/nivel5_movilidad.gd")
 const PUNTO_MALLA_VERDE_ESCENA  := preload("res://scenes/misiones/punto_malla_verde.gd")
 const MISION_MALLA_VERDE_ESCENA := preload("res://scenes/misiones/mision_malla_verde.gd")
 const PUNTO_COMITE_ESCENA       := preload("res://scenes/misiones/punto_comite_ambiental.gd")
@@ -410,8 +407,7 @@ var _interior_ui      : CanvasLayer = null
 var _solar_ui         : CanvasLayer = null
 var _reciclar_ui      : CanvasLayer = null
 var _captacion_ui     : CanvasLayer = null
-var _movilidad_ui     : CanvasLayer = null
-var _bicicletero_ui   : CanvasLayer = null
+var _nivel5           = null   # nivel5_movilidad.gd (Plan de Movilidad)
 var _malla_verde_ui   : CanvasLayer = null
 var _comite_ui        : CanvasLayer = null
 var _semana_verde_ui  : CanvasLayer = null
@@ -739,8 +735,7 @@ func _hay_ui_modal_abierta() -> bool:
 	if _solar_ui and _solar_ui.visible: return true
 	if _reciclar_ui and _reciclar_ui.visible: return true
 	if _captacion_ui and _captacion_ui.visible: return true
-	if _movilidad_ui and _movilidad_ui.visible: return true
-	if _bicicletero_ui and _bicicletero_ui.visible: return true
+	if _nivel5 and _nivel5.hay_panel_abierto(): return true
 	if _malla_verde_ui and _malla_verde_ui.visible: return true
 	if _comite_ui and _comite_ui.visible: return true
 	if _semana_verde_ui and _semana_verde_ui.visible: return true
@@ -800,6 +795,9 @@ func _input(event: InputEvent) -> void:
 		_cerrar_panel_contenedor()
 		get_viewport().set_input_as_handled()
 		return
+	# Con un panel del Plan de Movilidad abierto, la E no abre otra cosa.
+	if _nivel5 and _nivel5.hay_panel_abierto():
+		return
 	# ── Misiones de todos los niveles: elige la MÁS CERCANA, no la
 	# de mayor prioridad de grupo. Antes, si dos misiones de distinto
 	# nivel quedaban cerca una de otra, siempre ganaba la del grupo
@@ -808,7 +806,7 @@ func _input(event: InputEvent) -> void:
 	# coincidían en el mapa. Ahora se compara distancia real. ─────
 	const GRUPOS_MISION : Array[String] = [
 		"zona_tierra", "punto_energia", "zona_reciclaje",
-		"llave_agua", "punto_captacion", "oficina_movilidad", "punto_bicicletero",
+		"llave_agua", "punto_captacion", "punto_movilidad",
 		"punto_malla_verde", "punto_comite_ambiental", "punto_semana_verde",
 		"punto_informe_final",
 	]
@@ -1904,16 +1902,8 @@ const DATOS_PUNTOS_CAPTACION : Array = [
 	 "pos": Vector2(420, 300)},
 ]
 
-const DATOS_OFICINA_MOVILIDAD : Array = [
-	{"id": "oficina_movilidad", "nombre": "Oficina de Movilidad Sostenible", "pos": Vector2(600, 100)},
-]
-
-const DATOS_PUNTOS_BICICLETERO : Array = [
-	{"id": "bicicletero_bloque_e", "nombre": "Bicicletero — Bloque E", "indice_mision": 0,
-	 "pos": Vector2(1020, 460)},
-	{"id": "bicicletero_cafetin",   "nombre": "Bicicletero — Cafetín",   "indice_mision": 1,
-	 "pos": Vector2(200, 360)},
-]
+# Nivel 5 (Plan de Movilidad): sus puntos se ubican por lugar con nombre en
+# scenes/mapa/lugares_campus.gd (lo crea nivel5_movilidad.gd).
 
 # Posiciones de Nivel 6 verificadas con el mismo chequeo (script aparte)
 # contra los ~34 puntos de misión existentes — cero solapamientos, cero
@@ -1961,13 +1951,12 @@ func _init_misiones_nivel() -> void:
 	add_child(_captacion_ui)
 	_captacion_ui.mision_captacion_completada.connect(_on_captacion_completado)
 
-	_movilidad_ui = MISION_MOVILIDAD_ESCENA.new()
-	add_child(_movilidad_ui)
-	_movilidad_ui.mision_movilidad_completada.connect(_on_movilidad_completado)
-
-	_bicicletero_ui = MISION_BICICLETERO_ESCENA.new()
-	add_child(_bicicletero_ui)
-	_bicicletero_ui.mision_bicicletero_completada.connect(_on_bicicletero_completado)
+	# Nivel 5: Plan de Movilidad (puntos por lugar, paneles, cambios del mapa).
+	_nivel5 = NIVEL5_MOVILIDAD.new()
+	add_child(_nivel5)
+	_nivel5.configurar(self, NivelManager, PuntajeManager, SupabaseManager)
+	_nivel5.verificar_herramienta = _verificar_herramienta
+	_nivel5.mision_completada.connect(_on_movilidad_completado)
 
 	_malla_verde_ui = MISION_MALLA_VERDE_ESCENA.new()
 	add_child(_malla_verde_ui)
@@ -1991,8 +1980,7 @@ func _init_misiones_nivel() -> void:
 	_spawn_zonas_reciclaje()
 	_spawn_llaves_agua()
 	_spawn_puntos_captacion()
-	_spawn_oficina_movilidad()
-	_spawn_puntos_bicicletero()
+	_nivel5.activar()
 	_spawn_punto_malla_verde()
 	_spawn_punto_comite()
 	_spawn_punto_semana_verde()
@@ -2108,42 +2096,6 @@ func _spawn_puntos_captacion() -> void:
 		pc.z_index  = 1
 		add_child(pc)
 		pc.captacion_solicitada.connect(_on_captacion_solicitada)
-
-
-func _spawn_oficina_movilidad() -> void:
-	var nm = _nivel_mgr()
-	if not nm or not nm.nivel_desbloqueado(5):
-		return
-	if not get_tree().get_nodes_in_group("oficina_movilidad").is_empty():
-		return
-	for dato : Dictionary in DATOS_OFICINA_MOVILIDAD:
-		var om := OFICINA_MOVILIDAD_ESCENA.new()
-		om.set("nombre_punto", dato["nombre"])
-		om.position = dato["pos"]
-		om.z_index  = 1
-		add_child(om)
-		om.movilidad_solicitada.connect(_on_movilidad_solicitada)
-
-
-func _spawn_puntos_bicicletero() -> void:
-	var nm = _nivel_mgr()
-	if not nm or not nm.nivel_desbloqueado(5):
-		return
-	for dato : Dictionary in DATOS_PUNTOS_BICICLETERO:
-		var existe := false
-		for child in get_children():
-			if child.get("mision_id") == dato["id"]:
-				existe = true
-				break
-		if existe: continue
-		var pb := PUNTO_BICICLETERO_ESCENA.new()
-		pb.set("mision_id",     dato["id"])
-		pb.set("nombre_punto",  dato["nombre"])
-		pb.set("indice_mision", dato["indice_mision"])
-		pb.position = dato["pos"]
-		pb.z_index  = 1
-		add_child(pb)
-		pb.bicicletero_solicitado.connect(_on_bicicletero_solicitado)
 
 
 func _spawn_punto_malla_verde() -> void:
@@ -2311,18 +2263,6 @@ func _on_captacion_solicitada(punto: Area2D) -> void:
 	_captacion_ui.call("iniciar", idx, punto)
 
 
-func _on_movilidad_solicitada(punto: Area2D, mision_id: String) -> void:
-	if not is_instance_valid(_movilidad_ui): return
-	_movilidad_ui.call("iniciar", mision_id, punto)
-
-
-func _on_bicicletero_solicitado(punto: Area2D) -> void:
-	if not is_instance_valid(_bicicletero_ui): return
-	if not _verificar_herramienta("bicicletero", punto): return
-	var idx : int = punto.get("indice_mision") if punto.get("indice_mision") != null else 0
-	_bicicletero_ui.call("iniciar", idx, punto)
-
-
 func _on_malla_verde_solicitada(punto: Area2D) -> void:
 	if not is_instance_valid(_malla_verde_ui): return
 	_malla_verde_ui.call("iniciar", punto)
@@ -2424,29 +2364,21 @@ func _on_captacion_completado(mision_id: String, xp: int, ec: int) -> void:
 
 
 func _on_movilidad_completado(mision_id: String, xp: int, ec: int) -> void:
-	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
-	_aplicar_xp(xp, mision_id)
-	EconomiaManager.acreditar_mision(mision_id, ec)
+	# xp = 0 y ec = 0: el jugador ya había completado el Nivel 5 viejo y no
+	# cobra de nuevo (spec Nivel 5 §11.1). Sin acreditar_mision el servidor
+	# nunca paga EC; guardar_progreso con xp 0 registra la misión sin XP.
+	var pagar := xp > 0 or ec > 0
+	if pagar:
+		xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
+		_aplicar_xp(xp, mision_id)
+		EconomiaManager.acreditar_mision(mision_id, ec)
 	var nm = _nivel_mgr()
 	var pct : float = nm.pct_nivel(5) if nm else 0.0
 	_refrescar_progreso()
 	SupabaseManager.guardar_progreso(5, mision_id, int(pct * 100), xp, nm.nivel_completo(5) if nm else false)
 	_mostrar_mision_completada(mision_id, xp)
 	_sfx("mision")
-	print("🚲 Decisión de movilidad tomada: %s | +%d XP | +%d EC" % [mision_id, xp, ec])
-
-
-func _on_bicicletero_completado(mision_id: String, xp: int, ec: int) -> void:
-	xp = EconomiaManager.aplicar_bono_xp(xp)   # Credencial de voluntario (+10%)
-	_aplicar_xp(xp, mision_id)
-	EconomiaManager.acreditar_mision(mision_id, ec)
-	var nm = _nivel_mgr()
-	var pct : float = nm.pct_nivel(5) if nm else 0.0
-	_refrescar_progreso()
-	SupabaseManager.guardar_progreso(5, mision_id, int(pct * 100), xp, nm.nivel_completo(5) if nm else false)
-	_mostrar_mision_completada(mision_id, xp)
-	_sfx("mision")
-	print("🚲 Bicicletero instalado: %s | +%d XP | +%d EC" % [mision_id, xp, ec])
+	print("🚲 Plan de Movilidad: misión %s | +%d XP | +%d EC%s" % [mision_id, xp, ec, "" if pagar else " (ya cobrado con el Nivel 5 viejo)"])
 
 
 func _on_malla_verde_completado(mision_id: String, xp: int, ec: int) -> void:
@@ -2515,8 +2447,11 @@ func _on_nivel_greenmetric_completado(nivel: int) -> void:
 	var icono  = nm.ICONOS_NIVEL[nivel]  if nm else "⭐"
 	_mostrar_celebracion("%s NIVEL %d\n¡COMPLETADO!\n%s" % [icono, nivel, nombre])
 	_sfx("nivel")
-	var bonus_ec : int = int(nm.XP_NIVEL_BONUS.get(nivel, 150)) / 5 if nm else 30
-	EconomiaManager.ganar_creditos(bonus_ec, "nivel", str(nivel))
+	# Sin re-pago del bono a quien ya había completado el nivel con sus
+	# misiones viejas (spec Nivel 5 §11.1). Niveles sin cambios: siempre paga.
+	if not (nm and nm.legado_completo(nivel)):
+		var bonus_ec : int = int(nm.XP_NIVEL_BONUS.get(nivel, 150)) / 5 if nm else 30
+		EconomiaManager.ganar_creditos(bonus_ec, "nivel", str(nivel))
 	var sig_nivel := nivel + 1
 	if sig_nivel == 2 and nm and nm.nivel_desbloqueado(2):
 		_spawn_puntos_energia()
@@ -2526,8 +2461,8 @@ func _on_nivel_greenmetric_completado(nivel: int) -> void:
 		_spawn_llaves_agua()
 		_spawn_puntos_captacion()
 	elif sig_nivel == 5 and nm and nm.nivel_desbloqueado(5):
-		_spawn_oficina_movilidad()
-		_spawn_puntos_bicicletero()
+		if _nivel5:
+			_nivel5.activar()
 	elif sig_nivel == 6 and nm and nm.nivel_desbloqueado(6):
 		_spawn_punto_malla_verde()
 		_spawn_punto_comite()

@@ -65,7 +65,7 @@ func _ready() -> void:
 	_check(em != null and not ("impacto" in em), "EconomiaManager ya no tiene ImpactRating")
 	_check(em != null and not em.has_method("actualizar_impacto"), "actualizar_impacto eliminado")
 	for ruta in ["res://scenes/mapa/SceneMapaMundo.gd", "res://scenes/mapa/mapa_campus.gd",
-				 "res://scenes/ui/simulador_decision.gd", "res://scenes/misiones/mision_movilidad.gd",
+				 "res://scenes/ui/simulador_decision.gd", "res://scenes/misiones/nivel5_movilidad.gd",
 				 "res://scenes/misiones/mision_informe_final.gd", "res://scenes/ui/resultados_greenmetric.gd",
 				 "res://scenes/ui/quiz_npc.gd", "res://scenes/ui/minijuego_residuos.gd"]:
 		var s : Script = load(ruta)
@@ -81,6 +81,31 @@ func _ready() -> void:
 	_check(mapa_src.contains("hud_ficha_jugador.gd") and mapa_src.contains("hud_panel_greenmetric.gd")
 		and mapa_src.contains("hud_acciones.gd") and mapa_src.contains("hud_banner_zona.gd")
 		and mapa_src.contains("hud_aviso.gd"), "SceneMapaMundo usa los componentes del HUD")
+	# Nivel 5 nuevo (Plan de Movilidad): el mapa usa el controlador y los
+	# scripts viejos ya no existen.
+	_check(mapa_src.contains("nivel5_movilidad.gd") and mapa_src.contains("_nivel5.activar()")
+		and mapa_src.contains("\"punto_movilidad\""), "SceneMapaMundo usa el Plan de Movilidad")
+	# Sin el Callable inyectado, el control del kit de bicicletero del
+	# controlador se salta (is_valid() falso = pasa de largo).
+	_check(mapa_src.contains("_nivel5.verificar_herramienta = _verificar_herramienta"),
+		"SceneMapaMundo inyecta verificar_herramienta en el Nivel 5")
+	for viejo in ["oficina_movilidad.gd", "mision_movilidad.gd", "punto_bicicletero.gd", "mision_bicicletero.gd",
+				  "_spawn_oficina_movilidad", "_spawn_puntos_bicicletero", "DATOS_PUNTOS_BICICLETERO"]:
+		_check(not mapa_src.contains(viejo), "SceneMapaMundo sin %s" % viejo)
+	for ruta_vieja in ["mision_movilidad.gd", "oficina_movilidad.gd", "mision_bicicletero.gd", "punto_bicicletero.gd"]:
+		_check(not FileAccess.file_exists("res://scenes/misiones/" + ruta_vieja), "borrado %s" % ruta_vieja)
+	# Sin re-pago a quien completó el Nivel 5 viejo (spec §11.1).
+	var i_mov := mapa_src.find("func _on_movilidad_completado")
+	var cuerpo_mov := mapa_src.substr(i_mov, 1400)
+	_check(i_mov != -1 and cuerpo_mov.contains("var pagar := xp > 0 or ec > 0")
+		and cuerpo_mov.find("if pagar:") < cuerpo_mov.find("EconomiaManager.acreditar_mision")
+		and cuerpo_mov.contains("SupabaseManager.guardar_progreso(5, mision_id"), "movilidad: sin pago no acredita pero guarda progreso")
+	var i_niv := mapa_src.find("func _on_nivel_greenmetric_completado")
+	var cuerpo_niv := mapa_src.substr(i_niv, 1600)
+	_check(i_niv != -1 and cuerpo_niv.contains("nm.legado_completo(nivel)")
+		and cuerpo_niv.find("legado_completo(nivel)") < cuerpo_niv.find("EconomiaManager.ganar_creditos(bonus_ec"), "bono de nivel omitido con legado completo")
+	# El Nivel 5 se vuelve a activar al desbloquearse en la misma sesión.
+	_check(cuerpo_niv.contains("_nivel5.activar()"), "Nivel 5 se activa al completar el Nivel 4")
 	var escena = load("res://scenes/mapa/SceneMapaMundo.gd")
 	_check(escena != null and escena.can_instantiate(), "SceneMapaMundo compila")
 
