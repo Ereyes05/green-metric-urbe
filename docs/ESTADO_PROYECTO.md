@@ -61,7 +61,7 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
     `PuntajeManager` — ver abajo y la sección 4.
   - `PuntajeManager.gd` (+ `autoload/puntaje_formula.gd`, nuevos, 2026-09-14)
     — el puntaje GreenMetric por categoría (0–100), **un solo número** que
-    usan el HUD, el mapa de calor, el simulador de movilidad y el informe
+    usan el HUD, el mapa de avance, el simulador de movilidad y el informe
     final (antes cada uno mostraba un valor distinto — ver sección 4,
     "Puntaje GreenMetric (proyecto A)"). Lo calcula el servidor
     (`puntaje_greenmetric`); `puntaje_formula.gd` es un espejo local sin
@@ -277,7 +277,7 @@ espera que el cliente Godot logueado la llame, no hace falta esa flag).
 Nuevo (2026-09-14). Diseño completo en
 `docs/superpowers/specs/2026-09-14-puntaje-greenmetric-cruces-design.md`.
 Reemplaza los tres números que no coincidían entre sí (barra del HUD con
-`ImpactRating`, mapa de calor con valores fijos inventados, informe final por
+`ImpactRating`, mapa de avance con valores fijos inventados, informe final por
 % de misiones) por **un solo puntaje 0–100 por categoría**, calculado en el
 servidor.
 
@@ -302,7 +302,7 @@ Nivel 6, antes solo en `user://`) y `puntos_calidad` (comprensión/decisiones/
 sinergias ya otorgados, para no volver a pagarlos).
 
 **Funciones (`security definer`):** `puntaje_greenmetric()` (público — arma
-el desglose por categoría + total para el HUD/mapa de calor/resultados),
+el desglose por categoría + total para el HUD/mapa de avance/resultados),
 `guardar_detalle`/`obtener_detalles` (sincronizan `detalles_estudiante`),
 `registrar_quiz(mision_id, aciertos)`, `registrar_decision(decision_id,
 opcion_id)`, `registrar_sinergia(accion_id)`. `_puntaje_greenmetric(p_user)`
@@ -548,7 +548,7 @@ mecanismo técnico de escaneo → activación a distancia.
   publicar (Step 5)** — no se hicieron en esta tarea por no tener las
   credenciales de la cuenta de prueba a mano; ver el spec para el detalle de
   qué falta confirmar (consola `SceneLogin: detalles N del servidor`, barra
-  del HUD = mapa de calor = resultados, quiz dos veces solo suma la primera).
+  del HUD = mapa de avance = resultados, quiz dos veces solo suma la primera).
 - [x] **Proyecto B — Nivel 5 nuevo** — implementado el 2026-09-17: Plan de
   Movilidad con presupuesto de 100 puntos, 6 decisiones con opción
   contraproducente (regla Mixta), 2 bicicleteros con decisión de tipo y
@@ -556,21 +556,39 @@ mecanismo técnico de escaneo → activación a distancia.
   `docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md`; ver
   sección 3 (archivos) y sección 4 (backend, "Plan de Movilidad") de este
   documento. **Pendiente, en este orden y con OK del usuario, antes de dar por
-  cerrado el proyecto:**
-  1. Re-exportar el cliente web: `python scripts/exportar_web.py`.
-  2. Verificar el `.pck` (que no lleve nada sensible, ver sección 10 más
-     abajo).
-  3. Aplicar la migración `nivel5_plan_movilidad_misiones`
-     (`sql/nivel5_plan_movilidad.sql`, sección 10.2 del diseño).
-  4. Prueba con la cuenta real del usuario — checklist completa en
-     `docs/pruebas/checklist_nivel5_plan_movilidad.md`.
-  5. Push/merge/publicación.
-  **Aplicar la migración del paso 3 mucho antes del push/merge del paso 5
-  dejaría el juego ya publicado (que todavía guarda misiones `mov_*`) leyendo
-  el catálogo nuevo: el Avance de Transporte de todos los jugadores activos
-  caería a 0** hasta que el cliente que guarda `tr_*` quedara publicado — por
-  eso los pasos 3-5 se hacen seguidos, sin dejarlos para otro día (detalle
-  completo en `docs/pruebas/checklist_nivel5_plan_movilidad.md`).
+  cerrado el proyecto** (orden corregido — ver el porqué después de la
+  lista):
+  1. Correr la checklist completa **desde el editor**, con la migración 2
+     (`nivel5_plan_movilidad_misiones`) **todavía sin aplicar**. Todo
+     funciona salvo el Avance de Transporte del HUD, que arranca en 0 y se
+     enciende recién en retrospectiva al aplicar la migración más tarde:
+     `guardar_progreso_modulo` no valida `mision_id` contra el catálogo, así
+     que guarda el progreso de las misiones `tr_*` igual aunque el catálogo
+     todavía no las tenga.
+  2. Re-exportar el cliente web: `python scripts/exportar_web.py`.
+  3. Verificar el `.pck` — que no lleve `tests/`, `docs/` ni `sql/`, que
+     contenga `nivel5_movilidad` y que ya **no** contenga `mision_bicicletero`
+     (ver sección 10 más abajo).
+  4. Push/merge, y confirmar que GitHub Pages ya sirve el build nuevo (el
+     `index.pck?v=<hash>` cambió).
+  5. Recién unos minutos después, aplicar la migración
+     `nivel5_plan_movilidad_misiones` (`sql/nivel5_plan_movilidad.sql`,
+     sección 10.2 del diseño).
+  6. Verificación corta post-migración con la cuenta real (que el Avance de
+     Transporte ahora sí sube, que el Consejo registra la calificación).
+  **Por qué este orden y no el anterior (migración antes del build
+  publicado):** con la migración antes, el juego que todavía estaba publicado
+  (el que guarda `mov_*`) se hubiera quedado leyendo un catálogo que ya no
+  tiene esos IDs: el Avance de Transporte de **todos los jugadores activos**
+  habría caído a 0 durante las horas entre aplicar la migración y terminar de
+  publicar el build nuevo, y el ranking público habría mostrado un nivel
+  menos para esos jugadores (cuenta niveles por el catálogo vigente) sin que
+  hubiera ningún nivel nuevo disponible todavía para compensarlo. Migrar
+  **después** de confirmar que Pages ya sirve el cliente que guarda `tr_*`
+  evita esa ventana; el costo a cambio es la checklist del paso 1 corriendo
+  contra un catálogo viejo, que es solo una lectura del HUD y se corrige sola
+  al aplicar la migración. Detalle completo en
+  `docs/pruebas/checklist_nivel5_plan_movilidad.md`.
   - [ ] **Tarea de seguimiento — unificar a tuteo los textos con voseo que ya
     existían en el juego** (spec `2026-09-17-nivel5-plan-movilidad-design.md`
     §17; no se tocan en este proyecto, solo los textos nuevos usan tuteo).
@@ -585,13 +603,6 @@ mecanismo técnico de escaneo → activación a distancia.
   `docs/superpowers/specs/2026-09-14-puntaje-greenmetric-cruces-design.md`,
   sección 8 (cada uno recibe su propio documento detallado antes de
   implementarse).
-- [ ] **`tests/test_lugares_campus.gd`: la lista `IGNORADAS` todavía nombra
-  constantes que ya no existen** — el Nivel 5 nuevo eliminó
-  `DATOS_PUNTOS_BICICLETERO`/`DATOS_OFICINA_MOVILIDAD` y las constantes
-  `mov_*` que la prueba de solapamientos excluía a propósito; los nombres
-  viejos quedaron en la lista de exclusión sin efecto (no rompen la prueba,
-  simplemente no apuntan a nada). Limpiarlos cuando se toque ese archivo de
-  nuevo.
 - [ ] **El ranking cuenta niveles por el catálogo vigente; el HUD acepta
   también el legado** — con el Nivel 5 nuevo esto ya no es solo teórico: un
   jugador que superó el Nivel 5 solo por las misiones `mov_*`/bicicleteros

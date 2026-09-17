@@ -73,3 +73,24 @@ insert into public.catalogo_misiones (mision_id, categoria, tipo, preguntas) val
   ('tr_bici_bloque_e', 5, 'mision', 0), ('tr_bici_cafetin', 5, 'mision', 0),
   ('tr_consejo', 5, 'mision', 0)
 on conflict (mision_id) do nothing;
+
+-- ── Rollback de la migración 2 (nivel5_plan_movilidad_misiones) ─────
+-- NO APLICAR salvo que haya que deshacer la migración 2 ya aplicada (por
+-- ejemplo, publicar la migración quedó desalineado del build y hay que
+-- volver el catálogo del servidor a los IDs `mov_*`/bicicleteros viejos
+-- mientras se resuelve). Deshace SOLO catalogo_misiones — no toca filas ya
+-- guardadas en misiones_estudiante (ni las `mov_*` viejas, que el legado
+-- sigue necesitando, ni las `tr_*` que ya se hayan registrado), ni
+-- puntos_calidad, ni detalles_estudiante (plan_movilidad). Revisar y
+-- ejecutar a mano — no es parte del script normal de despliegue.
+--
+-- delete from public.catalogo_misiones
+--  where mision_id in ('tr_permisos', 'tr_lote', 'tr_carpool', 'tr_shuttle',
+--                      'tr_dia_sin_carros', 'tr_flota', 'tr_bici_bloque_e',
+--                      'tr_bici_cafetin', 'tr_consejo');
+-- insert into public.catalogo_misiones (mision_id, categoria, tipo, preguntas) values
+--   ('mov_parqueo', 5, 'mision', 0), ('mov_shuttle', 5, 'mision', 0),
+--   ('mov_ciclovia', 5, 'mision', 0), ('mov_dia_sin_carros', 5, 'mision', 0),
+--   ('mov_zev', 5, 'mision', 0), ('mov_carpool', 5, 'mision', 0),
+--   ('bicicletero_bloque_e', 5, 'mision', 0), ('bicicletero_cafetin', 5, 'mision', 0)
+-- on conflict (mision_id) do nothing;

@@ -1,36 +1,59 @@
 # Checklist de prueba del Nivel 5 — Plan de Movilidad (cuenta real)
 
 Esta checklist es para que **juegues con tu cuenta real** el Nivel 5 nuevo
-(Plan de Movilidad, proyecto B del puntaje GreenMetric) **antes de publicar**
-— después de aplicar la migración de misiones y de re-exportar, y antes del
-push/merge final. Ver `docs/ESTADO_PROYECTO.md`, sección 8 ("Proyecto B —
+(Plan de Movilidad, proyecto B del puntaje GreenMetric) — la primera pasada,
+completa, se corre **desde el editor y con la migración de misiones todavía
+sin aplicar** (paso 1 del orden de publicación de abajo); el punto 6 de ese
+orden pide una segunda pasada corta, ya con la migración aplicada y el
+build publicado. Ver `docs/ESTADO_PROYECTO.md`, sección 8 ("Proyecto B —
 Nivel 5 nuevo") y el diseño completo en
 `docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md`.
 
 ## Orden de publicación
 
-1. **Re-exportar el cliente web:** `python scripts/exportar_web.py`.
-2. **Verificar el `.pck`** — que no se haya empaquetado nada sensible (el
+1. **Correr esta checklist desde el editor, con la migración 2
+   (`nivel5_plan_movilidad_misiones`) todavía SIN aplicar.** Todo funciona
+   igual salvo el Avance de Transporte del HUD (puntos 1 y 9): con el
+   catálogo del servidor todavía en los 8 IDs viejos, ese número se lee en 0
+   durante todo este paso y se enciende recién en retrospectiva cuando se
+   aplique la migración en el paso 5 — `guardar_progreso_modulo` no valida
+   `mision_id` contra `catalogo_misiones`, así que guarda el progreso de las
+   misiones `tr_*` igual aunque el catálogo todavía no las tenga. Si algo
+   más falla, **no sigas al paso 2** hasta resolverlo.
+2. **Re-exportar el cliente web:** `python scripts/exportar_web.py`.
+3. **Verificar el `.pck`** — que no lleve `tests/`, `docs/` ni `sql/` (el
    script de comprobación está en `docs/ESTADO_PROYECTO.md`, sección 10,
-   "⚠️ Por qué `exclude_filter` no es opcional").
-3. **Aplicar la migración `nivel5_plan_movilidad_misiones`**
-   (`sql/nivel5_plan_movilidad.sql`, sección 10.2 del diseño) — recién en
-   este punto el catálogo del servidor pasa de los 8 IDs viejos (`mov_*`,
-   `bicicletero_bloque_e`, `bicicletero_cafetin`) a los 9 `tr_*` nuevos.
-4. **Correr esta checklist con tu cuenta real** (con el código de esta rama,
-   ya sea en el editor o con el build recién exportado). Si algo falla,
-   **no sigas al paso 5** hasta resolverlo.
-5. **Push / merge** — recién ahí el juego publicado queda al día.
+   "⚠️ Por qué `exclude_filter` no es opcional"), que contenga
+   `nivel5_movilidad` y que ya **no** contenga `mision_bicicletero` (el
+   controlador y los escenarios viejos que este proyecto eliminó).
+4. **Push / merge**, y confirmar que GitHub Pages ya sirve el build nuevo
+   (el `index.pck?v=<hash>` cambió respecto al publicado).
+5. **Recién unos minutos después, aplicar la migración
+   `nivel5_plan_movilidad_misiones`** (`sql/nivel5_plan_movilidad.sql`,
+   sección 10.2 del diseño) — en este punto el catálogo del servidor pasa de
+   los 8 IDs viejos (`mov_*`, `bicicletero_bloque_e`, `bicicletero_cafetin`)
+   a los 9 `tr_*` nuevos.
+6. **Verificación corta post-migración con la cuenta real:** que el Avance
+   de Transporte del HUD ahora sí sube con cada `tr_*`, y que el Consejo
+   registra la calificación (punto 11).
 
-**Por qué la migración va antes del push/merge y no al revés:** la
-migración y la publicación comparten el mismo Supabase de producción, sin
-entorno de prueba aparte. Si se aplicara la migración **antes** de tener
-listos los pasos 1-2 (o mucho antes del push/merge del paso 5), el juego
-*publicado* — que todavía guarda las misiones con los IDs viejos `mov_*` —
-quedaría leyendo un catálogo que ya no los tiene: **el Avance de Transporte
-de todos los jugadores activos caería a 0** hasta que el cliente nuevo (que
-guarda `tr_*`) quedara publicado. Por eso los pasos 3, 4 y 5 se hacen
-seguidos, sin dejarlos para otro día.
+**Por qué este orden y no el anterior (migrar antes de publicar el
+cliente):** la migración y la publicación comparten el mismo Supabase de
+producción, sin entorno de prueba aparte. El orden anterior de este
+documento aplicaba la migración antes del push/merge — pero eso deja al
+juego *ya publicado* (que todavía guarda las misiones con los IDs viejos
+`mov_*`) leyendo un catálogo que ya no las tiene. El costo real: durante las
+horas entre aplicar la migración y terminar de publicar el build nuevo,
+**todos los jugadores activos** ven el Avance de Transporte en 0, y como el
+ranking público cuenta niveles por el catálogo vigente, varios ven **un
+nivel menos** en el ranking — sin que haya ningún nivel nuevo disponible
+todavía para compensarlo (el cliente que lo desbloquea recién se publica en
+el paso 4). Migrar **después** de confirmar que Pages ya sirve el cliente
+que guarda `tr_*` (pasos 2-4 antes que el 5) evita esa ventana. El costo a
+cambio es correr la checklist del paso 1 contra un catálogo todavía viejo,
+que es un problema únicamente de lectura del HUD (Avance de Transporte en
+0) y se corrige solo, sin ninguna acción adicional, al aplicar la migración
+en el paso 5.
 
 ## Cómo probar
 
@@ -145,7 +168,7 @@ Sinergias).
 **Qué hacer:** después del Consejo, comparar la barra de Transporte en
 cuatro lugares distintos.
 
-**Qué vas a ver:** la barra del HUD, el mapa de calor, la pantalla de
+**Qué vas a ver:** la barra del HUD, el mapa de avance, la pantalla de
 resultados y el informe final muestran **el mismo número** para la
 categoría Transporte.
 

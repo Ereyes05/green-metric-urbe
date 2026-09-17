@@ -615,7 +615,7 @@ después de empezar el plan.
 | XP local | `SceneMapaMundo._on_movilidad_completado` | no llama `aplicar_bono_xp` ni `_aplicar_xp` | igual que hoy |
 | EC | `SceneMapaMundo._on_movilidad_completado` | **no llama** `EconomiaManager.acreditar_mision` → nunca se encola la RPC `acreditar_mision` (es la única vía por la que el servidor paga EC de misión) | igual que hoy |
 | Progreso | `SupabaseManager.guardar_progreso(5, id, pct, xp, completo)` | **se llama siempre**, con `xp = 0` → `guardar_progreso_modulo` registra la misión y no suma XP | con el XP de la misión |
-| Aviso | `_mostrar_mision_completada(id, xp)` | se muestra con "+0 XP" | igual que hoy |
+| Aviso | `_mostrar_mision_completada(id, xp)` | se muestra la misión completada, pero se **oculta** la línea "+N XP (Total: …)" (`xp == 0`, revisión final I3 — antes decía "+0 XP", ruido sin información en las nueve `tr_*`) | igual que hoy |
 | Bono de nivel | `SceneMapaMundo._on_nivel_greenmetric_completado` | no llama `ganar_creditos(bonus, "nivel", "5")`; la celebración sí se muestra | igual que hoy |
 
 Regla en `SceneMapaMundo`: `xp <= 0 and ec <= 0` = misión sin pago. No se cambia
@@ -624,6 +624,24 @@ ninguna función del servidor.
 **Limitación:** es una decisión del cliente (mismo modelo de confianza que el XP);
 un cliente modificado podría cobrar. Para quien tenía el Nivel 5 viejo a medias
 (legado incompleto) se paga normal, aunque haya cobrado algunas `mov_*`.
+
+**Limitación (revisión final):** `legado_completo(5)` se evalúa **en el momento
+de pagar** cada misión (`nivel5_movilidad._completar()`), leyendo
+`NivelManager._misiones`. `SceneLogin` (`_cargar_misiones_con_timeout`) espera
+la repoblación del servidor antes de entrar al mapa, pero con **fail-open** y
+un tope de 8 s: sin red, o si el servidor tarda más de eso, se entra igual con
+lo que haya en el archivo local `user://`. En una máquina nueva — sin ese
+archivo, porque el estudiante nunca jugó ahí — ese "lo que haya" es nada:
+`_misiones["5"]` queda vacío, `legado_completo(5)` da `false` y a un jugador
+que en otra máquina ya tenía el Nivel 5 viejo completo **se le podría pagar**
+XP/EC por las primeras `tr_*` que complete en esa sesión, antes de que la
+repoblación del servidor (si llega después del timeout, o en una sesión
+posterior) corrija `_misiones`. No se corrige en este proyecto (mismo modelo
+de confianza que el resto de esta sección, y la ventana ya existe hoy para
+otros niveles); si se quiere cerrar, la opción más simple es que
+`nivel5_movilidad.activar()`/`_completar()` no paguen nada hasta que
+`SceneLogin` confirme que la repoblación del servidor, específicamente,
+terminó (no solo que venció el timeout).
 
 ## 12. Cambios visibles en el mapa
 
