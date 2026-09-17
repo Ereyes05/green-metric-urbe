@@ -59,7 +59,7 @@ insert into public.catalogo_sinergias (accion_id, categoria, puntos, requisito_m
 on conflict (accion_id, categoria) do nothing;
 
 -- ── Migración 2: nivel5_plan_movilidad_misiones ──────────────
--- ESTADO: NO APLICADA. Se aplica junto con la publicación del cliente nuevo
+-- ESTADO: APLICADA el 2026-09-17, junto con la publicación del cliente nuevo. Se aplica junto con la publicación del cliente nuevo
 -- (spec R10 y §10.2): aplicada antes, el juego publicado (que guarda mov_*)
 -- mostraría el Avance de Transporte en 0. Las filas viejas de
 -- misiones_estudiante no se tocan (sostienen MISIONES_LEGADO del cliente).
