@@ -106,6 +106,48 @@ func _ready() -> void:
 		and cuerpo_niv.find("legado_completo(nivel)") < cuerpo_niv.find("EconomiaManager.ganar_creditos(bonus_ec"), "bono de nivel omitido con legado completo")
 	# El Nivel 5 se vuelve a activar al desbloquearse en la misma sesión.
 	_check(cuerpo_niv.contains("_nivel5.activar()"), "Nivel 5 se activa al completar el Nivel 4")
+
+	# ── Regla de selección de la tecla E (mision_mas_cercana) ────
+	# Un punto bloqueado que gane por distancia se traga la E: su
+	# intentar_interactuar() no hace nada pero _input() igual marca la tecla
+	# como consumida, y la misión de otro nivel que tiene al lado queda
+	# inalcanzable (parada_rectorado ↔ llave_bloque_b a ~100 px,
+	# bicicletero_bloque_e ↔ reciclar_este). Se prueba con puntos reales.
+	const PUNTO_MOV := preload("res://scenes/misiones/punto_movilidad.gd")
+	var jug_pos := Vector2(90, 100)
+	var cerca : Area2D = PUNTO_MOV.new()
+	cerca.tipo = "consejo"
+	cerca.lugar = "parada_rectorado"
+	add_child(cerca)
+	cerca.global_position = Vector2(100, 100)
+	cerca._jugador_cerca = true
+	var lejos : Area2D = PUNTO_MOV.new()
+	lejos.tipo = "decision"
+	lejos.lugar = "lote_este"
+	add_child(lejos)
+	lejos.global_position = Vector2(180, 100)
+	lejos._jugador_cerca = true
+	cerca.set_estado("pendiente")
+	lejos.set_estado("pendiente")
+	_check(mapa.mision_mas_cercana([cerca, lejos], jug_pos) == cerca,
+		"E: entre puntos abiertos gana el más cercano")
+	cerca.set_estado("bloqueado")
+	_check(mapa.mision_mas_cercana([cerca, lejos], jug_pos) == lejos,
+		"E: un punto bloqueado no gana aunque esté más cerca")
+	lejos.set_estado("bloqueado")
+	_check(mapa.mision_mas_cercana([cerca, lejos], jug_pos) == null,
+		"E: con todo bloqueado no hay candidato (la E cae a contenedores/zonas)")
+	cerca.set_estado("pendiente")
+	cerca._jugador_cerca = false
+	_check(mapa.mision_mas_cercana([cerca, lejos], jug_pos) == null,
+		"E: sin el jugador cerca no hay candidato")
+	cerca.queue_free()
+	lejos.queue_free()
+	# La rama del panel de movilidad abierto también consume la tecla, como
+	# las dos de arriba (edificio y contenedor).
+	var i_inp := mapa_src.find("if _nivel5 and _nivel5.hay_panel_abierto():\n\t\tget_viewport().set_input_as_handled()")
+	_check(i_inp != -1, "E: con un panel del Plan abierto la tecla se marca consumida")
+
 	var escena = load("res://scenes/mapa/SceneMapaMundo.gd")
 	_check(escena != null and escena.can_instantiate(), "SceneMapaMundo compila")
 

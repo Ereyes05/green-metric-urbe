@@ -797,6 +797,7 @@ func _input(event: InputEvent) -> void:
 		return
 	# Con un panel del Plan de Movilidad abierto, la E no abre otra cosa.
 	if _nivel5 and _nivel5.hay_panel_abierto():
+		get_viewport().set_input_as_handled()
 		return
 	# ── Misiones de todos los niveles: elige la MÁS CERCANA, no la
 	# de mayor prioridad de grupo. Antes, si dos misiones de distinto
@@ -810,15 +811,10 @@ func _input(event: InputEvent) -> void:
 		"punto_malla_verde", "punto_comite_ambiental", "punto_semana_verde",
 		"punto_informe_final",
 	]
-	var candidato      : Node  = null
-	var candidato_dist : float = INF
+	var cercanos : Array = []
 	for grupo in GRUPOS_MISION:
-		for nodo in get_tree().get_nodes_in_group(grupo):
-			if not nodo.get("_jugador_cerca"): continue
-			var d : float = jugador.global_position.distance_to((nodo as Node2D).global_position)
-			if d < candidato_dist:
-				candidato_dist = d
-				candidato = nodo
+		cercanos.append_array(get_tree().get_nodes_in_group(grupo))
+	var candidato : Node = mision_mas_cercana(cercanos, jugador.global_position)
 	if candidato:
 		candidato.call("intentar_interactuar")
 		get_viewport().set_input_as_handled()
@@ -826,6 +822,27 @@ func _input(event: InputEvent) -> void:
 	# ── Sin misión de nivel: contenedores y zonas verdes ─────────
 	_verificar_contenedor_cercano()
 	_verificar_zona_verde_cercana()
+
+
+# Regla de selección de la tecla E, aparte de _input() para poder probarla:
+# de los puntos que tienen al jugador cerca, el MÁS CERCANO que además sea
+# interactuable. Un punto bloqueado (estado "bloqueado" — solo los del Plan
+# de Movilidad lo usan) se descarta: si ganara por distancia, su
+# intentar_interactuar() no haría nada y la E igual se marcaría como
+# consumida, dejando sin abrir la misión de otro nivel que estuviera a pocos
+# píxeles (parada_rectorado ↔ llave_bloque_b, bicicletero_bloque_e ↔
+# reciclar_este). Descartarlo hace que la E caiga al siguiente más cercano.
+static func mision_mas_cercana(nodos: Array, desde: Vector2) -> Node:
+	var candidato      : Node  = null
+	var candidato_dist : float = INF
+	for nodo in nodos:
+		if not nodo.get("_jugador_cerca"): continue
+		if str(nodo.get("estado")) == "bloqueado": continue
+		var d : float = desde.distance_to((nodo as Node2D).global_position)
+		if d < candidato_dist:
+			candidato_dist = d
+			candidato = nodo
+	return candidato
 
 
 # ── Pantalla de misión — muestra interior del edificio primero ─
@@ -1883,9 +1900,12 @@ const DATOS_ZONAS_RECICLAJE : Array = [
 # jugador quedaba parado en la zona compartida. Se recalcularon las 9
 # posiciones de Nivel 4/5 con un chequeo contra los 30 puntos existentes
 # a la vez (script aparte, no a ojo) — cero solapamientos nuevos excepto
-# uno residual de 10px entre bicicletero_bloque_e y reciclar_este, ya
-# mitigado por el cambio en _input() que elige el punto más cercano en
-# vez de por prioridad fija de nivel.
+# unos pocos residuales de ~10px. El Nivel 5 ya no tiene constantes acá:
+# sus puntos salen de scenes/mapa/lugares_campus.gd (ver
+# tests/test_lugares_campus.gd, que revisa las distancias mínimas). Los
+# solapamientos que quedan están mitigados por mision_mas_cercana(), que
+# elige el punto más cercano —y nunca uno bloqueado— en vez de ir por
+# prioridad fija de nivel.
 const DATOS_LLAVES_AGUA : Array = [
 	{"id": "llave_bloque_c",   "nombre": "Baños cerca Bloque C",   "pos": Vector2(490, 510)},
 	{"id": "llave_bloque_a",   "nombre": "Baños cerca Bloque A",   "pos": Vector2(150, 550)},

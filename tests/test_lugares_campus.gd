@@ -7,9 +7,8 @@ extends Node
 const LUGARES := preload("res://scenes/mapa/lugares_campus.gd")
 const MINIMO := 55.0
 # Constantes DATOS_* de SceneMapaMundo que no son puntos instanciados en el
-# mapa, o que este registro reemplaza (Nivel 5 viejo).
-const IGNORADAS := ["DATOS_ZONAS_VERDES", "DATOS_CONTENEDORES",
-	"DATOS_OFICINA_MOVILIDAD", "DATOS_PUNTOS_BICICLETERO"]
+# mapa. Las del Nivel 5 viejo ya no existen: este registro las reemplazó.
+const IGNORADAS := ["DATOS_ZONAS_VERDES", "DATOS_CONTENEDORES"]
 
 var _fallos := 0
 
