@@ -267,6 +267,40 @@ func _ready() -> void:
 	_check(nm3.mision_completada_q(5, "tr_lote") and nm3.nivel_desbloqueado(6), "igual cuenta como completa y el 6 sigue abierto")
 	_check(pm3.decisiones.back() == ["tr_lote", "ciclovia_arborizada"], "igual registra la decisión (puntaje)")
 
+	# ── Desincronización servidor/catálogo ──────────────────
+	# El servidor dice "válida" pero el catálogo local (DATOS) todavía la ve
+	# contraproducente: plan.aplicar_valida() la rechaza y el plan se queda
+	# sin esa decisión. La misión no debe completarse (bloquearía el Consejo
+	# para siempre, que exige las 8 decisiones resueltas).
+	var nm4 : Node = load("res://autoload/NivelManager.gd").new()
+	for n in range(1, 5):
+		var d4 := {}
+		for id in nm4.MISIONES_NIVEL[n]:
+			d4[id] = true
+		nm4._misiones[str(n)] = d4
+	var pm4 := FakePuntaje.new()
+	add_child(pm4)
+	var mapa4 := Node2D.new()
+	add_child(mapa4)
+	var ctrl4 : Node = CTRL.new()
+	add_child(ctrl4)
+	ctrl4.configurar(mapa4, nm4, pm4, sm)
+	ctrl4.activar()
+	var completadas4 := []
+	ctrl4.mision_completada.connect(func(id, xp, ec): completadas4.append(id))
+	ctrl4._on_interaccion(ctrl4._puntos["oficina"])
+	ctrl4.panel_oficina._on_aceptar()
+	ctrl4.panel_oficina.cerrar()
+	ctrl4._on_interaccion(ctrl4._puntos["tr_permisos"])
+	ctrl4.panel_decision._on_opcion(_idx("tr_permisos", "pintar_mas_puestos"))
+	ctrl4.panel_decision._on_accion()
+	pm4.decision_resuelta.emit("tr_permisos", "pintar_mas_puestos", {"ok": true, "contraproducente": false})
+	ctrl4.panel_decision.cerrar()
+	_check(not ctrl4.plan.resuelta("tr_permisos"), "el plan no aplicó la opción (su catálogo la ve contraproducente)")
+	_check(not nm4.mision_completada_q(5, "tr_permisos") and completadas4.is_empty(),
+		"desincronización servidor/catálogo: no completa la misión si el plan no la aplicó")
+	nm4.free()
+
 	_verificar_espejo_sql()
 
 	nm.free()

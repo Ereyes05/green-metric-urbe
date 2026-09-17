@@ -6,7 +6,12 @@
 # mapa, abre los paneles, guarda el detalle "plan_movilidad", completa
 # misiones (una vez), registra decisiones/cruces/telemetría y emite
 # mision_completada para que SceneMapaMundo dé XP/EC y guarde el progreso.
-# Dependencias inyectadas (configurar) para probarlo sin red.
+# Dependencias inyectadas (configurar, de una sola vez: ver guarda al
+# principio) para probarlo sin red.
+# Ciclo de vida asumido: vive tanto como el mapa (SceneMapaMundo lo crea una
+# vez y no lo saca de la escena mientras el mapa esté cargado). Por eso no
+# libera los 10 puntos ni _cambios en _exit_tree(): se van con el mapa
+# cuando SceneMapaMundo se destruye, junto con este controlador.
 # Diseño: docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md
 # ============================================================
 extends Node
@@ -42,6 +47,11 @@ var _volver_a_consejo : bool = false
 
 
 func configurar(mapa: Node, nivel_mgr: Node, puntaje_mgr: Node, supa: Node) -> void:
+	# De una sola vez: una segunda llamada duplicaría los tres paneles y las
+	# conexiones a PuntajeManager.decision_resuelta (a diferencia de
+	# activar(), que ya es idempotente).
+	if panel_decision != null:
+		return
 	_mapa = mapa
 	_nm = nivel_mgr
 	_pm = puntaje_mgr
@@ -72,9 +82,12 @@ func configurar(mapa: Node, nivel_mgr: Node, puntaje_mgr: Node, supa: Node) -> v
 
 # Requisito de revisión (Task 10): _pm es un autoload que sobrevive al
 # controlador. Si el nivel se destruye mientras una respuesta del servidor
-# está en camino, sin este desconecte esa respuesta llegaría a un panel ya
-# liberado. Los paneles son hijos de este nodo, así que a esta altura ya no
-# son válidos: is_instance_valid() los descarta sin error.
+# está en camino, sin este desconecte esa respuesta podría llegar a un panel
+# ya liberado. En una destrucción normal los paneles (hijos de este nodo)
+# TODAVÍA son válidos acá: Godot llama _exit_tree() de los hijos antes que
+# el del padre, pero los libera después de que el padre termina de salir del
+# árbol. Los is_instance_valid() son la guarda para el caso ya liberado
+# (por ejemplo, si algo externo liberó _pm o el panel antes de este método).
 func _exit_tree() -> void:
 	if _pm == null or not is_instance_valid(_pm):
 		return
@@ -180,7 +193,11 @@ func _on_decision_registrada(decision_id: String, opcion_id: String, contraprodu
 		"presupuesto_restante": plan.restante(), "ms_hasta_elegir": ms,
 	}, not contraproducente)
 	_guardar()
-	if not contraproducente and not _nm.mision_completada_q(NIVEL, decision_id):
+	# plan.resuelta(decision_id): si el servidor dice "válida" pero el plan no
+	# la aplicó (desincronización con el catálogo local — p. ej. el cliente
+	# la sigue viendo contraproducente), no completar la misión: el plan
+	# queda sin esa decisión y el Consejo la exigiría para siempre.
+	if not contraproducente and plan.resuelta(decision_id) and not _nm.mision_completada_q(NIVEL, decision_id):
 		_completar(decision_id)
 	_refrescar()
 
