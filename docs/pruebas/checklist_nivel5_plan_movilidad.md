@@ -1,6 +1,6 @@
 # Checklist de prueba del Nivel 5 — Plan de Movilidad (cuenta real)
 
-Esta checklist es para que **jueges con tu cuenta real** el Nivel 5 nuevo
+Esta checklist es para que **juegues con tu cuenta real** el Nivel 5 nuevo
 (Plan de Movilidad, proyecto B del puntaje GreenMetric) **antes de publicar**
 — después de aplicar la migración de misiones y de re-exportar, y antes del
 push/merge final. Ver `docs/ESTADO_PROYECTO.md`, sección 8 ("Proyecto B —
