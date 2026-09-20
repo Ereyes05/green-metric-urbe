@@ -211,6 +211,31 @@ func _ready() -> void:
 	_check(desincronizados.is_empty(),
 		"ZONA_A_MISION coincide con catalogo_misiones: %s" % ", ".join(desincronizados))
 
+	# ── HU-002: volver al punto exacto donde lo dejó ─────────────
+	# Lo que importa no es guardar la posición sino NO restaurar una mala:
+	# un archivo de una versión anterior del mapa puede dejar al estudiante
+	# dentro de un edificio y sin forma de salir.
+	var edif : Array = load("res://scenes/mapa/colision_tilemap.gd").EDIFICIOS
+	_check(edif.size() >= 10, "se leyeron los edificios de colisión: %d" % edif.size())
+	_check(mapa.posicion_valida(Vector2(mapa.SPAWN_X, mapa.SPAWN_Y), edif, 1408.0, 768.0),
+		"el spawn por defecto es una posición válida")
+	# Rectorado: x=740..1060, y=480..660 según colision_tilemap.gd
+	_check(not mapa.posicion_valida(Vector2(900, 570), edif, 1408.0, 768.0),
+		"dentro del Rectorado no es válida")
+	_check(not mapa.posicion_valida(Vector2(-40, 300), edif, 1408.0, 768.0),
+		"fuera del mundo por la izquierda no es válida")
+	_check(not mapa.posicion_valida(Vector2(1400, 300), edif, 1408.0, 768.0),
+		"pegada al borde derecho no es válida")
+	_check(not mapa.posicion_valida(Vector2(600, 764), edif, 1408.0, 768.0),
+		"pegada al borde inferior no es válida")
+	# El margen empuja hacia afuera: justo contra la pared tampoco sirve.
+	_check(not mapa.posicion_valida(Vector2(900, 672), edif, 1408.0, 768.0),
+		"a 12 px de la pared del Rectorado no es válida (margen %d)" % int(mapa.POS_MARGEN))
+	_check(mapa.posicion_valida(Vector2(900, 700), edif, 1408.0, 768.0),
+		"en la avenida al sur del Rectorado sí es válida")
+	_check(mapa.posicion_valida(Vector2(600, 300), edif, 1408.0, 768.0),
+		"el patio central sí es válido")
+
 	var escena = load("res://scenes/mapa/SceneMapaMundo.gd")
 	_check(escena != null and escena.can_instantiate(), "SceneMapaMundo compila")
 

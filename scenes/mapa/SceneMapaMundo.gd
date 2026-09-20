@@ -10,6 +10,16 @@ const MAPA_ALTO  : float =  768.0
 const SPAWN_X    : float =  590.0
 const SPAWN_Y    : float =  360.0   # Patio Central — plaza abierta del campus
 
+# HU-002 pide devolver al estudiante "al mapa en el punto exacto donde lo
+# dejó". La posición se guarda por cuenta (misma ruta que el resto del
+# estado local) y se valida antes de usarla: un archivo viejo de un mapa
+# anterior podría dejar al jugador dentro de una pared y sin salida.
+const POS_ARCHIVO : String = "posicion_jugador"
+const POS_MARGEN  : float  = 14.0    # separación mínima de cualquier pared
+const POS_CADA    : float  = 5.0     # segundos entre guardados
+const POS_MINIMO  : float  = 24.0    # no guarda si se movió menos que esto
+const COLISIONES  := preload("res://scenes/mapa/colision_tilemap.gd")
+
 const NPC_ESCENA                := preload("res://scenes/mapa/npc_base.tscn")
 const QUIZ_ESCENA               := preload("res://scenes/ui/quiz_npc.tscn")
 const MISION_INICIO_ESCENA      := preload("res://scenes/ui/mision_inicio.gd")
@@ -410,6 +420,11 @@ var _comite_ui        : CanvasLayer = null
 var _semana_verde_ui  : CanvasLayer = null
 var _informe_ui       : CanvasLayer = null
 
+# Posición del jugador (HU-002). _volvio_donde_quedo se usa una sola vez,
+# para avisarle al estudiante que no lo devolvimos al punto de partida.
+var _pos_timer            : float   = POS_CADA
+var _pos_guardada         : Vector2 = Vector2(SPAWN_X, SPAWN_Y)
+var _volvio_donde_quedo   : bool    = false
 var _timer_crisis         : float   = 0.0
 var _crises_desbloqueadas : bool    = false
 var _menu_pausa_canvas    : CanvasLayer = null
@@ -431,7 +446,7 @@ var _progreso_modulos : Dictionary = {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0, 6:
 
 
 func _ready() -> void:
-	jugador.global_position = Vector2(SPAWN_X, SPAWN_Y)
+	jugador.global_position = _posicion_de_entrada()
 	jugador.z_index = 2
 
 	camara.limit_left   = 0
@@ -456,6 +471,10 @@ func _ready() -> void:
 	_construir_hud()
 	_construir_panel_completado()
 	_actualizar_hud()
+	# HU-002: "lo devuelve al mapa en el punto exacto donde lo dejó". Antes se
+	# restauraba el progreso pero no la posición, y no se le decía nada.
+	if _volvio_donde_quedo and _hud_aviso:
+		_hud_aviso.avisar("📍 Seguimos donde lo dejaste")
 	# Mismo motivo que el sembrado de _progreso_modulos de arriba: estos
 	# tres solo se actualizaban al completar una misión en vivo.
 	_refrescar_progreso()
@@ -1357,6 +1376,12 @@ func _init_sistemas_eva() -> void:
 
 
 func _process(delta: float) -> void:
+	_pos_timer -= delta
+	if _pos_timer <= 0.0:
+		_pos_timer = POS_CADA
+		if is_instance_valid(jugador) and jugador.global_position.distance_to(_pos_guardada) >= POS_MINIMO:
+			_guardar_posicion()
+
 	if not _crises_desbloqueadas: return
 	if _tutorial_ui and _tutorial_ui.visible: return
 	if _crisis_ui and _crisis_ui.visible: return
@@ -1364,6 +1389,65 @@ func _process(delta: float) -> void:
 	if _timer_crisis <= 0.0 and _crisis_ui:
 		_timer_crisis = randf_range(_CRISIS_MIN, _CRISIS_MAX)
 		_crisis_ui.iniciar_aleatoria()
+
+
+# En web cerrar la pestaña no siempre dispara la notificación de cierre, por
+# eso además del guardado periódico se guarda acá, que sí corre al cambiar
+# de escena (volver al login, por ejemplo).
+func _exit_tree() -> void:
+	_guardar_posicion()
+
+
+# Dónde aparece el jugador al entrar. Si hay una posición guardada de esta
+# cuenta y sigue siendo válida, vuelve ahí; si no, al Patio Central.
+func _posicion_de_entrada() -> Vector2:
+	var guardada = _leer_posicion()
+	if guardada is Vector2 and posicion_valida(guardada, COLISIONES.EDIFICIOS, MAPA_ANCHO, MAPA_ALTO):
+		_volvio_donde_quedo = true
+		_pos_guardada = guardada
+		return guardada
+	_pos_guardada = Vector2(SPAWN_X, SPAWN_Y)
+	return _pos_guardada
+
+
+# Aparte de _posicion_de_entrada() para poder probarla: la posición sirve si
+# está dentro del mundo y a POS_MARGEN de cualquier edificio. EDIFICIOS viene
+# de colision_tilemap.gd con el formato [cx, cy, ancho, alto].
+static func posicion_valida(pos: Vector2, edificios: Array, ancho: float, alto: float) -> bool:
+	if pos.x < POS_MARGEN or pos.y < POS_MARGEN:
+		return false
+	if pos.x > ancho - POS_MARGEN or pos.y > alto - POS_MARGEN:
+		return false
+	for e in edificios:
+		if absf(pos.x - float(e[0])) < float(e[2]) * 0.5 + POS_MARGEN 		and absf(pos.y - float(e[1])) < float(e[3]) * 0.5 + POS_MARGEN:
+			return false
+	return true
+
+
+func _leer_posicion() -> Variant:
+	var ruta := NivelManager.ruta_usuario(POS_ARCHIVO)
+	if not FileAccess.file_exists(ruta):
+		return null
+	var f := FileAccess.open(ruta, FileAccess.READ)
+	if not f:
+		return null
+	var crudo := f.get_as_text()
+	f.close()
+	var d = JSON.parse_string(crudo)
+	if not (d is Dictionary and d.has("x") and d.has("y")):
+		return null
+	return Vector2(float(d["x"]), float(d["y"]))
+
+
+func _guardar_posicion() -> void:
+	if not is_instance_valid(jugador):
+		return
+	var f := FileAccess.open(NivelManager.ruta_usuario(POS_ARCHIVO), FileAccess.WRITE)
+	if not f:
+		return
+	_pos_guardada = jugador.global_position
+	f.store_string(JSON.stringify({"x": _pos_guardada.x, "y": _pos_guardada.y}))
+	f.close()
 
 
 func _actualizar_hud_economia() -> void:

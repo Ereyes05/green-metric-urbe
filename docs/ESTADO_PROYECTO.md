@@ -813,9 +813,22 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
    misiones"*). **Bloqueante previo:** `EconomiaManager` no persiste nada —
    los EcoCredits arrancan en 0 cada sesión, así que primero hay que
    persistirlos por cuenta (mismo patrón que el Plan B de la sección 6).
-3. 🟡 **HU-002 pide devolver al estudiante *"al punto exacto donde lo
-   dejó"*.** Hoy se restaura el progreso (Plan B) pero no la posición en el
-   mapa, y no se le comunica nada al estudiante al volver.
+3. ✅ ~~**HU-002 pide devolver al estudiante *"al punto exacto donde lo
+   dejó"*.**~~ Resuelta el 2026-09-20. La posición se guarda por cuenta
+   (`user://posicion_jugador_<uid>.dat`, misma ruta que el resto del estado
+   local), cada 5 s si el jugador se movió más de 24 px, y además al salir de
+   la escena. Al entrar se **valida** antes de usarla —dentro del mundo y a 14
+   px de cualquier edificio de `colision_tilemap.gd`— porque un archivo de una
+   versión anterior del mapa podría dejar al estudiante dentro de una pared y
+   sin salida; si no pasa la validación, vuelve al Patio Central. Se le avisa
+   con "📍 Seguimos donde lo dejaste".
+
+   **Limitación conocida:** la posición es local, no del servidor. Si el
+   estudiante entra desde otra computadora recupera todo su progreso pero
+   aparece en el Patio Central. El criterio de aceptación formal de HU-002
+   solo exige "el mapa en el último estado guardado con el nivel y la
+   experiencia reflejados en el HUD", que sí se cumple en cualquier máquina;
+   el "punto exacto" está en el párrafo descriptivo.
 4. 🟡 **Conflicto de estilo visual.** La Tabla 2 del Cap. 4 reporta que el
    **65% de los encuestados eligió "diseño plano y minimalista"** y solo el
    **10% "estilo videojuego clásico (pixel art)"**; la conclusión escrita es
