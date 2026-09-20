@@ -829,15 +829,29 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
    sección 3 y 8 de este documento). Sigue pendiente el login y cualquier
    otra pantalla en pixel art — la tesis tiene que reflejar el HUD nuevo y no
    puede seguir afirmando sin matices que "el juego es pixel art".
-5. 🟡 **Requisito responsive/móvil.** La Tabla 1 concluye que es
-   *"mandatorio adoptar un enfoque multi-plataforma"* (70% de la muestra usa
-   móvil parcial o totalmente). `touch_controls.gd` existe y está conectado
-   (`SceneMapaMundo` lo instancia; `jugador.gd` lo lee), y desde el
-   2026-09-11 el juego **sí** se abre desde el navegador. Lo que falta es
-   verificarlo en un teléfono real: el juego se diseñó a 1280x720 y nadie
-   probó todavía si el HUD y los controles táctiles son usables en pantalla
-   chica. **Es una prueba, no un desarrollo** — y es lo que un jurado haría
-   si abre la URL desde su celular.
+5. 🔴 **Requisito responsive/móvil — DESVÍO DECIDIDO (2026-09-20).** El
+   equipo decidió que el alcance del juego es **navegador de escritorio
+   únicamente**. No se va a probar ni adaptar a móvil.
+
+   El problema no es técnico, es documental: la **Tabla 1 del Cap. 4 concluye
+   textualmente que es *"mandatorio adoptar un enfoque multi-plataforma"***
+   porque el 70% de la muestra usa móvil parcial o totalmente. Esa conclusión
+   es del propio documento y sale de datos de encuesta que no se pueden
+   cambiar. Queda una afirmación de la tesis que el producto entregado no
+   cumple, y es de las pocas que un jurado puede verificar sin tocar el
+   código: abre la URL en su teléfono.
+
+   **Lo que hay que hacer, y es en el documento, no en el código:** declarar
+   el alcance de escritorio de forma explícita en el Cap. 4 (alcance y
+   limitaciones), de manera que la limitación esté declarada por los autores
+   y no descubierta por el jurado. Una limitación declarada se lee como una
+   decisión; una no declarada, como un incumplimiento.
+
+   Estado del código: `touch_controls.gd` existe y sigue conectado
+   (`SceneMapaMundo` lo instancia, `jugador.gd` lo lee), o sea que hoy el
+   juego **carga igual** en un teléfono y se comporta de forma no verificada.
+   Pendiente de decidir: mostrar un aviso de "abrir en computadora" en
+   pantallas chicas, para que el alcance lo diga también el producto.
 
 ### Bug encontrado el 2026-09-11: el tutorial casi nadie lo ve
 
