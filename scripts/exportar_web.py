@@ -114,10 +114,35 @@ def verificar_secretos() -> None:
     print(f"Verificado: {len(rutas)} archivos empaquetados, ninguno sensible.")
 
 
+PESO_ESPERADO_MB = 5.5
+"""Techo del .pck. Los estudiantes lo descargan por internet en cada
+partida, así que un salto de peso es un problema, no un detalle.
+
+Ya pasó dos veces que una imagen sin usar se empaquetara igual: el export
+va con export_filter="all_resources", o sea que mete TODO lo que esté en
+el proyecto, la referencie alguien o no. mapa_campus_urbe.png (2,4 MB) se
+descargó durante meses sin dibujarse nunca, y urbe_removed (1).png
+(6,8 MB, el mapa nuevo todavía sin usar) casi duplica el build. Si este
+chequeo salta: o el archivo se agrega a exclude_filter en
+export_presets.cfg, o de verdad hace falta y se sube el techo a mano.
+"""
+
+
+def verificar_peso() -> None:
+    mb = (DESTINO / "index.pck").stat().st_size / 1e6
+    if mb > PESO_ESPERADO_MB:
+        print()
+        print(f"*** EL .pck PESA {mb:.1f} MB (esperado <= {PESO_ESPERADO_MB} MB) ***")
+        print("    Suele ser un asset que nadie usa pero que el export empaqueta igual.")
+        print("    Revisá assets/ y exclude_filter en export_presets.cfg.")
+        sys.exit("No publiques sin entender de dónde salió el peso.")
+
+
 def main() -> None:
     godot = buscar_godot()
     exportar(godot)
     verificar_secretos()
+    verificar_peso()
     version = versionar_pck()
     marcadores()
     mb = (DESTINO / "index.pck").stat().st_size / 1e6
