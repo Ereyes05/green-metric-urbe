@@ -82,7 +82,10 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
   - `hud_tema.gd` — únicos tokens de color/fuente/radio del HUD.
   - `hud_barra.gd` — barra de progreso genérica (fracción → ancho, con tween).
   - `hud_ficha_jugador.gd` — nombre, vidas, nivel de misiones, rango,
-    EcoCredits, barra hacia el siguiente rango, índices del campus.
+    EcoCredits y barra hacia el siguiente rango. **No muestra categorías**:
+    hasta el 2026-09-20 repetía Verde/Agua/Educación con el mismo número que
+    el panel GreenMetric y con otro nombre para la categoría 1. El panel es la
+    única vista de categorías.
   - `hud_panel_greenmetric.gd` — puntaje 0–100, 6 filas con barra partida
     80/10/5/5 y popover de desglose por categoría al pasar el mouse.
   - `hud_acciones.gd` — 5 botones con teclas 1–5, señal `accion(indice)`.
@@ -463,8 +466,8 @@ Solución actual:
   misión completada solo en local y nunca sincronizada (jugada sin
   internet, sin la sincronización automática) queda huérfana. Decisión
   consciente: el servidor es la fuente de verdad de ahora en más.
-- `_progreso_modulos` (el dict que pinta el sidebar) y los índices del HUD
-  (💧🌿📚) **no se actualizan solos** al entrar — hay que sembrarlos desde
+- `_progreso_modulos` (el dict que pinta el mapa de avance) **no se actualiza
+  solo** al entrar — hay que sembrarlo desde
   `NivelManager.pct_nivel()` en `SceneMapaMundo._ready()` (ya está hecho).
   Si se agrega un indicador visual nuevo que dependa del progreso, hay que
   sembrarlo ahí también, no asumir que se actualiza solo.
@@ -696,7 +699,7 @@ mecanismo técnico de escaneo → activación a distancia.
      público").
   3. **HUD plano según la especificación 2b** — componentes
      `scenes/ui/hud_*.gd` (sección 3), tema centralizado, ficha con nivel y
-     rango separados e índices adentro, panel GreenMetric 80/10/5/5 con
+     rango separados, panel GreenMetric 80/10/5/5 con
      desglose al pasar el mouse, 5 botones con teclas 1–5, banner de zona y
      aviso central con cola.
   4. **Verificación:** los 8 tests headless (`test_compila`, `test_puntaje`,

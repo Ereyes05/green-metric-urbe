@@ -34,9 +34,10 @@ func _ready() -> void:
 	_check(f.hacia_lbl.text == "Rango máximo", "EcoLíder: rango máximo")
 	f.set_creditos(319)
 	_check(f.creditos_lbl.text == "💰 319 EC", "créditos")
-	f.set_indices({1: 0.62, 4: 0.3, 6: 1.0})
-	_check(f.indices[1]["pct"].text == "62%", "índice verde 62%")
-	_check(f.indices[6]["pct"].text == "100%", "índice educación 100%")
+	# La ficha no repite categorías: eso es del panel GreenMetric (ver más
+	# abajo). Antes mostraba Verde/Agua/Educación con el mismo número y con
+	# otro nombre para la categoría 1.
+	_check(not f.has_method("set_indices"), "la ficha ya no muestra índices de categoría")
 
 	var gm = PANEL_GM.new()
 	add_child(gm)

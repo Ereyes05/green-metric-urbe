@@ -32,7 +32,6 @@ func _ready() -> void:
 	f.set_nivel_misiones(6, [true, true, true, true, true, false])
 	f.set_rango(2, 0.45, 1578)
 	f.set_creditos(319)
-	f.set_indices({1: 0.62, 4: 0.48, 6: 0.35})
 
 	var gm = PANEL_GM.new()
 	capa.add_child(gm)

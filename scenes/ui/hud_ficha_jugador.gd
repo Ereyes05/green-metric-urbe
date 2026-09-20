@@ -1,20 +1,20 @@
 # ============================================================
 # hud_ficha_jugador.gd — ficha arriba a la izquierda (spec 2b §1):
-# nombre y vidas, nivel de misiones con 6 pasos, rango + EcoCredits,
-# barra hacia el siguiente rango e índices del campus DENTRO del panel.
-# Solo muestra lo que le pasan; no lee autoloads.
+# nombre y vidas, nivel de misiones con 6 pasos, rango + EcoCredits y
+# barra hacia el siguiente rango. Solo muestra lo que le pasan; no lee
+# autoloads.
+#
+# Los "índices del campus" (Verde/Agua/Educación) vivían acá desde antes
+# del panel GreenMetric. Repetían tres de sus seis filas con el mismo
+# número — PuntajeManager.fraccion(cat) es valor(cat)/100 — y encima le
+# decían "Verde" a la categoría que el panel llama "Entorno". El panel es
+# la única vista de categorías; la ficha muestra solo lo suyo.
 # ============================================================
 extends PanelContainer
 
 const TEMA   := preload("res://scenes/ui/hud_tema.gd")
 const BARRA  := preload("res://scenes/ui/hud_barra.gd")
 const RANGOS := preload("res://autoload/rangos.gd")
-
-const INDICES : Array = [
-	{"cat": 1, "icono": "🌿", "nombre": "Verde"},
-	{"cat": 4, "icono": "💧", "nombre": "Agua"},
-	{"cat": 6, "icono": "📚", "nombre": "Educación"},
-]
 
 var corazones    : Array[Label] = []
 var pasos        : Array[Panel] = []
@@ -24,7 +24,6 @@ var creditos_lbl : Label
 var hacia_lbl    : Label
 var xp_lbl       : Label
 var barra_xp
-var indices      : Dictionary = {}
 
 
 func _init() -> void:
@@ -105,40 +104,6 @@ func _init() -> void:
 	bloque_xp.add_child(fx)
 	vb.add_child(bloque_xp)
 
-	var sep := ColorRect.new()
-	sep.custom_minimum_size = Vector2(0, 1)
-	sep.color = TEMA.SEPARADOR
-	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.add_child(sep)
-
-	# Índices del campus
-	var bloque_ind := VBoxContainer.new()
-	bloque_ind.add_theme_constant_override("separation", 6)
-	bloque_ind.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bloque_ind.add_child(TEMA.label("ÍNDICES DEL CAMPUS", 10, TEMA.APAGADO))
-	for d in INDICES:
-		var cat : int = d["cat"]
-		var fila := _hbox(6)
-		fila.custom_minimum_size.y = 14
-		var ic := TEMA.label(d["icono"], 14, TEMA.TEXTO)
-		ic.custom_minimum_size.x = 18
-		fila.add_child(ic)
-		var nl := TEMA.label(d["nombre"], 11, TEMA.TEXTO_2)
-		nl.custom_minimum_size.x = 64
-		fila.add_child(nl)
-		var b = BARRA.new()
-		b.configurar(TEMA.CATEGORIAS[cat]["color"], 6)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		fila.add_child(b)
-		var pct := TEMA.label("0%", 11, TEMA.TEXTO, 600, false, true)
-		pct.custom_minimum_size.x = 32
-		pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		fila.add_child(pct)
-		bloque_ind.add_child(fila)
-		indices[cat] = {"barra": b, "pct": pct}
-	vb.add_child(bloque_ind)
-
 
 func _hbox(sep: int) -> HBoxContainer:
 	var h := HBoxContainer.new()
@@ -172,10 +137,3 @@ func set_rango(niveles_completos: int, fraccion: float, xp: int) -> void:
 
 func set_creditos(ec: int) -> void:
 	creditos_lbl.text = "💰 %d EC" % ec
-
-
-func set_indices(fracciones: Dictionary) -> void:
-	for cat in indices.keys():
-		var f := clampf(float(fracciones.get(cat, 0.0)), 0.0, 1.0)
-		indices[cat]["barra"].set_fraccion(f)
-		indices[cat]["pct"].text = "%d%%" % roundi(f * 100.0)

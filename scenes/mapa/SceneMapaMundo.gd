@@ -1040,10 +1040,12 @@ func _actualizar_hud() -> void:
 	_hud_ficha.set_rango(completos, RANGOS.fraccion_siguiente(nm) if nm else 0.0, _xp_total)
 
 
-# Única vía para actualizar barras de categoría, índices del HUD y mapa de
-# avance. Todos leen PuntajeManager (avance 80 + comprensión 10 + decisiones 5
-# + sinergias 5). Antes cada pantalla tenía su propio número (índice de
+# Única vía para actualizar las barras de categoría y el mapa de avance.
+# Todos leen PuntajeManager (avance 80 + comprensión 10 + decisiones 5 +
+# sinergias 5). Antes cada pantalla tenía su propio número (índice de
 # impacto sin guardar, valores fijos del mapa de avance, % de misiones).
+# El panel GreenMetric es la única vista de categorías: la ficha ya no
+# repite Verde/Agua/Educación.
 func _refrescar_progreso(_cats: Dictionary = {}, _total: float = 0.0) -> void:
 	for mod_id in _progreso_modulos.keys():
 		_progreso_modulos[mod_id] = PuntajeManager.fraccion(mod_id)
@@ -1051,8 +1053,6 @@ func _refrescar_progreso(_cats: Dictionary = {}, _total: float = 0.0) -> void:
 			mapa_campus.actualizar_modulo(mod_id, _progreso_modulos[mod_id])
 	if _hud_gm:
 		_hud_gm.actualizar(PuntajeManager.categorias, PuntajeManager.total)
-	if _hud_ficha:
-		_hud_ficha.set_indices({1: PuntajeManager.fraccion(1), 4: PuntajeManager.fraccion(4), 6: PuntajeManager.fraccion(6)})
 	_actualizar_hud()
 
 

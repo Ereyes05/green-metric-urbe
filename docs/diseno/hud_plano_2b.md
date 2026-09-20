@@ -52,10 +52,13 @@ prueba en el juego con cuenta real y re-export web.
 - **Fila 3 rango:** h 17 · emoji 12 · «RANGO» 9 px #7E938E + «Árbol» Rubik 600 12 px #E8BE55 · derecha «💰 319 EC» Rubik 600 13 px #E8BE55
 - **Barra XP:** h 10 · radius 5 · fill #3FBEDC · progreso 45 % · gap 4 sobre la fila de texto
 - **Texto XP:** izq. «XP hacia <rango siguiente>» / der. «1578 / 3500» Rubik 10 px #9FB3AE tabular
-- **Separador:** 1 px rgba(255,255,255,0.10)
-- **Índices:** DENTRO del panel · título «ÍNDICES DEL CAMPUS» 10 px #7E938E · 3 filas h 14 gap 6
-  - fila: icono 14 px · label 64 px Rubik 11 px #C9D8D3 · barra flex h 6 r 3 · % 32 px der. Rubik 600 11 px #EAF2EE
-  - colores: Verde #62D06A · Agua #3FBEDC · Educación #4FD1B0
+- **Índices del campus: eliminados** (2026-09-20). La especificación 2b los
+  ponía dentro de la ficha, con un separador de 1 px encima. Repetían tres de
+  las seis filas del panel GreenMetric con el mismo número — ambos leen
+  `PuntajeManager`, y `fraccion(cat)` es `valor(cat)/100` — y encima le decían
+  «Verde» a la categoría que el panel llama «Entorno». El panel GreenMetric es
+  la única vista de categorías; la ficha muestra solo lo suyo y el separador se
+  fue con ellos.
 
 ### 2 · Panel GreenMetric (arriba der.)
 - **Panel:** pos 996,16 · 268 × 343 · radius 12 · border 2 #3FBEDC · padding 10/12/12 · gap 8
@@ -86,11 +89,11 @@ prueba en el juego con cuenta real y re-export web.
 
 ### Implementación en Godot 4.7
 - **Texturas PNG:** ninguna. Todo con StyleBoxFlat (bg_color + border_width_* + corner_radius_* + content_margin_*).
-- **Único asset opcional:** atlas de íconos PNG 32 × 32 (@1x) / 64 × 64 (@2x), 14 íconos (6 categorías + 3 índices + 5 herramientas), archivo 448 × 32.
+- **Único asset opcional:** atlas de íconos PNG 32 × 32 (@1x) / 64 × 64 (@2x), 11 íconos (6 categorías + 5 herramientas), archivo 352 × 32.
 - **Fuentes:** Rubik-Regular/Medium/Bold.ttf + PressStart2P-Regular.ttf embebidas; antialias activado en Rubik, desactivado en Press Start 2P.
 - **Jerarquía:** HUD (CanvasLayer 1) → MarginContainer(16) → cada panel como PanelContainer + VBoxContainer; Toast en CanvasLayer 2.
 - **Anclajes:** ficha top-left · GreenMetric top-right · acciones bottom-left · banner y aviso center (anchors_preset 7 / 5).
-- **Barras:** ProgressBar con StyleBoxFlat fg/bg, o Panel + ColorRect con anchor_right animado (tween 0,3 s ease_out) para XP e índices.
+- **Barras:** ProgressBar con StyleBoxFlat fg/bg, o Panel + ColorRect con anchor_right animado (tween 0,3 s ease_out) para XP y categorías.
 - **Barra segmentada:** HBoxContainer (separation 2) con 4 Panel de stretch_ratio 80/10/5/5, cada uno con un ColorRect hijo; corner_radius solo en el primero y el último.
 - **Popover:** PanelContainer oculto, se muestra en mouse_entered / focus_entered de la fila; top_level = true.
 - **Texto tabular:** Label con fuente Rubik y OpenType feature tnum, o LabelSettings con fuente monoespaciada para los números.
