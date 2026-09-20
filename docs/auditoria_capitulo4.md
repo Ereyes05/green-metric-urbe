@@ -39,7 +39,7 @@
 
 ---
 
-## Las tres que no están
+## Las que no están (y la que se resolvió)
 
 ### Tabla 1 — Responsive Web Design 🔴
 
@@ -67,7 +67,7 @@ Lo que sí funciona: `m1..m6_completo`, `quiz_perfecto`, `crisis_resuelta` y `ec
 
 **Salida:** persistir insignias en Supabase es trabajo real (tablas ya existen, faltan las RPC y el cliente). Las rachas de acceso son una funcionalidad nueva. Alternativa: acotar la promesa del Capítulo 4 a lo que hay.
 
-### Tabla 10 — Sistema de vidas 🔴
+### Tabla 10 — Sistema de vidas 🟢 (resuelta por la Tabla 15)
 
 > *"se establecerá un sistema de vidas representadas visualmente, de modo que el agotamiento de intentos restrinja temporalmente el acceso... ofreciendo la opción de reponer energía respondiendo a preguntas de menor dificultad"*
 
@@ -97,7 +97,7 @@ Y el propio análisis del capítulo ya lo adopta: *"ante una respuesta incorrect
 
 **Por lo tanto:** el sistema de vidas no es una deuda, es un criterio **superado por la autoridad experta**, y el capítulo ya documenta esa decisión. Solo hay que redactarlo así: preferencia estudiantil (Tabla 10) contra criterio experto (Tabla 15), se optó por el experto.
 
-Queda un detalle cosmético: **si no hay vidas, los 3 corazones del HUD no deberían estar.** Sacarlos toma minutos y elimina la única evidencia visual que contradice el argumento.
+Quedaba un detalle cosmético — los 3 corazones del HUD contradecían el argumento — y **se quitaron el 2026-09-20** junto con el resto del estado de energía.
 
 ---
 
