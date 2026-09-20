@@ -798,11 +798,14 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
 
 ### Brechas detectadas entre lo que la tesis afirma y lo que el juego hace
 
-1. 🔴 **El Cap. 4 afirma que el juego se exportó para la web.** La Tabla 33
-   dice textual *"Godot 4 | Motor con el que se creó el juego y se exportó
-   para la web"*, y justifica la elección de Godot por poder abrirse *"desde
-   el navegador sin necesidad de instalar nada"*. **No está exportado.** Es
-   la brecha más verificable por un jurado (basta pedir la URL).
+1. ✅ ~~**El Cap. 4 afirma que el juego se exportó para la web y no lo
+   está.**~~ Resuelta el 2026-09-11 (ver sección 8): el juego se sirve en
+   **https://ereyes05.github.io/green-metric-urbe/juego/** y se re-exporta en
+   cada publicación. Texto original de la brecha: la Tabla 33 dice textual
+   *"Godot 4 | Motor con el que se creó el juego y se exportó para la web"*, y
+   justifica la elección de Godot por poder abrirse *"desde el navegador sin
+   necesidad de instalar nada"*. Era la brecha más verificable por un jurado
+   (basta pedir la URL) — hoy la URL responde.
 2. ✅ ~~**HU-012 "Tienda del Conocimiento" no existe.**~~ Resuelta el
    2026-09-14, ver sección 4. Texto original de la brecha: tiene criterios de
    aceptación escritos (compra exitosa/fallida, saldo nunca negativo, costo
@@ -828,8 +831,13 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
    puede seguir afirmando sin matices que "el juego es pixel art".
 5. 🟡 **Requisito responsive/móvil.** La Tabla 1 concluye que es
    *"mandatorio adoptar un enfoque multi-plataforma"* (70% de la muestra usa
-   móvil parcial o totalmente). Existe `touch_controls.gd` y está conectado,
-   pero el juego es 1280x720 de escritorio y no hay export web.
+   móvil parcial o totalmente). `touch_controls.gd` existe y está conectado
+   (`SceneMapaMundo` lo instancia; `jugador.gd` lo lee), y desde el
+   2026-09-11 el juego **sí** se abre desde el navegador. Lo que falta es
+   verificarlo en un teléfono real: el juego se diseñó a 1280x720 y nadie
+   probó todavía si el HUD y los controles táctiles son usables en pantalla
+   chica. **Es una prueba, no un desarrollo** — y es lo que un jurado haría
+   si abre la URL desde su celular.
 
 ### Bug encontrado el 2026-09-11: el tutorial casi nadie lo ve
 
