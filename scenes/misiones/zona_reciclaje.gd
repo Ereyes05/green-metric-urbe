@@ -14,7 +14,11 @@ signal vaciado_servicio(xp: int, ec: int)
 
 const RADIO_DETEC  : float = 55.0
 const RADIO_VISUAL : float = 26.0
-const TASA_LLENADO : float = 0.0025   # ~6 min de 0 a 100%
+# Llenado ambiental. Antes era 0.0025 (~6,7 min de 0 a 100 %), que de
+# vacía a "llamá al servicio" (35 %) daban 2,3 min: apenas terminabas de
+# vaciar una papelera ya te estaba pidiendo el servicio otra vez. A 0.0008
+# el ciclo completo son ~21 min y el umbral de servicio llega a los ~7 min.
+const TASA_LLENADO : float = 0.0008
 
 # Origen fijo del trabajador de limpieza para las 6 papeleras — un
 # rincón del campus (esquina sur-oeste, lejos de las 6 zonas reales:
@@ -278,7 +282,10 @@ func _nivel_mgr():
 
 func _ready() -> void:
 	add_to_group("zona_reciclaje")
-	nivel_llenado = randf_range(0.20, 0.50)
+	# Arranque por debajo del umbral de servicio (0.35): con el rango
+	# anterior (0.20..0.50) media docena de papeleras ya pedían limpieza
+	# en el primer minuto de partida.
+	nivel_llenado = randf_range(0.05, 0.25)
 	_crear_collision()
 	_crear_visual()
 	_crear_prompt()
