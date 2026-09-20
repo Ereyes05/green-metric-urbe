@@ -56,7 +56,6 @@ signal catalogo_cargado(items: Array)
 signal billetera_actualizada(respuesta: Dictionary, ctx: Dictionary)
 signal compra_resuelta(respuesta: Dictionary, item_id: String)
 # titulos: {user_id: "nombre del título"}
-signal titulos_ranking_cargados(titulos: Dictionary)
 
 # ── Puntaje GreenMetric (ver sql/puntaje_greenmetric.sql) ────
 # datos: {"categorias": {"1": {"avance","comprension","decisiones","sinergias","total"}, ...},
@@ -343,12 +342,6 @@ func comprar_item(item_id: String) -> void:
 	_rpc("comprar", "comprar_item", {"p_item_id": item_id}, {"item_id": item_id})
 
 
-# Pública: el ranking se carga sin sesión. Solo devuelve user_id + título.
-func cargar_titulos_ranking() -> void:
-	_encolar("titulos_ranking", SUPABASE_URL + "/rest/v1/rpc/titulos_ranking",
-			 HTTPClient.METHOD_POST, _headers_anon(), "{}")
-
-
 func obtener_puntaje() -> void:
 	_rpc("puntaje", "puntaje_greenmetric", {})
 
@@ -524,7 +517,6 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"catalogo"        : _procesar_catalogo(code, datos)
 		"billetera_mov"   : _procesar_billetera_mov(code, datos, ctx)
 		"comprar"         : _procesar_compra(code, datos, ctx)
-		"titulos_ranking" : _procesar_titulos(code, datos)
 		"puntaje"         : _procesar_puntaje(code, datos)
 		"calidad"         : _procesar_calidad(code, datos, ctx)
 		"detalle"         : _procesar_detalle(code, datos, ctx)
@@ -731,15 +723,6 @@ func _procesar_compra(code: int, datos: Variant, ctx: Dictionary) -> void:
 	else:
 		push_error("SupabaseManager: falló comprar_item %s (HTTP %d)" % [item_id, code])
 		emit_signal("compra_resuelta", {"ok": false, "error": "http_%d" % code}, item_id)
-
-
-func _procesar_titulos(code: int, datos: Variant) -> void:
-	var titulos : Dictionary = {}
-	if code == 200 and datos is Array:
-		for fila in datos:
-			if fila is Dictionary:
-				titulos[str(fila.get("user_id", ""))] = str(fila.get("titulo", ""))
-	emit_signal("titulos_ranking_cargados", titulos)
 
 
 func _procesar_puntaje(code: int, datos: Variant) -> void:

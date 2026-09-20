@@ -207,8 +207,10 @@ La anon key es pública por diseño (protegida por RLS, no por estar oculta).
   estudiante: reintentar nunca paga ni cobra dos veces.
 - **El cliente no puede escribir estas tablas.** Todo pasa por funciones
   `SECURITY DEFINER`: `obtener_billetera`, `acreditar_mision`,
-  `sumar_ecocredits`, `gastar_ecocredits`, `comprar_item` y la pública
-  `titulos_ranking`.
+  `sumar_ecocredits`, `gastar_ecocredits` y `comprar_item`. (La pública
+  `titulos_ranking` sigue existiendo en Supabase pero el cliente ya no la
+  llama: `ranking_publico` devuelve el título junto con el resto de la fila.
+  El código que la consumía se borró el 2026-09-20.)
 - `acreditar_mision` solo paga misiones que `misiones_estudiante` ya tiene
   registradas, con el monto que decide el servidor (`_ec_por_modulo`, espejo
   de `NivelManager.EC_POR_MISION`: **si cambia uno hay que cambiar el
@@ -664,14 +666,25 @@ mecanismo técnico de escaneo → activación a distancia.
   **Falta: una compra real de punta a punta con una cuenta** (no se pudo
   hacer sin credenciales). Verificable consultando
   `movimientos_ecocredits` e `inventario_estudiante` después de probar.
-- [ ] **Insignias, energía e impacto no se guardan** — siguen solo en
-  memoria. Existen tablas `insignias` e `insignias_estudiante` en Supabase
-  que el juego no usa.
-- [ ] **Zonas verdes mejorables: código muerto.** Están eliminadas del mapa
-  (`_spawn_zonas_verdes()` es un `pass`), pero su lógica de adopción y
-  mejora sigue en el código y ya cobra EC en el servidor. Si se reactivan,
-  hay que reconstruir su nivel desde `refs_zonas` al entrar (ver comentario
-  en `EconomiaManager`), o el estudiante pierde lo pagado.
+- [ ] **Insignias no se guardan** — siguen solo en memoria. Existen tablas
+  `insignias` e `insignias_estudiante` en Supabase que el juego no usa.
+- [ ] **Las 3 vidas del HUD son decorativas.** `energia_actual` arranca en 3
+  y nada la baja: el código que la descontaba (racha de fallos en quiz) y el
+  que la recuperaba (25 EC, o un quiz remedial de 7 preguntas) nunca tuvo
+  quien lo llamara, y se borró el 2026-09-20. Hay que decidir: darle
+  significado a las vidas, o sacar los corazones de `hud_ficha_jugador`.
+- [x] **Zonas verdes mejorables: código muerto** — resuelto el 2026-09-20:
+  se borró `zona_verde.gd` con su panel de mejora, `DATOS_ZONAS_VERDES` y
+  `refs_zonas`/`zonas_restauradas` en `EconomiaManager`. **Ojo si se
+  reactivan:** los EC que algún estudiante ya gastó en adoptar o mejorar una
+  zona siguen en `movimientos_ecocredits` del servidor, pero el cliente ya
+  no lee esas refs, así que habría que reconstruir el estado de la zona
+  desde ahí o el estudiante pierde lo pagado. El código está en git
+  (commit anterior a la limpieza).
+- [x] **Contenedores de basura grandes: código muerto** — resuelto el
+  2026-09-20: `_spawn_contenedores()` era un `return` desde que se dejaron
+  solo las papeleras de colores, pero quedaban `contenedor_basura.gd`, el
+  panel de servicio y 7 funciones. Todo borrado.
 - [x] **`leaderboard.gd`: restos de otro proyecto** — resuelto el
   2026-09-16: se borraron las constantes `SUPABASE_URL`/`SUPABASE_KEY` del
   proyecto anterior (`qjuiwnwqkfmmfsdacpgd`) y el "(Tú)" del ranking ahora

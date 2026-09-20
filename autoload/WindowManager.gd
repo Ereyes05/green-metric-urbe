@@ -131,7 +131,3 @@ func _toggle_fullscreen() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 
-func esta_en_fullscreen() -> bool:
-	var modo := DisplayServer.window_get_mode()
-	return modo == DisplayServer.WINDOW_MODE_FULLSCREEN \
-		or modo == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN

@@ -11,7 +11,6 @@ extends Area2D
 @export var color      : Color             = Color(0.5, 0.5, 0.5)
 @export var tipo_npc   : String            = "prof_h"
 
-signal mision_iniciada(id: String)
 
 var _burbuja      : Control  = null
 var _jugador_cerca: bool     = false
@@ -358,5 +357,3 @@ func iniciar_dialogo() -> void:
 	var ui = get_tree().get_first_node_in_group("ui_dialogo")
 	if ui:
 		ui.iniciar(nombre_npc, dialogos, mision_id, color)
-	if mision_id != "":
-		mision_iniciada.emit(mision_id)

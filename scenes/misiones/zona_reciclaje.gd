@@ -13,7 +13,6 @@ signal reciclar_solicitado(zona: Area2D)
 signal vaciado_servicio(xp: int, ec: int)
 
 const RADIO_DETEC  : float = 55.0
-const RADIO_VISUAL : float = 26.0
 # Llenado ambiental. Antes era 0.0025 (~6,7 min de 0 a 100 %), que de
 # vacía a "llamá al servicio" (35 %) daban 2,3 min: apenas terminabas de
 # vaciar una papelera ya te estaba pidiendo el servicio otra vez. A 0.0008

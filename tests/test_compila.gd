@@ -136,7 +136,7 @@ func _ready() -> void:
 		"E: un punto bloqueado no gana aunque esté más cerca")
 	lejos.set_estado("bloqueado")
 	_check(mapa.mision_mas_cercana([cerca, lejos], jug_pos) == null,
-		"E: con todo bloqueado no hay candidato (la E cae a contenedores/zonas)")
+		"E: con todo bloqueado no hay candidato")
 	cerca.set_estado("pendiente")
 	cerca._jugador_cerca = false
 	_check(mapa.mision_mas_cercana([cerca, lejos], jug_pos) == null,

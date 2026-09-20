@@ -7,8 +7,11 @@ extends Node
 const LUGARES := preload("res://scenes/mapa/lugares_campus.gd")
 const MINIMO := 55.0
 # Constantes DATOS_* de SceneMapaMundo que no son puntos instanciados en el
-# mapa. Las del Nivel 5 viejo ya no existen: este registro las reemplazó.
-const IGNORADAS := ["DATOS_ZONAS_VERDES", "DATOS_CONTENEDORES"]
+# mapa. Las del Nivel 5 viejo ya no existen: este registro las reemplazó, y
+# DATOS_ZONAS_VERDES / DATOS_CONTENEDORES se borraron con sus subsistemas
+# (2026-09-20). La lista queda porque el chequeo la sigue consultando: si
+# aparece otra constante DATOS_* que no sea un punto real del mapa, va acá.
+const IGNORADAS : Array[String] = []
 
 var _fallos := 0
 

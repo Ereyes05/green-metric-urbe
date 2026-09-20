@@ -78,19 +78,6 @@ func ocultar() -> void:
 		visible = false
 
 
-func marcar_mision_activa() -> void:
-	if not is_instance_valid(_btn_hablar): return
-	_btn_hablar.text     = "✦ Misión en curso..."
-	_btn_hablar.disabled = true
-
-
-func marcar_mision_completada() -> void:
-	if not is_instance_valid(_btn_hablar): return
-	_btn_hablar.text = "✓ Misión completada"
-	_btn_hablar.disabled = true
-	_btn_hablar.add_theme_color_override("font_color", Color(0.28, 0.90, 0.35))
-
-
 # ── Construcción de UI ───────────────────────────────────────
 func _construir_ui() -> void:
 	_raiz = Panel.new()

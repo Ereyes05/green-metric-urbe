@@ -28,17 +28,9 @@ signal inventario_cambiado()
 signal catalogo_listo()
 # mensaje: texto listo para mostrar al estudiante
 signal compra_terminada(ok: bool, item_id: String, mensaje: String)
-# refs de mejoras/adopciones de zona ya pagadas, para reconstruir su estado
-signal zonas_restauradas(refs: Array)
 
 var inventario : Array = []        # item_id de lo comprado
 var catalogo   : Array = []        # filas de catalogo_tienda
-# Refs de mejoras/adopciones de zonas verdes ya pagadas. HOY NADIE LAS USA:
-# las zonas verdes mejorables están eliminadas del mapa
-# (SceneMapaMundo._spawn_zonas_verdes() es un `pass`). Si se reactivan, hay
-# que reconstruir su nivel/adopción a partir de esto al entrar, o el
-# estudiante perdería lo pagado (el EC gastado persiste, el nivel de la zona no).
-var refs_zonas : Array = []
 var billetera_cargada : bool = false
 
 # Operaciones de EC mandadas al servidor que todavía no respondieron (más
@@ -51,9 +43,15 @@ var _misiones_por_cobrar : Dictionary = {}
 var _contador_refs : int = 0
 
 # ── Energía / Vidas ──────────────────────────────────────────
+# PENDIENTE DE DECISIÓN: los 3 corazones del HUD son decorativos. El código
+# que bajaba la energía (on_fallo_quiz, racha de fallos) y el que la
+# recuperaba (25 EC, o un quiz remedial de 7 preguntas) nunca tuvo quien lo
+# llamara desde ninguna pantalla, así que se borró el 2026-09-20 — está en
+# git si se quiere recuperar. Queda el estado porque el HUD lo dibuja
+# (hud_ficha_jugador.set_energia). Hay que decidir una de dos: darle
+# significado a las vidas, o sacar los corazones de la ficha.
 const MAX_ENERGIA   : int = 3
 var energia_actual  : int = 3
-var _fallos_racha   : int = 0
 
 # ── Insignias ─────────────────────────────────────────────────
 const INSIGNIAS : Dictionary = {
@@ -70,24 +68,6 @@ const INSIGNIAS : Dictionary = {
 }
 var _insignias_obtenidas : Array = []
 
-# ── Preguntas remediales para recuperar energía ───────────────
-const PREGUNTAS_REMEDIALES : Array = [
-	{"q": "¿Qué evalúa principalmente UI GreenMetric?",
-	 "ops": ["Deportes universitarios", "Sostenibilidad del campus", "Rendimiento académico"], "c": 1},
-	{"q": "¿Qué color corresponde a contenedores de papel reciclable?",
-	 "ops": ["Rojo", "Azul", "Negro"], "c": 1},
-	{"q": "¿Qué significa CO₂ en el contexto ambiental?",
-	 "ops": ["Dióxido de carbono — gas de efecto invernadero", "Cloruro de calcio", "Combustible fósil"], "c": 0},
-	{"q": "¿Qué porcentaje mínimo de área verde promueve GreenMetric?",
-	 "ops": ["5%", "15%", "25%"], "c": 2},
-	{"q": "¿Qué transporte prioriza GreenMetric en campus?",
-	 "ops": ["Auto privado", "Moto", "Bicicleta y transporte público"], "c": 2},
-	{"q": "¿Cuál es el módulo GreenMetric que evalúa el consumo eléctrico?",
-	 "ops": ["Entorno", "Energía", "Transporte"], "c": 1},
-	{"q": "¿Qué acción reduce más el consumo de agua en un campus?",
-	 "ops": ["Regar jardines a mediodía", "Instalar grifos temporizadores", "Usar manguera libre"], "c": 1},
-]
-var _remedial_idx : int = 0
 
 
 func _ready() -> void:
@@ -106,7 +86,6 @@ func _ready() -> void:
 func iniciar_sesion() -> void:
 	ecocredits = 50
 	inventario = []
-	refs_zonas = []
 	billetera_cargada = false
 	_ops_en_vuelo = 0
 	_misiones_por_cobrar = {}
@@ -200,14 +179,12 @@ func _terminar_op(saldo_servidor: int) -> void:
 
 func _on_billetera_cargada(datos: Dictionary) -> void:
 	inventario = (datos.get("inventario", []) as Array).duplicate()
-	refs_zonas = (datos.get("refs_zonas", []) as Array).duplicate()
 	billetera_cargada = true
 	# Si hay operaciones en vuelo, su respuesta traerá el saldo final.
 	if _ops_en_vuelo == 0:
 		ecocredits = int(datos.get("saldo", ecocredits))
 		ecocredits_cambiados.emit(ecocredits)
 	inventario_cambiado.emit()
-	zonas_restauradas.emit(refs_zonas)
 
 
 func _on_catalogo_cargado(items: Array) -> void:
@@ -276,41 +253,6 @@ func aplicar_bono_xp(xp: int) -> int:
 	return xp
 
 
-# ── Energía ───────────────────────────────────────────────────
-func tiene_energia() -> bool:
-	return energia_actual > 0
-
-
-func on_fallo_quiz() -> void:
-	_fallos_racha += 1
-	if _fallos_racha >= 2:
-		_fallos_racha = 0
-		energia_actual = maxi(0, energia_actual - 1)
-		energia_cambiada.emit(energia_actual, MAX_ENERGIA)
-
-
-func on_acierto_quiz() -> void:
-	_fallos_racha = 0
-
-
-func recuperar_con_creditos() -> bool:
-	if not gastar_creditos(25, "energia"): return false
-	energia_actual = mini(MAX_ENERGIA, energia_actual + 1)
-	energia_cambiada.emit(energia_actual, MAX_ENERGIA)
-	return true
-
-
-func recuperar_con_remedial() -> void:
-	energia_actual = mini(MAX_ENERGIA, energia_actual + 1)
-	energia_cambiada.emit(energia_actual, MAX_ENERGIA)
-
-
-func siguiente_pregunta_remedial() -> Dictionary:
-	var p : Dictionary = PREGUNTAS_REMEDIALES[_remedial_idx % PREGUNTAS_REMEDIALES.size()]
-	_remedial_idx += 1
-	return p
-
-
 # ── Insignias ─────────────────────────────────────────────────
 func otorgar_insignia(id: String) -> void:
 	if id in _insignias_obtenidas or not INSIGNIAS.has(id): return
@@ -328,5 +270,3 @@ func on_modulo_completado(modulo_id: int, xp_ganado: int, xp_maximo: int) -> voi
 		otorgar_insignia("ecolider")
 
 
-func insignias_lista() -> Array:
-	return _insignias_obtenidas.duplicate()

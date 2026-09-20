@@ -13,7 +13,6 @@
 # ============================================================
 extends RefCounted
 
-const CATEGORIA := 5
 const PRESUPUESTO := 100
 const DECISION_CONSEJO := "tr_consejo"
 

@@ -22,17 +22,6 @@ const MODULOS_INFO : Array = [
 	 "color": Color(0.58, 0.05, 0.88), "desc": "Materias ambientales, publicaciones, iniciativas"},
 ]
 
-const RANKING_SIMULADO : Array = [
-	"Wageningen University",
-	"UC Davis",
-	"Nottingham University",
-	"Leiden University",
-	"UNIVERSIDAD URBE ← TÚ",
-	"UNAM",
-	"UCV",
-	"USB",
-]
-
 var _progreso : Dictionary = {}
 var _xp_total : int        = 0
 

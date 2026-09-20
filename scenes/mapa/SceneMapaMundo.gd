@@ -12,7 +12,6 @@ const SPAWN_Y    : float =  360.0   # Patio Central — plaza abierta del campus
 
 const NPC_ESCENA                := preload("res://scenes/mapa/npc_base.tscn")
 const QUIZ_ESCENA               := preload("res://scenes/ui/quiz_npc.tscn")
-const DIALOGO_ESCENA            := preload("res://scenes/ui/dialogo_npc.tscn")
 const MISION_INICIO_ESCENA      := preload("res://scenes/ui/mision_inicio.gd")
 const MINIJUEGO_RESIDUOS_ESCENA := preload("res://scenes/ui/minijuego_residuos.gd")
 const TUTORIAL_ESCENA           := preload("res://scenes/ui/tutorial_onboarding.gd")
@@ -22,8 +21,6 @@ const LEADERBOARD_ESCENA        := preload("res://scenes/ui/leaderboard.gd")
 const TIENDA_ESCENA             := preload("res://scenes/ui/tienda_conocimiento.gd")
 const SIMULADOR_ESCENA          := preload("res://scenes/ui/simulador_decision.gd")
 const RESULTADOS_ESCENA         := preload("res://scenes/ui/resultados_greenmetric.gd")
-const ZONA_VERDE_ESCENA         := preload("res://scenes/mapa/zona_verde.gd")
-const CONTENEDOR_ESCENA         := preload("res://scenes/mapa/contenedor_basura.gd")
 const EDIFICIO_ESCENA           := preload("res://scenes/edificios/escena_edificio.gd")
 const ZONA_TIERRA_ESCENA        := preload("res://scenes/misiones/zona_tierra.gd")
 const PUNTO_ENERGIA_ESCENA      := preload("res://scenes/misiones/punto_critico_energia.gd")
@@ -412,24 +409,7 @@ var _malla_verde_ui   : CanvasLayer = null
 var _comite_ui        : CanvasLayer = null
 var _semana_verde_ui  : CanvasLayer = null
 var _informe_ui       : CanvasLayer = null
-var _zonas_verdes        : Array       = []   # Array[Node2D]
-var _panel_zona_mejora   : Panel       = null
-var _pzm_titulo_lbl      : Label       = null
-var _pzm_nivel_lbl       : Label       = null
-var _pzm_xp_lbl          : Label       = null
-var _pzm_costo_lbl       : Label       = null
-var _pzm_btn_mejorar     : Button      = null
-var _zona_en_panel       : Node2D      = null
 
-# ── Contenedores de basura ────────────────────────────────────
-var _contenedores        : Array    = []
-var _panel_contenedor    : Panel    = null
-var _pc_titulo_lbl       : Label    = null
-var _pc_barra_bg         : ColorRect = null
-var _pc_barra_fill       : ColorRect = null
-var _pc_estado_lbl       : Label    = null
-var _pc_btn_servicio     : Button   = null
-var _contenedor_en_panel : Node2D   = null
 var _timer_crisis         : float   = 0.0
 var _crises_desbloqueadas : bool    = false
 var _menu_pausa_canvas    : CanvasLayer = null
@@ -475,8 +455,6 @@ func _ready() -> void:
 
 	_construir_hud()
 	_construir_panel_completado()
-	_construir_panel_zona_mejora()
-	_construir_panel_contenedor()
 	_actualizar_hud()
 	# Mismo motivo que el sembrado de _progreso_modulos de arriba: estos
 	# tres solo se actualizaban al completar una misión en vivo.
@@ -725,8 +703,6 @@ func _hay_ui_modal_abierta() -> bool:
 	if _tutorial_ui and _tutorial_ui.visible: return true
 	if _crisis_ui and _crisis_ui.visible: return true
 	if _edificio_ui and _edificio_ui.visible: return true
-	if _panel_contenedor and _panel_contenedor.visible: return true
-	if _panel_zona_mejora and _panel_zona_mejora.visible: return true
 	if is_instance_valid(_overlay_carga): return true
 	# UIs de misiones por nivel (2–6): abren su propio panel/quiz encima del
 	# mapa igual que _edificio_ui, así que también deben tragarse el 1–5.
@@ -778,7 +754,7 @@ func _input(event: InputEvent) -> void:
 
 	# Atajos de la barra de acciones (1–5), solo sin otra UI modal abierta
 	# (tienda, leaderboard, simulador, resultados, tutorial, crisis, edificio,
-	# panel de contenedor/zona de mejora, aviso de carga).
+	# aviso de carga).
 	if _hud_acciones and not _hay_ui_modal_abierta() and _hud_acciones.tecla(event.keycode):
 		get_viewport().set_input_as_handled()
 		return
@@ -789,10 +765,6 @@ func _input(event: InputEvent) -> void:
 	# E cierra la escena de edificio (funciona como "Salir")
 	if _edificio_ui and _edificio_ui.visible:
 		_on_salida_edificio()
-		get_viewport().set_input_as_handled()
-		return
-	if _panel_contenedor and _panel_contenedor.visible:
-		_cerrar_panel_contenedor()
 		get_viewport().set_input_as_handled()
 		return
 	# Con un panel del Plan de Movilidad abierto, la E no abre otra cosa.
@@ -819,9 +791,6 @@ func _input(event: InputEvent) -> void:
 		candidato.call("intentar_interactuar")
 		get_viewport().set_input_as_handled()
 		return
-	# ── Sin misión de nivel: contenedores y zonas verdes ─────────
-	_verificar_contenedor_cercano()
-	_verificar_zona_verde_cercana()
 
 
 # Regla de selección de la tecla E, aparte de _input() para poder probarla:
@@ -846,16 +815,6 @@ static func mision_mas_cercana(nodos: Array, desde: Vector2) -> Node:
 
 
 # ── Pantalla de misión — muestra interior del edificio primero ─
-func _mostrar_pantalla_mision() -> void:
-	if not ZONA_A_MISION.has(_zona_activa):
-		return
-	var info : Dictionary = ZONA_A_MISION[_zona_activa]
-	if is_instance_valid(_edificio_ui):
-		_edificio_ui.mostrar(_zona_activa, info, info["npc"])
-	else:
-		_mision_ui.mostrar(info["modulo_id"], _nombre_activo, info["npc"], info["mision_id"], info["progreso"])
-
-
 func _on_hablar_npc_edificio() -> void:
 	if not ZONA_A_MISION.has(_zona_activa): return
 	var info : Dictionary = ZONA_A_MISION[_zona_activa]
@@ -1218,144 +1177,6 @@ func _construir_panel_completado() -> void:
 	barra_bg.add_child(_complete_barra)
 
 
-# ════════════════════════════════════════════════════════════
-# PANEL DE MEJORA DE ZONA VERDE
-# ════════════════════════════════════════════════════════════
-func _construir_panel_zona_mejora() -> void:
-	_panel_zona_mejora = Panel.new()
-	_panel_zona_mejora.set_anchors_preset(Control.PRESET_CENTER)
-	_panel_zona_mejora.custom_minimum_size = Vector2(320, 220)
-	_panel_zona_mejora.offset_left   = -160
-	_panel_zona_mejora.offset_top    = -110
-	_panel_zona_mejora.offset_right  =  160
-	_panel_zona_mejora.offset_bottom =  110
-	var ps := StyleBoxFlat.new()
-	ps.bg_color     = Color(0.04, 0.09, 0.06, 0.97)
-	ps.border_color = Color(0.28, 0.85, 0.32)
-	ps.set_border_width_all(3)
-	ps.set_corner_radius_all(14)
-	ps.shadow_color = Color(0.18, 0.72, 0.22, 0.50)
-	ps.shadow_size  = 18
-	_panel_zona_mejora.add_theme_stylebox_override("panel", ps)
-	_panel_zona_mejora.visible = false
-	_hud_canvas.add_child(_panel_zona_mejora)
-
-	var mg := MarginContainer.new()
-	mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for m in ["margin_left","margin_right","margin_top","margin_bottom"]:
-		mg.add_theme_constant_override(m, 20)
-	_panel_zona_mejora.add_child(mg)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	mg.add_child(vbox)
-
-	_pzm_titulo_lbl = Label.new()
-	_pzm_titulo_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pzm_titulo_lbl.add_theme_font_size_override("font_size", 15)
-	_pzm_titulo_lbl.add_theme_color_override("font_color", Color(0.35, 1.0, 0.45))
-	vbox.add_child(_pzm_titulo_lbl)
-
-	_pzm_nivel_lbl = Label.new()
-	_pzm_nivel_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pzm_nivel_lbl.add_theme_font_size_override("font_size", 13)
-	_pzm_nivel_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.22))
-	vbox.add_child(_pzm_nivel_lbl)
-
-	_pzm_xp_lbl = Label.new()
-	_pzm_xp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pzm_xp_lbl.add_theme_font_size_override("font_size", 11)
-	_pzm_xp_lbl.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65))
-	vbox.add_child(_pzm_xp_lbl)
-
-	_pzm_costo_lbl = Label.new()
-	_pzm_costo_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pzm_costo_lbl.add_theme_font_size_override("font_size", 11)
-	_pzm_costo_lbl.add_theme_color_override("font_color", Color(0.85, 0.75, 0.20))
-	vbox.add_child(_pzm_costo_lbl)
-
-	_pzm_btn_mejorar = Button.new()
-	_pzm_btn_mejorar.custom_minimum_size = Vector2(0, 40)
-	_pzm_btn_mejorar.add_theme_font_size_override("font_size", 13)
-	var s_m := StyleBoxFlat.new()
-	s_m.bg_color     = Color(0.10, 0.28, 0.12)
-	s_m.border_color = Color(0.28, 0.80, 0.32)
-	s_m.set_border_width_all(2)
-	s_m.set_corner_radius_all(8)
-	_pzm_btn_mejorar.add_theme_stylebox_override("normal", s_m)
-	_pzm_btn_mejorar.pressed.connect(_on_btn_mejorar_zona)
-	vbox.add_child(_pzm_btn_mejorar)
-
-	var btn_cerrar := Button.new()
-	btn_cerrar.text = "Cerrar"
-	btn_cerrar.custom_minimum_size = Vector2(0, 34)
-	btn_cerrar.add_theme_font_size_override("font_size", 11)
-	var s_c := StyleBoxFlat.new()
-	s_c.bg_color     = Color(0.12, 0.06, 0.06)
-	s_c.border_color = Color(0.55, 0.20, 0.20)
-	s_c.set_border_width_all(1)
-	s_c.set_corner_radius_all(6)
-	btn_cerrar.add_theme_stylebox_override("normal", s_c)
-	btn_cerrar.pressed.connect(_cerrar_panel_zona)
-	vbox.add_child(btn_cerrar)
-
-
-func _mostrar_panel_zona(zona: Node2D) -> void:
-	_zona_en_panel = zona
-	var nombre  : String = zona.nombre_zona
-	var lvl     : int    = zona.nivel
-	var xp_p    : int    = zona.xp_pasiva_actual()
-	var n_lvl   : String = zona.nombre_nivel_actual()
-	var iconos  : Array  = ["🌱", "🌿", "🌳"]
-
-	_pzm_titulo_lbl.text = "%s  %s" % [iconos[lvl - 1], nombre]
-	_pzm_nivel_lbl.text  = "Nivel %d — %s" % [lvl, n_lvl]
-	_pzm_xp_lbl.text     = "+%d XP / minuto   |   Módulo: %d" % [xp_p, zona.modulo_id]
-
-	if zona.puede_mejorar():
-		var costo : int    = zona.costo_siguiente()
-		var sig   : String = iconos[lvl]   # siguiente nivel
-		_pzm_costo_lbl.text      = "Costo: %d EC  →  %s Nivel %d" % [costo, sig, lvl + 1]
-		_pzm_btn_mejorar.text    = "⬆ Mejorar zona  (%d EC)" % costo
-		_pzm_btn_mejorar.visible = true
-	else:
-		_pzm_costo_lbl.text      = "Nivel máximo alcanzado"
-		_pzm_btn_mejorar.visible = false
-
-	_panel_zona_mejora.modulate.a = 0.0
-	_panel_zona_mejora.visible    = true
-	var tw := create_tween()
-	tw.tween_property(_panel_zona_mejora, "modulate:a", 1.0, 0.18)
-
-
-func _cerrar_panel_zona() -> void:
-	if not is_instance_valid(_panel_zona_mejora): return
-	var tw := create_tween()
-	tw.tween_property(_panel_zona_mejora, "modulate:a", 0.0, 0.15)
-	tw.tween_callback(func(): _panel_zona_mejora.visible = false)
-	_zona_en_panel = null
-
-
-func _on_btn_mejorar_zona() -> void:
-	if not is_instance_valid(_zona_en_panel): return
-	var zona  : Node2D = _zona_en_panel
-	var costo : int    = zona.costo_siguiente()
-	if EconomiaManager.ecocredits < costo:
-		if _hud_aviso:
-			_hud_aviso.avisar("✗  Faltan %d EC" % (costo - EconomiaManager.ecocredits), true)
-		return
-	EconomiaManager.gastar_creditos(costo, "mejora_zona", "%s:%d" % [zona.nombre_zona, zona.nivel + 1])
-	var lvl_antes : int = zona.nivel
-	zona.aplicar_mejora()
-	# Recompensas inmediatas
-	var xp_bonus : int   = zona.XP_MEJORA_INM[lvl_antes - 1]
-	_aplicar_xp(xp_bonus, "mejora_zona_%s" % zona.nombre_zona.to_lower().replace(" ","_"))
-	_sfx("xp_bonus")
-	_mostrar_notificacion_zona("🌳", "%s → Nivel %d  (+%d XP)" % [zona.nombre_zona, zona.nivel, xp_bonus],
-			Color(0.30, 1.0, 0.42))
-	_mostrar_panel_zona(zona)   # refresca el panel con el nuevo nivel
-
-
 func _mostrar_mision_completada(mision_id: String, xp_ganado: int) -> void:
 	if not is_instance_valid(_complete_panel): return
 	# Misiones del Plan de Movilidad (tr_*): el id crudo capitalizado se lee
@@ -1480,11 +1301,6 @@ func _init_sistemas_eva() -> void:
 	add_child(_resultados_ui)
 	_resultados_ui.cerrar_resultados.connect(func(): pass)
 
-	# Zonas verdes adoptables
-	_spawn_zonas_verdes()
-
-	# Contenedores de basura
-	_spawn_contenedores()
 
 	# Sistema de misiones por nivel (Nivel 1 y 2)
 	_init_misiones_nivel()
@@ -1559,7 +1375,6 @@ func _on_crisis_resulta(modulo_id: int, exito: bool) -> void:
 	_timer_crisis = randf_range(_CRISIS_MIN, _CRISIS_MAX)
 
 
-
 # ════════════════════════════════════════════════════════════
 # HELPER AUDIO (compatible antes de que el IDE rescane project.godot)
 # ════════════════════════════════════════════════════════════
@@ -1567,52 +1382,6 @@ func _sfx(nombre: String) -> void:
 	var am := get_node_or_null("/root/AudioManager")
 	if am:
 		am.tocar(nombre)
-
-
-# ════════════════════════════════════════════════════════════
-# ZONAS VERDES ADOPTABLES
-# ════════════════════════════════════════════════════════════
-const DATOS_ZONAS_VERDES : Array = [
-	# Patio Central (x=480..700, y=120..480) — fuente y arboleda
-	{"nombre": "Patio Central",   "pos": Vector2(590, 350), "mod": 4, "radio": 36.0},
-	# Corredor oeste norte (junto a Estacionamiento)
-	{"nombre": "Corredor Oeste",  "pos": Vector2(250, 200), "mod": 1, "radio": 18.0},
-	# Camino norte frente a Bloque E
-	{"nombre": "Jardín Norte",    "pos": Vector2(890, 100), "mod": 3, "radio": 18.0},
-	# Sur del Rectorado (área abierta y=660..740, x=740..1060)
-	{"nombre": "Zona Cultural",   "pos": Vector2(870, 700), "mod": 6, "radio": 28.0},
-	# Avenida principal frente a Bloque A
-	{"nombre": "Avenida URBE",    "pos": Vector2(490, 752), "mod": 5, "radio": 28.0},
-]
-
-func _spawn_zonas_verdes() -> void:
-	pass  # zonas mejorables con ecocredits eliminadas del mapa
-
-
-func _on_zona_verde_adoptada(nombre_zona: String, _modulo_id: int) -> void:
-	_aplicar_xp(15, "adopcion_%s" % nombre_zona.to_lower().replace(" ", "_"))
-	_mostrar_notificacion_zona("♥", "Adoptaste: " + nombre_zona, Color(0.28, 0.90, 0.40))
-	_sfx("adoptar")
-	EconomiaManager.ganar_creditos(10, "adopcion_zona", nombre_zona)
-
-
-func _verificar_zona_verde_cercana() -> void:
-	var radio_interaccion : float = 55.0
-	var nombre_j : String = SupabaseManager.nombre_usuario
-	if nombre_j.is_empty(): nombre_j = "Eco-Ranger"
-	for zona in _zonas_verdes:
-		var z : Node2D = zona as Node2D
-		if not is_instance_valid(z): continue
-		if jugador.global_position.distance_to(z.global_position) > radio_interaccion:
-			continue
-		if not z.esta_adoptada():
-			z.intentar_adoptar(nombre_j)
-		elif z.es_mia(nombre_j):
-			_mostrar_panel_zona(z)
-		else:
-			if _hud_aviso:
-				_hud_aviso.avisar("🔒  Ya adoptada por " + z.adoptado_por, true)
-		return
 
 
 # ════════════════════════════════════════════════════════════
@@ -1642,197 +1411,6 @@ func _verificar_misiones_completadas() -> void:
 		_timer_crisis = _CRISIS_MIN
 	await get_tree().create_timer(1.5).timeout
 	_abrir_resultados()
-
-
-# ════════════════════════════════════════════════════════════
-# CONTENEDORES DE BASURA
-# ════════════════════════════════════════════════════════════
-const DATOS_CONTENEDORES : Array = [
-	# Camino norte frente al Cafetín (y=82..120, x=280..480)
-	{"nombre": "Cafetín",        "pos": Vector2(430, 100)},
-	# Patio central (x=480..700, y=120..480) — zona alta
-	{"nombre": "Patio Central",  "pos": Vector2(640, 170)},
-	# Corredor oeste (x=220..280), nivel medio
-	{"nombre": "Corredor Oeste", "pos": Vector2(250, 500)},
-	# Sur del Rectorado (y=660..740, x=740..1060)
-	{"nombre": "Sur Rectorado",  "pos": Vector2(870, 705)},
-	# Avenida frente al Bloque A
-	{"nombre": "Avenida URBE",   "pos": Vector2(490, 752)},
-]
-
-func _spawn_contenedores() -> void:
-	# Sistema de contenedores grandes retirado para mantener únicamente las papeleras de colores de reciclaje
-	return
-
-
-func _construir_panel_contenedor() -> void:
-	_panel_contenedor = Panel.new()
-	_panel_contenedor.set_anchors_preset(Control.PRESET_CENTER)
-	_panel_contenedor.custom_minimum_size = Vector2(340, 210)
-	_panel_contenedor.offset_left   = -170
-	_panel_contenedor.offset_top    = -105
-	_panel_contenedor.offset_right  =  170
-	_panel_contenedor.offset_bottom =  105
-	var ps := StyleBoxFlat.new()
-	ps.bg_color     = Color(0.06, 0.06, 0.08, 0.97)
-	ps.border_color = Color(0.55, 0.42, 0.12)
-	ps.set_border_width_all(3)
-	ps.set_corner_radius_all(14)
-	ps.shadow_color = Color(0.40, 0.30, 0.05, 0.50)
-	ps.shadow_size  = 16
-	_panel_contenedor.add_theme_stylebox_override("panel", ps)
-	_panel_contenedor.visible = false
-	_hud_canvas.add_child(_panel_contenedor)
-
-	var mg := MarginContainer.new()
-	mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		mg.add_theme_constant_override(m, 20)
-	_panel_contenedor.add_child(mg)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	mg.add_child(vbox)
-
-	# Título
-	_pc_titulo_lbl = Label.new()
-	_pc_titulo_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pc_titulo_lbl.add_theme_font_size_override("font_size", 15)
-	_pc_titulo_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.30))
-	vbox.add_child(_pc_titulo_lbl)
-
-	# Barra de llenado
-	_pc_barra_bg = ColorRect.new()
-	_pc_barra_bg.custom_minimum_size = Vector2(280, 16)
-	_pc_barra_bg.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_pc_barra_bg.color = Color(0.12, 0.10, 0.06)
-	vbox.add_child(_pc_barra_bg)
-
-	_pc_barra_fill = ColorRect.new()
-	_pc_barra_fill.size = Vector2(0, 16)
-	_pc_barra_fill.color = Color(0.28, 0.72, 0.22)
-	_pc_barra_bg.add_child(_pc_barra_fill)
-
-	# Estado / porcentaje
-	_pc_estado_lbl = Label.new()
-	_pc_estado_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pc_estado_lbl.add_theme_font_size_override("font_size", 12)
-	_pc_estado_lbl.add_theme_color_override("font_color", Color(0.80, 0.80, 0.80))
-	vbox.add_child(_pc_estado_lbl)
-
-	# Botón llamar servicio
-	_pc_btn_servicio = Button.new()
-	_pc_btn_servicio.custom_minimum_size = Vector2(0, 40)
-	_pc_btn_servicio.add_theme_font_size_override("font_size", 13)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color     = Color(0.12, 0.22, 0.10)
-	sb.border_color = Color(0.35, 0.78, 0.28)
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(8)
-	_pc_btn_servicio.add_theme_stylebox_override("normal", sb)
-	_pc_btn_servicio.pressed.connect(_on_btn_servicio_contenedor)
-	vbox.add_child(_pc_btn_servicio)
-
-	# Botón cerrar
-	var btn_c := Button.new()
-	btn_c.text = "Cerrar"
-	btn_c.custom_minimum_size = Vector2(0, 32)
-	btn_c.add_theme_font_size_override("font_size", 11)
-	var sc := StyleBoxFlat.new()
-	sc.bg_color     = Color(0.12, 0.06, 0.06)
-	sc.border_color = Color(0.55, 0.20, 0.20)
-	sc.set_border_width_all(1)
-	sc.set_corner_radius_all(6)
-	btn_c.add_theme_stylebox_override("normal", sc)
-	btn_c.pressed.connect(_cerrar_panel_contenedor)
-	vbox.add_child(btn_c)
-
-
-func _verificar_contenedor_cercano() -> bool:
-	var radio : float = 52.0
-	for nodo in _contenedores:
-		var c : Node2D = nodo as Node2D
-		if not is_instance_valid(c): continue
-		if jugador.global_position.distance_to(c.global_position) > radio: continue
-		_mostrar_panel_contenedor(c)
-		return true
-	return false
-
-
-func _mostrar_panel_contenedor(c: Node2D) -> void:
-	_contenedor_en_panel = c
-	var pct  : int    = c.porcentaje()
-	var lleno : bool  = c.esta_lleno()
-	var serv  : bool  = c.en_servicio
-
-	_pc_titulo_lbl.text = "🗑 Contenedor — %s" % c.nombre_bin
-
-	# Barra de llenado
-	var bar_w : float = 280.0
-	var col : Color
-	if pct >= 80:
-		col = Color(0.88, 0.12, 0.12)
-	elif pct >= 50:
-		col = Color(0.88, 0.72, 0.08)
-	else:
-		col = Color(0.28, 0.72, 0.22)
-	_pc_barra_fill.color  = col
-	_pc_barra_fill.size.x = bar_w * clampf(pct / 100.0, 0.0, 1.0)
-
-	# Texto de estado
-	if serv:
-		_pc_estado_lbl.text = "🧹 Limpiando... el servicio está en camino"
-		_pc_btn_servicio.text    = "En servicio..."
-		_pc_btn_servicio.disabled = true
-	else:
-		var estado_txt : String
-		if pct >= 90:
-			estado_txt = "⚠ URGENTE — %d%% lleno   (+20 XP si lo vacías ahora)" % pct
-		elif pct >= 70:
-			estado_txt = "Bastante lleno — %d%%   (+15 XP)" % pct
-		elif pct >= 50:
-			estado_txt = "Medio lleno — %d%%   (+10 XP)" % pct
-		else:
-			estado_txt = "Poco lleno — %d%%   (+5~7 XP)" % pct
-		_pc_estado_lbl.text       = estado_txt
-		_pc_btn_servicio.text     = "📞 Llamar servicio de limpieza"
-		_pc_btn_servicio.disabled = false
-
-	_panel_contenedor.modulate.a = 0.0
-	_panel_contenedor.visible    = true
-	var tw := create_tween()
-	tw.tween_property(_panel_contenedor, "modulate:a", 1.0, 0.18)
-
-
-func _cerrar_panel_contenedor() -> void:
-	if not is_instance_valid(_panel_contenedor): return
-	var tw := create_tween()
-	tw.tween_property(_panel_contenedor, "modulate:a", 0.0, 0.14)
-	tw.tween_callback(func(): _panel_contenedor.visible = false)
-	_contenedor_en_panel = null
-
-
-func _on_btn_servicio_contenedor() -> void:
-	if not is_instance_valid(_contenedor_en_panel): return
-	var c : Node2D = _contenedor_en_panel
-	if c.en_servicio: return
-	c.solicitar_servicio()
-	_sfx("zona")
-	_cerrar_panel_contenedor()
-	_mostrar_notificacion_zona("📞", "Servicio en camino a: %s" % c.nombre_bin,
-			Color(0.55, 0.85, 1.0))
-
-
-func _on_contenedor_vaciado(xp: int, c: Node2D) -> void:
-	_aplicar_xp(xp, "contenedor_%s" % c.nombre_bin.to_lower().replace(" ", "_"))
-	EconomiaManager.ganar_creditos(xp / 4, "contenedor")
-	var msg : String
-	if xp >= 20:
-		msg = "🗑 ¡Contenedor vacío! Servicio excelente  +%d XP" % xp
-	else:
-		msg = "🗑 Contenedor vaciado  +%d XP" % xp
-	_mostrar_notificacion_zona("✓", msg, Color(0.30, 0.90, 0.42))
-	_sfx("xp_bonus" if xp >= 15 else "xp")
 
 
 func _on_insignia_obtenida(_id: String, nombre: String, icono: String) -> void:
