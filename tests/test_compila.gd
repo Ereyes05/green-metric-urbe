@@ -158,6 +158,59 @@ func _ready() -> void:
 	_check(cuerpo_comp.contains("_complete_xp.visible = xp_ganado > 0"),
 		"aviso de misión: oculta la línea de XP cuando xp_ganado es 0")
 
+	# ── Atribución del quiz a su categoría GreenMetric ───────────
+	# El nivel del evento sale del mision_id, no de dónde está parado el
+	# jugador. Con maxi(_modulo_activo, 0), 12 de los primeros 143 eventos
+	# quedaron con nivel 0 (inexistente) y sin poder atribuirse a ningún
+	# indicador.
+	_check(mapa_src.contains("modulo_de_mision(ZONA_A_MISION, mision_id, _modulo_activo)"),
+		"el quiz saca el nivel del mision_id, no de la posición del jugador")
+	var zam := {"Z1": {"mision_id": "mision_agua", "modulo_id": 4},
+				"Z2": {"mision_id": "mision_rector", "modulo_id": 6}}
+	_check(mapa.modulo_de_mision(zam, "mision_agua", -1) == 4,
+		"modulo_de_mision: saca la categoría del mision_id")
+	_check(mapa.modulo_de_mision(zam, "mision_rector", 0) == 6,
+		"modulo_de_mision: no usa el respaldo si el id está en el mapa")
+	_check(mapa.modulo_de_mision(zam, "desconocida", 3) == 3,
+		"modulo_de_mision: id fuera del mapa cae al respaldo")
+	_check(mapa.modulo_de_mision(zam, "desconocida", -1) == 0,
+		"modulo_de_mision: nunca devuelve el -1 de 'sin zona'")
+
+	# ZONA_A_MISION es el espejo del catálogo del servidor. Si se desincronizan,
+	# el evento se atribuye a una categoría y el puntaje a otra.
+	var sql : String = FileAccess.get_file_as_string("res://sql/puntaje_greenmetric.sql")
+	var re_sql := RegEx.create_from_string("\\('(mision_[a-z_0-9]+)',\\s*(\\d+),\\s*'quiz'")
+	var cat_servidor := {}
+	for m in re_sql.search_all(sql):
+		cat_servidor[m.get_string(1)] = int(m.get_string(2))
+	_check(cat_servidor.size() >= 12, "se leyeron los quizzes del catálogo SQL: %d" % cat_servidor.size())
+
+	# "mision_residuos" es la única zona que NO abre un quiz: el Cafetín lanza
+	# el minijuego de clasificación, que el catálogo registra aparte como
+	# "mision_residuos_minijuego". Se verifica que la excepción sea real en vez
+	# de darla por buena.
+	_check(mapa_src.contains("if mision_id == \"mision_residuos\":")
+		and cat_servidor.has("mision_residuos_minijuego"),
+		"mision_residuos abre el minijuego y el catálogo lo registra aparte")
+
+	var re_cli := RegEx.create_from_string("\"mision_id\":\\s*\"([a-z_0-9]+)\",\\s*\"modulo_id\":\\s*(\\d+)")
+	var desincronizados : Array[String] = []
+	var comparados := 0
+	for m in re_cli.search_all(mapa_src):
+		var mid := m.get_string(1)
+		if mid == "mision_residuos":
+			continue
+		if not cat_servidor.has(mid):
+			desincronizados.append("%s no está en el catálogo SQL" % mid)
+			continue
+		comparados += 1
+		if cat_servidor[mid] != int(m.get_string(2)):
+			desincronizados.append("%s: cliente %s, servidor %d"
+				% [mid, m.get_string(2), cat_servidor[mid]])
+	_check(comparados >= 11, "se compararon los quizzes de ZONA_A_MISION: %d" % comparados)
+	_check(desincronizados.is_empty(),
+		"ZONA_A_MISION coincide con catalogo_misiones: %s" % ", ".join(desincronizados))
+
 	var escena = load("res://scenes/mapa/SceneMapaMundo.gd")
 	_check(escena != null and escena.can_instantiate(), "SceneMapaMundo compila")
 

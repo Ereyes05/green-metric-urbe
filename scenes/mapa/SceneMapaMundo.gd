@@ -793,6 +793,26 @@ func _input(event: InputEvent) -> void:
 		return
 
 
+# Categoría GreenMetric a la que pertenece un quiz, para que su telemetría
+# quede atribuida a un indicador (ver eventos_aprendizaje).
+#
+# Antes esto era maxi(_modulo_activo, 0), o sea el nivel de la zona donde
+# estaba PARADO el jugador. Un comentario afirmaba que "el quiz siempre
+# arranca dentro de una zona"; los datos lo desmintieron: de los primeros
+# 143 eventos, 12 quedaron con nivel 0 — un nivel que no existe — y esos no
+# se pueden atribuir a ningún indicador ni recuperar después.
+#
+# El mision_id ya determina la categoría sin ambigüedad. ZONA_A_MISION es el
+# espejo de catalogo_misiones (sql/puntaje_greenmetric.sql), así que se lee
+# de ahí en vez de duplicar la tabla. `respaldo` solo se usa si el id no está
+# en el mapa, y sigue pasando por maxi(...,0) para no escribir un -1.
+static func modulo_de_mision(zona_a_mision: Dictionary, mision_id: String, respaldo: int) -> int:
+	for info in zona_a_mision.values():
+		if info.get("mision_id", "") == mision_id:
+			return int(info.get("modulo_id", 0))
+	return maxi(respaldo, 0)
+
+
 # Regla de selección de la tecla E, aparte de _input() para poder probarla:
 # de los puntos que tienen al jugador cerca, el MÁS CERCANO que además sea
 # interactuable. Un punto bloqueado (estado "bloqueado" — solo los del Plan
@@ -863,10 +883,8 @@ func _on_dialogo_terminado(mision_id: String) -> void:
 			break
 	# Se le pasa el nivel/misión para que el quiz pueda registrar telemetría
 	# atribuible a un indicador GreenMetric (ver eventos_aprendizaje).
-	# maxi(..., 0) porque _modulo_activo vale -1 fuera de una zona; el quiz
-	# siempre arranca dentro de una, pero un 0 es más honesto que un -1 si
-	# alguna vez no lo está.
-	_quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre, maxi(_modulo_activo, 0), mision_id)
+	_quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre,
+			modulo_de_mision(ZONA_A_MISION, mision_id, _modulo_activo), mision_id)
 
 
 # ── Callbacks de completado ───────────────────────────────────
