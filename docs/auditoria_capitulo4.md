@@ -13,7 +13,7 @@
 | Tabla | Promete | Estado |
 |---|---|---|
 | 1 | *"mandatorio... Responsive Web Design"*, escritorio **y** móvil | 🔴 **No cumplido** |
-| 2 | Flat Design y minimalista | 🟡 Parcial — falta el login |
+| 2 | Flat Design y minimalista | 🟢 Cumplido (2026-09-20) |
 | 3 | Barra de XP visible + Supabase en tiempo real | 🟢 Cumplido |
 | 4 | Ranking global e interactivo | 🟢 Cumplido |
 | 5 | Narrativa + desbloqueo secuencial de zonas | 🟢 Cumplido |
@@ -31,11 +31,11 @@
 | 17 | Zonas verdes (M1) y puntos de residuos (M3) | 🟢 Cumplido |
 | 18 | Minijuego de clasificación con tiempo límite | 🟢 Cumplido |
 
-**13 cumplidas, 2 parciales, 2 no cumplidas, 1 sin verificar.**
+**14 cumplidas, 1 parcial, 2 no cumplidas, 1 sin verificar.**
 
-> **Actualizado el 2026-09-20** tras la primera tanda de arreglos: las
-> Tablas 10 y 11 pasaron a cumplidas. El detalle original de cada una se
-> conserva abajo con la nota de cómo se resolvió.
+> **Actualizado el 2026-09-20** tras la primera tanda de arreglos: las Tablas
+> 2, 10 y 11 pasaron a cumplidas. El detalle original de cada una se conserva
+> abajo con la nota de cómo se resolvió.
 
 ---
 
@@ -101,11 +101,47 @@ Quedaba un detalle cosmético — los 3 corazones del HUD contradecían el argum
 
 ---
 
+## Corrección de diagnóstico: el login y la "fuente pixel art"
+
+La primera versión de esta auditoría decía que el login incumplía la Tabla 2
+por usar **Press Start 2P**, repitiendo lo que afirmaba `ESTADO_PROYECTO.md`.
+**Era incorrecto, y se verificó el 2026-09-20.**
+
+El HUD plano —el que la propia auditoría daba por cumplido— usa esa misma
+fuente en cuatro lugares: el nombre del jugador, el título del banner de zona,
+el título "GreenMetric" y el número de puntaje. O sea que el sistema de diseño
+del proyecto **es un híbrido deliberado**: Rubik para el cuerpo, Press Start 2P
+para los acentos de identidad. El título del login en esa fuente es
+*coherente con el sistema*, no una violación.
+
+**El incumplimiento real era otro:** el login no usaba el sistema de diseño en
+absoluto. Tenía **69 `Color()` escritos a mano**, parecidos a los del tema pero
+nunca iguales (verde `#59F280` contra `#62D06A`, cian propio, texto propio),
+radios distintos (14 y 11 contra 12 y 10) y **7 sombras proyectadas** —
+el recurso menos "plano" que había. Login y juego se veían como dos productos.
+
+**Qué se hizo:** `SceneLogin.gd` ahora importa `hud_tema.gd` y toma de ahí
+colores, radios y semántica de los mensajes (aviso, error, en curso, éxito).
+Se quitó la sombra proyectada del panel; el resplandor de foco y hover se
+conserva, porque eso es respuesta a la interacción y no profundidad simulada.
+El panel de login usa el mismo color que los del HUD pero al 96 % en vez del
+86 %: en el mapa se apoya sobre césped plano, acá va sobre una ilustración con
+mucho detalle y a esa transparencia el formulario perdía legibilidad.
+
+Se conservaron las decisiones que el usuario había pedido explícitamente en su
+momento: panel azul-cian en vez de verde, y botones de contorno en vez de
+relleno sólido.
+
+**La ilustración de fondo se deja como está.** Flat Design aplica a la interfaz
+—paneles, tipografía, botones, controles—, no al arte del juego.
+
+---
+
 ## Las parciales
 
 | Tabla | Qué falta |
 |---|---|
-| **2** — Flat Design | El HUD del mapa ya es plano (2026-09-16). **El login sigue en pixel art** con fuente Press Start 2P, y es la primera pantalla que ve el jurado. La Tabla 2 dice 65% plano contra 10% pixel art. |
+| **2** — Flat Design | ✅ **Resuelto el 2026-09-20.** Ver la corrección de diagnóstico abajo: el problema no era la tipografía sino que el login tenía su propia paleta. Ahora lee `hud_tema.gd`, igual que el HUD. |
 | **8** — Push | No existe ningún módulo de notificaciones. El `serviceWorker` que aparece en el build es código propio de Godot, no un módulo de avisos. **Riesgo bajo:** el texto dice *"se contempla el desarrollo"*, que se lee como consideración de diseño, no como entrega. |
 | **11** — Tutorial obligatorio | ✅ **Resuelto el 2026-09-20.** Dos correcciones: la marca de "visto" se escribía **antes** de mostrar el tutorial, así que si el estudiante cerraba el juego a mitad no lo veía nunca más — ahora se escribe al terminarlo. Y se quitó el botón "Saltar intro", que contradecía el *"obligatorio"* de la tabla. (La ruta del archivo ya era por cuenta, no por máquina: eso estaba desactualizado en `ESTADO_PROYECTO.md`.) |
 | **14** — Eco-puntos canjeables por insignias | Los EcoCredits se canjean por **herramientas y cosméticos** (kits, termo, credencial, estela, título), no por insignias. La promesa dice *"canjeables por insignias digitales de estatus"*. Está cerca: `titulo_embajador` y `credencial_voluntario` son cosméticos de estatus. Puede resolverse redactando, o renombrando esos ítems como insignias. |

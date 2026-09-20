@@ -136,7 +136,7 @@ func recibir_respuesta(id: String, opcion_id: String, respuesta: Dictionary) -> 
 			_estado_lbl.text = "Opción contraproducente (sin sesión: no se registró penalización). El presupuesto no se gastó; puedes reintentar."
 		else:
 			_estado_lbl.text = "Opción contraproducente. Ya tenías el máximo de 3 penalizaciones en esta decisión. El presupuesto no se gastó; puedes reintentar."
-		_estado_lbl.add_theme_color_override("font_color", TEMA.VIDAS)
+		_estado_lbl.add_theme_color_override("font_color", TEMA.ALERTA)
 	else:
 		plan.aplicar_valida(decision_id, opcion_id, modo_consejo)
 		estado = "revelado_valida"
@@ -185,7 +185,7 @@ func _pintar() -> void:
 			det.text += "  ·  " + bloqueo
 		var color := TEMA.TEXTO_3
 		if revelada:
-			color = TEMA.VIDAS if o["contraproducente"] else TEMA.TEXTO_2
+			color = TEMA.ALERTA if o["contraproducente"] else TEMA.TEXTO_2
 		det.add_theme_color_override("font_color", color)
 	match estado:
 		"eligiendo":

@@ -21,7 +21,9 @@ const DORADO         := Color("#E8BE55")
 const NARANJA        := Color("#E5893E")
 const VIOLETA        := Color("#9B77DF")
 const TEAL           := Color("#4FD1B0")
-const VIDAS          := Color("#E8556B")
+# Rojo de alerta. Se llamaba VIDAS por los corazones del HUD, que se
+# quitaron el 2026-09-20 (ver docs/auditoria_capitulo4.md, Tabla 10).
+const ALERTA         := Color("#E8556B")
 const VACIO          := Color("#3A4550")
 const PASO_PENDIENTE := Color("#24323C")
 const LEYENDA        := Color("#8FA0A8")

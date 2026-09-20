@@ -56,7 +56,7 @@ func _mostrar(item: Dictionary) -> void:
 	for d in item["deltas"]:
 		_deltas.add_child(TEMA.label(str(d.get("texto", "")), 13, d.get("color", TEMA.TEXTO), 600))
 	add_theme_stylebox_override("panel",
-		TEMA.caja(TEMA.PANEL_BG, TEMA.VIDAS if item["bloqueo"] else TEMA.DORADO, 2, 10, 14, 8))
+		TEMA.caja(TEMA.PANEL_BG, TEMA.ALERTA if item["bloqueo"] else TEMA.DORADO, 2, 10, 14, 8))
 	visible = true
 	offset_left = 0
 	offset_right = 0

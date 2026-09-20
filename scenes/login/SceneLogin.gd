@@ -44,6 +44,14 @@ var _msg_rec           : Label    = null
 # La base rechaza dominios no permitidos, pero Supabase enmascara ese
 # error con un mensaje genérico e inútil — así que el formulario valida
 # lo mismo ANTES de llamar a /auth/v1/signup, para dar un mensaje claro.
+# Mismo sistema de diseño que el HUD del mapa: colores, radios y fuentes
+# salen de hud_tema.gd y no se escriben a mano acá. Antes el login tenía su
+# propia paleta (69 Color() sueltos), parecida pero nunca igual, así que
+# login y juego se veían como dos productos distintos. La Tabla 2 del Cap. 4
+# pide "diseño plano y minimalista" (65% de la muestra): eso se sostiene con
+# un sistema único, no con dos paletas que casi coinciden.
+const TEMA := preload("res://scenes/ui/hud_tema.gd")
+
 const FONDO_ILUSTRADO_PATH : String = "res://assets/sprites/login_fondo.png"
 const EMAIL_REGEX          : String = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
 const DOMINIOS_PERMITIDOS  : Array  = ["urbe.edu", "gmail.com", "outlook.com",
@@ -215,7 +223,7 @@ func _ready() -> void:
 
 	# Botón "¿Olvidaste tu contraseña?"
 	var btn_olvide := _btn_link("¿Olvidaste tu contraseña?",
-								Color(0.40, 0.72, 1.0))
+								TEMA.CIAN)
 	var vlogin := _btn_reg.get_parent() as VBoxContainer
 	vlogin.add_child(btn_olvide)
 	vlogin.move_child(btn_olvide, _btn_reg.get_index() + 1)
@@ -225,7 +233,7 @@ func _ready() -> void:
 	_spinner_label.text = ""
 	_spinner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_spinner_label.add_theme_font_size_override("font_size", 22)
-	_spinner_label.add_theme_color_override("font_color", Color(0.35, 0.92, 0.46))
+	_spinner_label.add_theme_color_override("font_color", TEMA.VERDE)
 	_spinner_label.visible = false
 	vlogin.add_child(_spinner_label)
 
@@ -284,12 +292,12 @@ func _aplicar_estilo_panel_tscn() -> void:
 		if fuente_pixel:
 			titulo.add_theme_font_override("font", fuente_pixel)
 		titulo.add_theme_font_size_override("font_size", 16)
-		titulo.add_theme_color_override("font_color", Color(0.35, 0.95, 0.50))
+		titulo.add_theme_color_override("font_color", TEMA.VERDE)
 
 	# Subtítulo "Inicia sesión..." (index 3)
 	var sub := vlogin.get_child(3) as Label
 	if sub:
-		sub.add_theme_color_override("font_color", Color(0.52, 0.68, 0.55))
+		sub.add_theme_color_override("font_color", TEMA.TEXTO_3)
 		sub.add_theme_font_size_override("font_size", 11)
 
 	_estilizar_input(_email_in)
@@ -325,14 +333,18 @@ func _style_panel() -> StyleBoxFlat:
 	# (referencia: panel de login con look de terminal azul/cian, en vez
 	# del verde que tenía el panel antes). El verde se conserva como
 	# color de marca en el botón LOGIN, ver _estilizar_btn_primario.
+	# Sin sombra proyectada: es el recurso menos "plano" que había y no
+	# aporta información. El resplandor de foco/hover de los controles sí se
+	# conserva, porque eso es respuesta a la interacción, no profundidad.
 	var sb := StyleBoxFlat.new()
-	sb.bg_color     = Color(0.075, 0.095, 0.125, 0.92)
-	sb.border_color = Color(0.30, 0.65, 0.85, 0.85)
+	# Mismo color que los paneles del HUD, pero más opaco: en el mapa el
+	# panel se apoya sobre césped plano y el 86 % alcanza; acá va encima de
+	# una ilustración con mucho detalle y a esa transparencia el formulario
+	# pierde legibilidad.
+	sb.bg_color     = Color(TEMA.PANEL_BG, 0.96)
+	sb.border_color = Color(TEMA.CIAN, 0.85)
 	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(14)
-	sb.shadow_color  = Color(0.20, 0.55, 0.78, 0.35)
-	sb.shadow_size   = 12
-	sb.shadow_offset = Vector2(0, 5)
+	sb.set_corner_radius_all(12)
 	sb.content_margin_left   = 26
 	sb.content_margin_right  = 26
 	sb.content_margin_top    = 22
@@ -344,8 +356,8 @@ func _estilizar_input(le: LineEdit) -> void:
 	le.custom_minimum_size = Vector2(290, 40)
 
 	var sb_n := StyleBoxFlat.new()
-	sb_n.bg_color     = Color(0.055, 0.075, 0.100, 0.96)
-	sb_n.border_color = Color(0.24, 0.34, 0.44, 0.70)
+	sb_n.bg_color     = TEMA.POPOVER_BG
+	sb_n.border_color = Color(TEMA.VACIO, 0.9)
 	sb_n.set_border_width_all(1)
 	sb_n.set_corner_radius_all(8)
 	sb_n.content_margin_left   = 12
@@ -355,15 +367,15 @@ func _estilizar_input(le: LineEdit) -> void:
 	le.add_theme_stylebox_override("normal", sb_n)
 
 	var sb_f := sb_n.duplicate() as StyleBoxFlat
-	sb_f.border_color = Color(0.35, 0.75, 0.95, 1.0)
+	sb_f.border_color = TEMA.CIAN
 	sb_f.set_border_width_all(2)
-	sb_f.shadow_color = Color(0.25, 0.65, 0.90, 0.30)
+	sb_f.shadow_color = Color(TEMA.CIAN, 0.30)
 	sb_f.shadow_size  = 7
 	le.add_theme_stylebox_override("focus", sb_f)
 
-	le.add_theme_color_override("font_color",             Color(0.90, 0.95, 0.98))
-	le.add_theme_color_override("font_placeholder_color", Color(0.42, 0.52, 0.62))
-	le.add_theme_color_override("caret_color",            Color(0.45, 0.85, 0.98))
+	le.add_theme_color_override("font_color",             TEMA.TEXTO)
+	le.add_theme_color_override("font_placeholder_color", TEMA.APAGADO)
+	le.add_theme_color_override("caret_color",            TEMA.CIAN)
 	le.add_theme_font_size_override("font_size", 13)
 
 
@@ -372,14 +384,14 @@ func _estilizar_btn_primario(btn: Button) -> void:
 	# sólido — pedido explícito del usuario mostrando una referencia con
 	# ese estilo. Verde: es el botón principal (LOGIN), mantiene el color
 	# de marca de GreenMetric.
-	_estilizar_btn_contorno(btn, Color(0.30, 0.90, 0.45))
+	_estilizar_btn_contorno(btn, TEMA.VERDE)
 	btn.add_theme_font_size_override("font_size", 14)
 
 
 func _estilizar_btn_secundario(btn: Button) -> void:
 	# Mismo tratamiento de contorno que el primario, pero en cian — el
 	# botón secundario (ej. "Crear cuenta") de la referencia del usuario.
-	_estilizar_btn_contorno(btn, Color(0.35, 0.80, 0.95))
+	_estilizar_btn_contorno(btn, TEMA.CIAN)
 	btn.add_theme_font_size_override("font_size", 13)
 
 
@@ -390,11 +402,11 @@ func _estilizar_btn_contorno(btn: Button, col: Color) -> void:
 
 	var mk := func(bg_a: float, border_a: float) -> StyleBoxFlat:
 		var s := StyleBoxFlat.new()
-		s.bg_color     = Color(0.06, 0.09, 0.10, bg_a)
-		s.border_color = Color(col.r, col.g, col.b, border_a)
+		s.bg_color     = Color(TEMA.PANEL_BG, bg_a)
+		s.border_color = Color(col, border_a)
 		s.set_border_width_all(2)
-		s.set_corner_radius_all(11)
-		s.shadow_color  = Color(col.r, col.g, col.b, 0.30)
+		s.set_corner_radius_all(10)
+		s.shadow_color  = Color(col, 0.30)
 		s.shadow_size   = 6
 		s.content_margin_top    = 10
 		s.content_margin_bottom = 10
@@ -409,7 +421,7 @@ func _estilizar_btn_contorno(btn: Button, col: Color) -> void:
 
 func _estilizar_option(ob: OptionButton) -> void:
 	ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ob.add_theme_color_override("font_color", Color(0.85, 0.95, 0.87))
+	ob.add_theme_color_override("font_color", TEMA.TEXTO_2)
 	ob.add_theme_font_size_override("font_size", 12)
 
 
@@ -473,7 +485,7 @@ func _crear_panel_registro() -> void:
 	vbox.add_child(_btn_crear)
 	_btn_crear.pressed.connect(_on_registro_pressed)
 
-	var btn_volver_reg := _btn_link("← Volver al login", Color(0.40, 0.72, 1.0))
+	var btn_volver_reg := _btn_link("← Volver al login", TEMA.CIAN)
 	vbox.add_child(btn_volver_reg)
 	btn_volver_reg.pressed.connect(func(): _cambiar_panel("login"))
 
@@ -501,7 +513,7 @@ func _crear_panel_recuperacion() -> void:
 	desc1.text = "Ingresa tu correo registrado y te enviaremos\nun código de 6 dígitos para restablecer tu contraseña."
 	desc1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc1.autowrap_mode = TextServer.AUTOWRAP_WORD
-	desc1.add_theme_color_override("font_color", Color(0.58, 0.75, 0.62))
+	desc1.add_theme_color_override("font_color", TEMA.TEXTO_3)
 	desc1.add_theme_font_size_override("font_size", 12)
 	_rec_paso1.add_child(desc1)
 
@@ -525,7 +537,7 @@ func _crear_panel_recuperacion() -> void:
 	desc2.text = "Ingresa el código de 6 dígitos que te enviamos por correo."
 	desc2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc2.autowrap_mode = TextServer.AUTOWRAP_WORD
-	desc2.add_theme_color_override("font_color", Color(0.58, 0.75, 0.62))
+	desc2.add_theme_color_override("font_color", TEMA.TEXTO_3)
 	desc2.add_theme_font_size_override("font_size", 12)
 	_rec_paso2.add_child(desc2)
 
@@ -539,7 +551,7 @@ func _crear_panel_recuperacion() -> void:
 	_rec_paso2.add_child(_btn_verificar)
 	_btn_verificar.pressed.connect(_on_verificar_codigo_pressed)
 
-	var btn_reenviar := _btn_link("← Pedir otro código", Color(0.40, 0.72, 1.0))
+	var btn_reenviar := _btn_link("← Pedir otro código", TEMA.CIAN)
 	_rec_paso2.add_child(btn_reenviar)
 	btn_reenviar.pressed.connect(func():
 		_rec_paso1.visible = true
@@ -556,7 +568,7 @@ func _crear_panel_recuperacion() -> void:
 	desc3.text = "Código verificado. Escribe tu contraseña nueva."
 	desc3.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc3.autowrap_mode = TextServer.AUTOWRAP_WORD
-	desc3.add_theme_color_override("font_color", Color(0.58, 0.75, 0.62))
+	desc3.add_theme_color_override("font_color", TEMA.TEXTO_3)
 	desc3.add_theme_font_size_override("font_size", 12)
 	_rec_paso3.add_child(desc3)
 
@@ -571,7 +583,7 @@ func _crear_panel_recuperacion() -> void:
 	_rec_paso3.add_child(_btn_cambiar)
 	_btn_cambiar.pressed.connect(_on_cambiar_pass_pressed)
 
-	var btn_volver_rec := _btn_link("← Volver al login", Color(0.40, 0.72, 1.0))
+	var btn_volver_rec := _btn_link("← Volver al login", TEMA.CIAN)
 	vbox.add_child(btn_volver_rec)
 	btn_volver_rec.pressed.connect(func(): _cambiar_panel("login"))
 
@@ -671,15 +683,15 @@ func _on_login_pressed() -> void:
 	var email := _email_in.text.strip_edges()
 	var pass_ := _pass_in.text
 	if email.is_empty() or pass_.is_empty():
-		_msg(_msg_login, "Completa todos los campos.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_login, "Completa todos los campos.", TEMA.DORADO)
 		_shake(_center)
 		return
 	if not email.contains("@"):
-		_msg(_msg_login, "El correo no es válido.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_login, "El correo no es válido.", TEMA.DORADO)
 		_shake(_center)
 		return
 	_set_cargando(true)
-	_msg(_msg_login, "Conectando...", Color(0.65, 0.90, 0.70))
+	_msg(_msg_login, "Conectando...", TEMA.TEXTO_2)
 	SupabaseManager.login(email, pass_)
 
 
@@ -693,21 +705,21 @@ func _on_registro_pressed() -> void:
 	var trimestre := _reg_trimestre.selected + 1
 
 	if nombre.is_empty() or cedula.is_empty() or email.is_empty() or pass_.is_empty():
-		_msg(_msg_reg, "Completa todos los campos obligatorios (*).", Color(0.98, 0.82, 0.12))
+		_msg(_msg_reg, "Completa todos los campos obligatorios (*).", TEMA.DORADO)
 		_shake(_panel_reg); return
 	var error_email := _validar_email(email)
 	if not error_email.is_empty():
-		_msg(_msg_reg, error_email, Color(0.98, 0.82, 0.12))
+		_msg(_msg_reg, error_email, TEMA.DORADO)
 		_shake(_panel_reg); return
 	if pass_.length() < 6:
-		_msg(_msg_reg, "La contraseña debe tener al menos 6 caracteres.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_reg, "La contraseña debe tener al menos 6 caracteres.", TEMA.DORADO)
 		_shake(_panel_reg); return
 	if pass_ != confirm_:
-		_msg(_msg_reg, "Las contraseñas no coinciden.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_reg, "Las contraseñas no coinciden.", TEMA.DORADO)
 		_shake(_panel_reg); return
 
 	_set_cargando(true)
-	_msg(_msg_reg, "Creando cuenta...", Color(0.65, 0.90, 0.70))
+	_msg(_msg_reg, "Creando cuenta...", TEMA.TEXTO_2)
 	SupabaseManager.registrar(email, pass_, {
 		"nombre"  : nombre,
 		"cedula"  : cedula,
@@ -719,23 +731,23 @@ func _on_registro_pressed() -> void:
 func _on_recuperar_pressed() -> void:
 	var email := _rec_email.text.strip_edges()
 	if email.is_empty():
-		_msg(_msg_rec, "Ingresa tu correo.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_rec, "Ingresa tu correo.", TEMA.DORADO)
 		_shake(_panel_rec); return
 	if not email.contains("@"):
-		_msg(_msg_rec, "Correo no válido.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_rec, "Correo no válido.", TEMA.DORADO)
 		_shake(_panel_rec); return
 	_set_cargando(true)
-	_msg(_msg_rec, "Enviando código...", Color(0.65, 0.90, 0.70))
+	_msg(_msg_rec, "Enviando código...", TEMA.TEXTO_2)
 	SupabaseManager.recuperar_contrasena(email)
 
 
 func _on_verificar_codigo_pressed() -> void:
 	var codigo := _rec_codigo.text.strip_edges()
 	if codigo.length() != 6:
-		_msg(_msg_rec, "El código tiene 6 dígitos.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_rec, "El código tiene 6 dígitos.", TEMA.DORADO)
 		_shake(_panel_rec); return
 	_set_cargando(true)
-	_msg(_msg_rec, "Verificando...", Color(0.65, 0.90, 0.70))
+	_msg(_msg_rec, "Verificando...", TEMA.TEXTO_2)
 	SupabaseManager.verificar_codigo_recuperacion(_rec_email.text.strip_edges(), codigo)
 
 
@@ -743,13 +755,13 @@ func _on_cambiar_pass_pressed() -> void:
 	var nueva     := _rec_pass_nueva.text
 	var confirmar := _rec_pass_confirmar.text
 	if nueva.length() < 6:
-		_msg(_msg_rec, "La contraseña debe tener al menos 6 caracteres.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_rec, "La contraseña debe tener al menos 6 caracteres.", TEMA.DORADO)
 		_shake(_panel_rec); return
 	if nueva != confirmar:
-		_msg(_msg_rec, "Las contraseñas no coinciden.", Color(0.98, 0.82, 0.12))
+		_msg(_msg_rec, "Las contraseñas no coinciden.", TEMA.DORADO)
 		_shake(_panel_rec); return
 	_set_cargando(true)
-	_msg(_msg_rec, "Actualizando contraseña...", Color(0.65, 0.90, 0.70))
+	_msg(_msg_rec, "Actualizando contraseña...", TEMA.TEXTO_2)
 	SupabaseManager.establecer_nueva_contrasena(nueva)
 
 
@@ -759,7 +771,7 @@ func _on_cambiar_pass_pressed() -> void:
 func _en_login_exitoso(_datos: Dictionary) -> void:
 	_set_cargando(false)
 	_login_es_post_registro = false
-	_msg(_msg_login, "¡Bienvenido al campus!", Color(0.28, 0.95, 0.45))
+	_msg(_msg_login, "¡Bienvenido al campus!", TEMA.VERDE)
 	await _preparar_progreso_y_entrar(_msg_login)
 
 
@@ -769,7 +781,7 @@ func _en_login_fallido(error: String, error_code: String) -> void:
 		_login_es_post_registro = false
 		_resolver_login_post_registro_fallido(error, error_code)
 		return
-	_msg(_msg_login, error, Color(0.95, 0.30, 0.30))
+	_msg(_msg_login, error, TEMA.ALERTA)
 	_shake(_center)
 
 
@@ -777,7 +789,7 @@ func _en_login_fallido(error: String, error_code: String) -> void:
 # directo, sin ningún mensaje de error de por medio.
 func _en_registro_exitoso(_usuario: Dictionary) -> void:
 	_set_cargando(false)
-	_msg(_msg_reg, "¡Cuenta creada! Entrando al campus...", Color(0.28, 0.95, 0.45))
+	_msg(_msg_reg, "¡Cuenta creada! Entrando al campus...", TEMA.VERDE)
 	await get_tree().create_timer(1.0).timeout
 	await _preparar_progreso_y_entrar(_msg_reg)
 
@@ -801,7 +813,7 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 		"si" if not SupabaseManager.jwt_token.is_empty() else "NO",
 	])
 	NivelManager.iniciar_sesion(SupabaseManager.user_id)
-	_msg(msg_lbl, "Cargando tu progreso...", Color(0.65, 0.90, 0.70))
+	_msg(msg_lbl, "Cargando tu progreso...", TEMA.TEXTO_2)
 	var lista = await _cargar_misiones_con_timeout()
 	if lista is Array:
 		print("SceneLogin: el servidor devolvió %d misiones completadas" % lista.size())
@@ -918,7 +930,7 @@ func _cargar_misiones_con_timeout() -> Variant:
 # estado de la cuenta, probamos loguearnos con las credenciales que ya
 # están en los campos del formulario y actuamos según ESA respuesta.
 func _en_registro_sin_sesion() -> void:
-	_msg(_msg_reg, "Verificando tu cuenta...", Color(0.65, 0.90, 0.70))
+	_msg(_msg_reg, "Verificando tu cuenta...", TEMA.TEXTO_2)
 	_login_es_post_registro = true
 	var email := _reg_email.text.strip_edges().to_lower().replace(" ", "")
 	SupabaseManager.login(email, _reg_pass.text)
@@ -926,7 +938,7 @@ func _en_registro_sin_sesion() -> void:
 
 func _en_registro_fallido(error: String) -> void:
 	_set_cargando(false)
-	_msg(_msg_reg, error, Color(0.95, 0.30, 0.30))
+	_msg(_msg_reg, error, TEMA.ALERTA)
 	_shake(_panel_reg)
 
 
@@ -939,10 +951,10 @@ func _resolver_login_post_registro_fallido(error: String, error_code: String) ->
 	var color : Color
 	if _es_error_correo_no_confirmado(error, error_code):
 		msg   = "Cuenta creada. Te enviamos un correo para confirmarla. Confirmala y volvé a iniciar sesión acá."
-		color = Color(0.28, 0.95, 0.45)   # mismo verde de éxito que ya usa el formulario
+		color = TEMA.VERDE   # mismo verde de éxito que ya usa el formulario
 	else:
 		msg   = "Tu cuenta se creó. Iniciá sesión para entrar."
-		color = Color(0.65, 0.90, 0.70)   # mismo neutro que "Conectando..." / "Creando cuenta..."
+		color = TEMA.TEXTO_2   # mismo neutro que "Conectando..." / "Creando cuenta..."
 	_cambiar_panel("login")
 	_email_in.text = email
 	_msg(_msg_login, msg, color)
@@ -966,14 +978,14 @@ func _en_recuperacion_enviada() -> void:
 	_set_cargando(false)
 	_msg(_msg_rec,
 		"¡Código enviado!\nRevisa tu bandeja y la carpeta de spam.",
-		Color(0.28, 0.95, 0.45))
+		TEMA.VERDE)
 	_rec_paso1.visible = false
 	_rec_paso2.visible = true
 
 
 func _en_recuperacion_fallida(error: String) -> void:
 	_set_cargando(false)
-	_msg(_msg_rec, error, Color(0.95, 0.30, 0.30))
+	_msg(_msg_rec, error, TEMA.ALERTA)
 
 
 func _en_codigo_verificado() -> void:
@@ -985,13 +997,13 @@ func _en_codigo_verificado() -> void:
 
 func _en_codigo_fallido(error: String) -> void:
 	_set_cargando(false)
-	_msg(_msg_rec, error, Color(0.95, 0.30, 0.30))
+	_msg(_msg_rec, error, TEMA.ALERTA)
 	_shake(_panel_rec)
 
 
 func _en_contrasena_actualizada() -> void:
 	_set_cargando(false)
-	_msg(_msg_rec, "¡Contraseña actualizada! Ya puedes iniciar sesión.", Color(0.28, 0.95, 0.45))
+	_msg(_msg_rec, "¡Contraseña actualizada! Ya puedes iniciar sesión.", TEMA.VERDE)
 	await get_tree().create_timer(2.5).timeout
 	_resetear_panel_recuperacion()
 	_cambiar_panel("login")
@@ -999,7 +1011,7 @@ func _en_contrasena_actualizada() -> void:
 
 func _en_actualizar_contrasena_fallido(error: String) -> void:
 	_set_cargando(false)
-	_msg(_msg_rec, error, Color(0.95, 0.30, 0.30))
+	_msg(_msg_rec, error, TEMA.ALERTA)
 	_shake(_panel_rec)
 
 
@@ -1010,7 +1022,7 @@ func _en_error_red(mensaje: String) -> void:
 	# un 401/403 del servidor, y sin él no hay forma de diagnosticar nada en
 	# el export web.
 	push_error("SceneLogin: error de red -> " + mensaje)
-	_msg(_msg_login, mensaje, Color(0.95, 0.30, 0.30))
+	_msg(_msg_login, mensaje, TEMA.ALERTA)
 	if is_instance_valid(_msg_reg): _msg_reg.text = "Sin conexión: " + mensaje
 	if is_instance_valid(_msg_rec): _msg_rec.text = "Sin conexión."
 
@@ -1072,7 +1084,7 @@ func _lbl(vbox: VBoxContainer, texto: String) -> void:
 	var l := Label.new()
 	l.text = texto
 	l.add_theme_font_size_override("font_size", 11)
-	l.add_theme_color_override("font_color", Color(0.62, 0.78, 0.65))
+	l.add_theme_color_override("font_color", TEMA.TEXTO_3)
 	vbox.add_child(l)
 
 
@@ -1080,7 +1092,7 @@ func _lbl_sec(vbox: VBoxContainer, texto: String) -> void:
 	var l := Label.new()
 	l.text = "▸ " + texto
 	l.add_theme_font_size_override("font_size", 10)
-	l.add_theme_color_override("font_color", Color(0.30, 0.78, 0.42))
+	l.add_theme_color_override("font_color", TEMA.VERDE)
 	vbox.add_child(l)
 
 
