@@ -6,7 +6,6 @@ extends Node
 
 # ── Señales ──────────────────────────────────────────────────
 signal ecocredits_cambiados(total: int)
-signal energia_cambiada(actual: int, maximo: int)
 signal insignia_obtenida(id: String, nombre: String, icono: String)
 
 # ── EcoCredits ────────────────────────────────────────────────
@@ -42,16 +41,14 @@ var _ops_en_vuelo : int = 0
 var _misiones_por_cobrar : Dictionary = {}
 var _contador_refs : int = 0
 
-# ── Energía / Vidas ──────────────────────────────────────────
-# PENDIENTE DE DECISIÓN: los 3 corazones del HUD son decorativos. El código
-# que bajaba la energía (on_fallo_quiz, racha de fallos) y el que la
-# recuperaba (25 EC, o un quiz remedial de 7 preguntas) nunca tuvo quien lo
-# llamara desde ninguna pantalla, así que se borró el 2026-09-20 — está en
-# git si se quiere recuperar. Queda el estado porque el HUD lo dibuja
-# (hud_ficha_jugador.set_energia). Hay que decidir una de dos: darle
-# significado a las vidas, o sacar los corazones de la ficha.
-const MAX_ENERGIA   : int = 3
-var energia_actual  : int = 3
+# Sin sistema de vidas/energía. La Tabla 10 del Cap. 4 (encuesta a
+# estudiantes) proponía vidas con bloqueo temporal, pero la Tabla 15
+# (encuesta a la experta del Departamento de Sustentabilidad) descarta
+# explícitamente el bloqueo y elige "penalización inmediata y permitir el
+# reintento" — que es lo que el juego implementa (Regla Mixta del Nivel 5).
+# Se siguió el criterio experto; los 3 corazones del HUD se quitaron el
+# 2026-09-20 porque eran la única señal visual que lo contradecía.
+# Ver docs/auditoria_capitulo4.md.
 
 # ── Insignias ─────────────────────────────────────────────────
 const INSIGNIAS : Dictionary = {

@@ -20,9 +20,9 @@ func _ready() -> void:
 	print("test_hud_paneles")
 	var f = FICHA.new()
 	add_child(f)
-	f.set_energia(2, 3)
-	_check(f.corazones.size() == 3, "3 corazones")
-	_check(f.corazones[2].get_theme_color("font_color").is_equal_approx(Color("#3A4550")), "corazón vacío gris")
+	# Sin vidas: se siguió el criterio experto de la Tabla 15 (penalización
+	# con reintento, sin bloqueo), no la Tabla 10. Ver docs/auditoria_capitulo4.md.
+	_check(not f.has_method("set_energia"), "la ficha ya no dibuja corazones de vida")
 	f.set_nivel_misiones(6, [true, true, true, true, false, false])
 	_check(f.nivel_lbl.text == "Nivel 6/6 · Educación", "nivel de misiones: %s" % f.nivel_lbl.text)
 	_check(f.pasos.size() == 6, "6 pasos")

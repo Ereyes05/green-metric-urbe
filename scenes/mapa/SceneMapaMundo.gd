@@ -1339,7 +1339,6 @@ func _init_sistemas_eva() -> void:
 
 	# Señales EconomiaManager
 	EconomiaManager.ecocredits_cambiados.connect(_on_creditos_cambiados)
-	EconomiaManager.energia_cambiada.connect(_on_energia_cambiada)
 	EconomiaManager.insignia_obtenida.connect(_on_insignia_obtenida)
 
 	_actualizar_hud_economia()
@@ -1348,10 +1347,11 @@ func _init_sistemas_eva() -> void:
 	# por cuenta (no por máquina) a propósito: con un archivo global, en
 	# una sala de computación compartida solo el primer estudiante vería
 	# el tutorial — ver NivelManager.ruta_usuario().
-	var _TUTORIAL_FLAG := NivelManager.ruta_usuario("tutorial_visto")
-	if not FileAccess.file_exists(_TUTORIAL_FLAG):
-		var _tf := FileAccess.open(_TUTORIAL_FLAG, FileAccess.WRITE)
-		if _tf: _tf.store_string("1"); _tf.close()
+	# La marca se escribe al TERMINARLO (_on_tutorial_completado), no acá:
+	# antes se guardaba antes de mostrarlo, así que si el estudiante cerraba
+	# el juego a mitad del tutorial no lo volvía a ver nunca. La Tabla 11 del
+	# Cap. 4 lo pide obligatorio (65% de la muestra).
+	if not FileAccess.file_exists(NivelManager.ruta_usuario("tutorial_visto")):
 		await get_tree().create_timer(0.6).timeout
 		_tutorial_ui.iniciar()
 
@@ -1369,7 +1369,6 @@ func _process(delta: float) -> void:
 func _actualizar_hud_economia() -> void:
 	if _hud_ficha:
 		_hud_ficha.set_creditos(EconomiaManager.ecocredits)
-		_hud_ficha.set_energia(EconomiaManager.energia_actual, EconomiaManager.MAX_ENERGIA)
 
 
 func _on_creditos_cambiados(total: int) -> void:
@@ -1377,13 +1376,16 @@ func _on_creditos_cambiados(total: int) -> void:
 		_hud_ficha.set_creditos(total)
 
 
-func _on_energia_cambiada(actual: int, maximo: int) -> void:
-	if _hud_ficha:
-		_hud_ficha.set_energia(actual, maximo)
-
-
 func _on_tutorial_completado() -> void:
-	pass  # crises solo se desbloquean al completar el juego
+	# Recién acá queda marcado como visto para esta cuenta. Las crisis no se
+	# desbloquean con el tutorial, sino al completar el juego.
+	var ruta := NivelManager.ruta_usuario("tutorial_visto")
+	var f := FileAccess.open(ruta, FileAccess.WRITE)
+	if f:
+		f.store_string("1")
+		f.close()
+	else:
+		push_warning("No se pudo marcar el tutorial como visto: %s" % ruta)
 
 
 func _on_crisis_resulta(modulo_id: int, exito: bool) -> void:

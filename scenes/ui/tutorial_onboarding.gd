@@ -51,7 +51,6 @@ var _titulo_lbl    : Label         = null
 var _texto_lbl     : Label         = null
 var _dots_row      : HBoxContainer = null
 var _btn_siguiente : Button        = null
-var _btn_saltar    : Button        = null
 var _acento        : ColorRect     = null
 
 
@@ -83,7 +82,6 @@ func _mostrar_paso() -> void:
 
 	var es_ultimo := (_paso_actual == PASOS.size() - 1)
 	_btn_siguiente.text = "  ¡Comenzar!  🚀" if es_ultimo else "  Siguiente  →  "
-	_btn_saltar.visible = not es_ultimo
 
 	_actualizar_dots()
 
@@ -250,18 +248,6 @@ func _crear_ui() -> void:
 	btn_row.add_theme_constant_override("separation", 20)
 	vbox.add_child(btn_row)
 
-	_btn_saltar = Button.new()
-	_btn_saltar.text = "Saltar intro"
-	_btn_saltar.add_theme_font_size_override("font_size", 12)
-	_btn_saltar.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
-	var s_skip := StyleBoxFlat.new()
-	s_skip.bg_color     = Color(0.07, 0.09, 0.14)
-	s_skip.border_color = Color(0.20, 0.26, 0.40)
-	s_skip.set_border_width_all(1)
-	s_skip.set_corner_radius_all(8)
-	_btn_saltar.add_theme_stylebox_override("normal", s_skip)
-	_btn_saltar.pressed.connect(_finalizar)
-	btn_row.add_child(_btn_saltar)
 
 	_btn_siguiente = Button.new()
 	_btn_siguiente.text = "  Siguiente  →  "

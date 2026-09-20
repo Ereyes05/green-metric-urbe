@@ -1,6 +1,6 @@
 # ============================================================
 # hud_ficha_jugador.gd — ficha arriba a la izquierda (spec 2b §1):
-# nombre y vidas, nivel de misiones con 6 pasos, rango + EcoCredits y
+# nombre, nivel de misiones con 6 pasos, rango + EcoCredits y
 # barra hacia el siguiente rango. Solo muestra lo que le pasan; no lee
 # autoloads.
 #
@@ -16,7 +16,6 @@ const TEMA   := preload("res://scenes/ui/hud_tema.gd")
 const BARRA  := preload("res://scenes/ui/hud_barra.gd")
 const RANGOS := preload("res://autoload/rangos.gd")
 
-var corazones    : Array[Label] = []
 var pasos        : Array[Panel] = []
 var nivel_lbl    : Label
 var rango_lbl    : Label
@@ -36,18 +35,12 @@ func _init() -> void:
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(vb)
 
-	# Fila 1: nombre + vidas
+	# Fila 1: nombre
 	var f1 := _hbox(6)
 	f1.add_child(TEMA.label("🌿", 14, TEMA.TEXTO))
 	var nom := TEMA.label("Eco-Ranger", 11, TEMA.TEXTO, 400, true)
 	nom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	f1.add_child(nom)
-	var vidas := _hbox(2)
-	for i in 3:
-		var c := TEMA.label("♥", 12, TEMA.VIDAS)
-		corazones.append(c)
-		vidas.add_child(c)
-	f1.add_child(vidas)
 	vb.add_child(f1)
 
 	# Fila 2: nivel de misiones
@@ -110,12 +103,6 @@ func _hbox(sep: int) -> HBoxContainer:
 	h.add_theme_constant_override("separation", sep)
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return h
-
-
-func set_energia(actual: int, maximo: int) -> void:
-	for i in corazones.size():
-		corazones[i].visible = i < maximo
-		corazones[i].add_theme_color_override("font_color", TEMA.VIDAS if i < actual else TEMA.VACIO)
 
 
 func set_nivel_misiones(nivel: int, hechos: Array) -> void:

@@ -21,8 +21,8 @@
 | 7 | Trivia contrarreloj + módulo de simulación de decisiones | 🟢 Cumplido |
 | 8 | *"se contempla"* Web Push API / Service Workers | 🟡 No existe, pero el verbo lo salva |
 | 9 | Microlearning: sesiones de 10–15 min | ⚪ Sin verificar (medible hoy) |
-| 10 | Sistema de vidas + reposición con quiz remedial | 🔴 **No cumplido** — ver nota abajo |
-| 11 | Tutorial interactivo **obligatorio** | 🟡 Existe, pero no es obligatorio |
+| 10 | Sistema de vidas + reposición con quiz remedial | 🟢 **Superada por la Tabla 15** (2026-09-20) |
+| 11 | Tutorial interactivo **obligatorio** | 🟢 Cumplido (2026-09-20) |
 | 12 | Progresión por rangos Semilla→Brote→Árbol→Estratega | 🟢 Cumplido |
 | 13 | Simuladores de decisión sobre casos | 🟢 Cumplido |
 | 14 | Eco-puntos canjeables **por insignias** | 🟡 Canjeables por herramientas, no por insignias |
@@ -31,7 +31,11 @@
 | 17 | Zonas verdes (M1) y puntos de residuos (M3) | 🟢 Cumplido |
 | 18 | Minijuego de clasificación con tiempo límite | 🟢 Cumplido |
 
-**11 cumplidas, 4 parciales, 3 no cumplidas, 1 sin verificar.**
+**13 cumplidas, 2 parciales, 2 no cumplidas, 1 sin verificar.**
+
+> **Actualizado el 2026-09-20** tras la primera tanda de arreglos: las
+> Tablas 10 y 11 pasaron a cumplidas. El detalle original de cada una se
+> conserva abajo con la nota de cómo se resolvió.
 
 ---
 
@@ -71,7 +75,11 @@ Lo que sí funciona: `m1..m6_completo`, `quiz_perfecto`, `crisis_resuelta` y `ec
 
 **Divulgación completa:** el código que implementaba esto (`on_fallo_quiz` con racha de fallos, `recuperar_con_remedial`, `recuperar_con_creditos` y 7 preguntas remediales) existía pero **nunca estuvo conectado a ninguna pantalla**, y se borró el 2026-09-20 en el commit `38b2d1a` durante la limpieza de código muerto. Está recuperable en git. Estaba muerto porque la funcionalidad quedó a medio hacer, no porque se hubiera descartado.
 
-**Pero hay una salida buena, y sale del propio capítulo** — ver abajo.
+**RESUELTO el 2026-09-20.** Se siguió el criterio experto de la Tabla 15 (ver
+abajo) y se quitó el sistema de energía completo, incluidos los 3 corazones
+del HUD, que eran la única señal visual que contradecía esa decisión. La
+promesa de la Tabla 10 no se cumple, pero está superada por un criterio de
+mayor autoridad que el propio capítulo documenta.
 
 ---
 
@@ -99,7 +107,7 @@ Queda un detalle cosmético: **si no hay vidas, los 3 corazones del HUD no deber
 |---|---|
 | **2** — Flat Design | El HUD del mapa ya es plano (2026-09-16). **El login sigue en pixel art** con fuente Press Start 2P, y es la primera pantalla que ve el jurado. La Tabla 2 dice 65% plano contra 10% pixel art. |
 | **8** — Push | No existe ningún módulo de notificaciones. El `serviceWorker` que aparece en el build es código propio de Godot, no un módulo de avisos. **Riesgo bajo:** el texto dice *"se contempla el desarrollo"*, que se lee como consideración de diseño, no como entrega. |
-| **11** — Tutorial obligatorio | `tutorial_onboarding.gd` existe y su contenido es bueno, pero se marca como visto en `user://tutorial_visto.dat`, que es **por máquina, no por cuenta**. Y no es obligatorio: se puede cerrar. |
+| **11** — Tutorial obligatorio | ✅ **Resuelto el 2026-09-20.** Dos correcciones: la marca de "visto" se escribía **antes** de mostrar el tutorial, así que si el estudiante cerraba el juego a mitad no lo veía nunca más — ahora se escribe al terminarlo. Y se quitó el botón "Saltar intro", que contradecía el *"obligatorio"* de la tabla. (La ruta del archivo ya era por cuenta, no por máquina: eso estaba desactualizado en `ESTADO_PROYECTO.md`.) |
 | **14** — Eco-puntos canjeables por insignias | Los EcoCredits se canjean por **herramientas y cosméticos** (kits, termo, credencial, estela, título), no por insignias. La promesa dice *"canjeables por insignias digitales de estatus"*. Está cerca: `titulo_embajador` y `credencial_voluntario` son cosméticos de estatus. Puede resolverse redactando, o renombrando esos ítems como insignias. |
 
 ---
@@ -120,8 +128,8 @@ Es la única promesa del capítulo que podés **demostrar con evidencia del prop
 3. Acotar la promesa de la Tabla 6 a las insignias que sí existen, o asumir el trabajo de persistirlas.
 
 **Código, por relación esfuerzo/beneficio:**
-1. **Sacar los corazones del HUD** — minutos. Elimina la contradicción visual con la decisión de la Tabla 15.
-2. **Tutorial: mover `tutorial_visto` a la cuenta** — es el mismo bug que ya se arregló para los EcoCredits, con el mismo patrón.
+1. ~~**Sacar los corazones del HUD**~~ ✅ hecho el 2026-09-20.
+2. ~~**Tutorial obligatorio**~~ ✅ hecho el 2026-09-20.
 3. **Login a Flat Design** — cierra la Tabla 2 completa y es la primera pantalla que se ve.
 4. **HU-002** (*"al punto exacto donde lo dejó"*) — historia de usuario con criterio de aceptación escrito, a medio cumplir.
 5. **Persistir insignias** — el más caro; solo si se decide cumplir la Tabla 6 en vez de acotarla.

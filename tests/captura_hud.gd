@@ -28,7 +28,6 @@ func _ready() -> void:
 
 	var f = FICHA.new()
 	capa.add_child(f)
-	f.set_energia(3, 3)
 	f.set_nivel_misiones(6, [true, true, true, true, true, false])
 	f.set_rango(2, 0.45, 1578)
 	f.set_creditos(319)
