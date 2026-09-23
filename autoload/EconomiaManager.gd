@@ -223,6 +223,12 @@ func _on_compra_resuelta(respuesta: Dictionary, item_id: String) -> void:
 	if ok and not tiene_item(item_id):
 		inventario.append(item_id)
 		inventario_cambiado.emit()
+		# Los ítems de estatus (tipo 'avatar') otorgan además su insignia:
+		# la Tabla 14 del Cap. 4 pide Eco-puntos "canjeables por insignias
+		# digitales de estatus dentro del perfil". Quién la merece lo decide
+		# el servidor (sql/insignias_3_compras.sql); acá solo se le pide que
+		# reevalúe para que aparezca en el momento de comprarla.
+		evaluar_insignias()
 	_terminar_op(int(respuesta.get("saldo", -1)))
 	var mensaje := ""
 	if ok:
