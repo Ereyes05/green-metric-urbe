@@ -65,7 +65,11 @@ Tres incumplimientos en una sola frase:
 
 Lo que sí funciona: `m1..m6_completo`, `quiz_perfecto`, `crisis_resuelta` y `ecolider` se otorgan correctamente — pero solo hasta que cerrás el juego.
 
-**Salida:** persistir insignias en Supabase es trabajo real (tablas ya existen, faltan las RPC y el cliente). Las rachas de acceso son una funcionalidad nueva. Alternativa: acotar la promesa del Capítulo 4 a lo que hay.
+**Hallazgo posterior (2026-09-23): el capítulo lo afirma dos veces, y la segunda es peor.** El párrafo de la Fase III ("Integración de las mecánicas de gamificación en el código fuente") dice, en **pasado**: *"se integró el sistema de insignias, programando las condiciones que debe cumplir el estudiante para obtener cada recompensa **y guardándolas en su perfil**"*, y cierra con *"Todas estas mecánicas se conectaron con la base de datos, de modo que el progreso quedara guardado **de forma permanente**"*.
+
+La Tabla 6 está en futuro ("se definirá") y se puede leer como planificación. **Este párrafo no**: es una afirmación sobre lo construido. Es el punto más falsable del capítulo — alcanza con completar un nivel, cerrar el juego, volver a entrar y pedir ver la insignia.
+
+**Salida:** persistir insignias en Supabase es trabajo real (tablas ya existen, faltan las RPC y el cliente). Las rachas de acceso son una funcionalidad nueva. Alternativa: acotar la promesa del Capítulo 4 a lo que hay. Las dos redacciones, y la recomendación, están en `docs/redaccion_cap4_pendiente.md`.
 
 ### Tabla 10 — Sistema de vidas 🟢 (resuelta por la Tabla 15)
 
