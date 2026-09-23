@@ -25,13 +25,13 @@
 | 11 | Tutorial interactivo **obligatorio** | 🟢 Cumplido (2026-09-20) |
 | 12 | Progresión por rangos Semilla→Brote→Árbol→Estratega | 🟢 Cumplido |
 | 13 | Simuladores de decisión sobre casos | 🟢 Cumplido |
-| 14 | Eco-puntos canjeables **por insignias** | 🟡 Canjeables por herramientas, no por insignias |
+| 14 | Eco-puntos canjeables **por insignias** | 🟢 Cumplido (2026-09-23) |
 | 15 | Penalización + reintento, **sin bloqueo** | 🟢 Cumplido |
 | 16 | Datos mixtos: campus real + estándar GreenMetric | 🟢 Cumplido |
 | 17 | Zonas verdes (M1) y puntos de residuos (M3) | 🟢 Cumplido |
 | 18 | Minijuego de clasificación con tiempo límite | 🟢 Cumplido |
 
-**15 cumplidas, 1 parcial, 1 no cumplida, 1 sin verificar.**
+**16 cumplidas, 1 no cumplida, 1 sin verificar.**
 
 > **Actualizado el 2026-09-20** tras la primera tanda de arreglos: las Tablas
 > 2, 10 y 11 pasaron a cumplidas. El detalle original de cada una se conserva
@@ -172,7 +172,7 @@ relleno sólido.
 | **2** — Flat Design | ✅ **Resuelto el 2026-09-20.** Ver la corrección de diagnóstico abajo: el problema no era la tipografía sino que el login tenía su propia paleta. Ahora lee `hud_tema.gd`, igual que el HUD. |
 | **8** — Push | No existe ningún módulo de notificaciones. El `serviceWorker` que aparece en el build es código propio de Godot, no un módulo de avisos. **Riesgo bajo:** el texto dice *"se contempla el desarrollo"*, que se lee como consideración de diseño, no como entrega. |
 | **11** — Tutorial obligatorio | ✅ **Resuelto el 2026-09-20.** Dos correcciones: la marca de "visto" se escribía **antes** de mostrar el tutorial, así que si el estudiante cerraba el juego a mitad no lo veía nunca más — ahora se escribe al terminarlo. Y se quitó el botón "Saltar intro", que contradecía el *"obligatorio"* de la tabla. (La ruta del archivo ya era por cuenta, no por máquina: eso estaba desactualizado en `ESTADO_PROYECTO.md`.) |
-| **14** — Eco-puntos canjeables por insignias | Los EcoCredits se canjean por **herramientas y cosméticos** (kits, termo, credencial, estela, título), no por insignias. La promesa dice *"canjeables por insignias digitales de estatus"*. Está cerca: `titulo_embajador` y `credencial_voluntario` son cosméticos de estatus. Puede resolverse redactando, o renombrando esos ítems como insignias. |
+| **14** — Eco-puntos canjeables por insignias | ✅ **Resuelto el 2026-09-23** (`sql/insignias_3_compras.sql`, aplicada y verificada). Los dos ítems de estatus de la tienda —`estela_hojas` (90 EC) y `titulo_embajador` (150 EC), tipo `avatar`, sin efecto mecánico— otorgan ahora su insignia del perfil, así que la frase *"canjear por insignias digitales de estatus dentro del perfil"* es literal. Las herramientas y bonificaciones no otorgan ninguna: habilitan misiones o dan bonos, no son estatus. Y `ecolider` cuenta solo las que se ganan jugando (`por_compra = false`), para que coronar el juego no dependa de gastar 240 EC en cosméticos. |
 
 ---
 

@@ -7,6 +7,9 @@
 -- editor y dale Run. Al terminar debe decir "Success. No rows returned".
 --
 -- REQUIERE que insignias_1_migracion.sql ya esté aplicada.
+--
+-- ESTADO: APLICADA en producción el 2026-09-23. La prueba
+-- (insignias_4_prueba_compras.sql) corrió después y devolvió PRUEBA_OK.
 -- ============================================================
 --
 -- POR QUÉ: la Tabla 14 del Cap. 4 (instrumento a la experta del Depto. de
