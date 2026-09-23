@@ -6,6 +6,17 @@
 -- Abrí este archivo, seleccioná TODO (Ctrl+A), copiá (Ctrl+C), pegalo en el
 -- editor y dale Run. Al terminar debe decir "Success. No rows returned".
 -- ============================================================
+--
+-- ESTADO: APLICADA en producción el 2026-09-23. La prueba
+-- (insignias_2_prueba.sql) corrió después y devolvió PRUEBA_OK.
+--
+-- El diagnóstico del PASO 0 confirmó que existen dos tablas viejas del
+-- panel, `insignias` e `insignias_estudiante`, con OTRO diseño: los ids son
+-- integer y hay columnas condicion_tipo/condicion_valor, o sea que alguien
+-- empezó un motor de reglas declarativo y nunca lo conectó. Esta migración
+-- no las toca. Quedan sin uso y se pueden borrar cuando se confirme que no
+-- tienen filas que importen.
+-- ============================================================
 
 -- POR QUÉ: el Cap. 4 afirma que hay "un motor de reglas en el backend que
 -- dispare diferentes tipos de insignias" (Tabla 6) y que se integraron

@@ -17,7 +17,7 @@
 | 3 | Barra de XP visible + Supabase en tiempo real | 🟢 Cumplido |
 | 4 | Ranking global e interactivo | 🟢 Cumplido |
 | 5 | Narrativa + desbloqueo secuencial de zonas | 🟢 Cumplido |
-| 6 | *"motor de reglas en el backend"* de insignias, con rachas de acceso | 🔴 **No cumplido** |
+| 6 | *"motor de reglas en el backend"* de insignias, con rachas de acceso | 🟢 Cumplido (2026-09-23) |
 | 7 | Trivia contrarreloj + módulo de simulación de decisiones | 🟢 Cumplido |
 | 8 | *"se contempla"* Web Push API / Service Workers | 🟡 No existe, pero el verbo lo salva |
 | 9 | Microlearning: sesiones de 10–15 min | ⚪ Sin verificar (medible hoy) |
@@ -31,7 +31,7 @@
 | 17 | Zonas verdes (M1) y puntos de residuos (M3) | 🟢 Cumplido |
 | 18 | Minijuego de clasificación con tiempo límite | 🟢 Cumplido |
 
-**14 cumplidas, 1 parcial, 2 no cumplidas, 1 sin verificar.**
+**15 cumplidas, 1 parcial, 1 no cumplida, 1 sin verificar.**
 
 > **Actualizado el 2026-09-20** tras la primera tanda de arreglos: las Tablas
 > 2, 10 y 11 pasaron a cumplidas. El detalle original de cada una se conserva
@@ -53,7 +53,7 @@ Es la brecha más verificable de todas: el jurado abre la URL en su teléfono.
 
 **Salida:** declarar el alcance de escritorio en *alcance y limitaciones*, y bajarle el tono a la palabra *"mandatorio"*, que es más fuerte de lo que el dato sostiene (35% smartphone, 35% indiferente, 30% escritorio no hace nada *mandatorio*). Una limitación declarada se lee como decisión; descubierta, como incumplimiento.
 
-### Tabla 6 — Motor de insignias 🔴
+### Tabla 6 — Motor de insignias 🟢 (resuelta el 2026-09-23)
 
 > *"se definirá un motor de reglas en el backend que dispare diferentes tipos de insignias o trofeos digitales... bonificadores por rachas de acceso continuo o medallas especiales por alcanzar la máxima calificación"*
 
@@ -69,7 +69,31 @@ Lo que sí funciona: `m1..m6_completo`, `quiz_perfecto`, `crisis_resuelta` y `ec
 
 La Tabla 6 está en futuro ("se definirá") y se puede leer como planificación. **Este párrafo no**: es una afirmación sobre lo construido. Es el punto más falsable del capítulo — alcanza con completar un nivel, cerrar el juego, volver a entrar y pedir ver la insignia.
 
-**Salida:** persistir insignias en Supabase es trabajo real (tablas ya existen, faltan las RPC y el cliente). Las rachas de acceso son una funcionalidad nueva. Alternativa: acotar la promesa del Capítulo 4 a lo que hay. Las dos redacciones, y la recomendación, están en `docs/redaccion_cap4_pendiente.md`.
+**RESUELTO el 2026-09-23.** Se implementó el motor en el servidor
+(`sql/insignias_1_migracion.sql`, aplicada y verificada en producción):
+
+- `catalogo_insignias` — nombres, íconos y descripciones en el servidor. El
+  cliente ya no tiene copia propia.
+- `insignias_obtenidas` — RLS de solo lectura propia; insert/update/delete
+  revocados a `anon` y `authenticated`.
+- `_insignias_merecidas(uuid)` — **las deriva** de lo que el servidor ya
+  guarda: `misiones_estudiante` contra `catalogo_misiones` para m1..m6,
+  eventos `respuesta_quiz` para `quiz_perfecto`, `crisis_resuelta`, y días
+  calendario consecutivos para **`racha_fuego`**, que estaba declarada y no
+  se otorgaba nunca. Con eso queda cubierto el *"bonificadores por rachas de
+  acceso continuo"* de la tabla.
+- `evaluar_insignias()` — única vía de escritura. El cliente no manda
+  ninguna insignia, solo pide la evaluación, así que no puede otorgarse una
+  que no ganó.
+
+El párrafo de la Fase III (*"guardándolas en su perfil"*) queda verdadero
+sin tocar el documento.
+
+**Nota:** el diagnóstico previo confirmó que existen dos tablas viejas del
+panel (`insignias`, `insignias_estudiante`) con otro diseño — ids `integer`,
+columnas `condicion_tipo`/`condicion_valor`. No se tocaron. Quedan sin uso.
+
+~~**Salida:** persistir insignias en Supabase es trabajo real (tablas ya existen, faltan las RPC y el cliente). Las rachas de acceso son una funcionalidad nueva. Alternativa: acotar la promesa del Capítulo 4 a lo que hay.~~
 
 ### Tabla 10 — Sistema de vidas 🟢 (resuelta por la Tabla 15)
 

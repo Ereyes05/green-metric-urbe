@@ -57,6 +57,12 @@ No es una deuda: es un criterio superado por una fuente de mayor autoridad, y el
 
 ## 3. Tabla 6 y el párrafo de la Fase III — Las insignias
 
+> ✅ **RESUELTO EL 2026-09-23 — no hace falta tocar el documento.** Se eligió
+> la Opción A: el motor de insignias se implementó en el servidor y la
+> migración está aplicada y verificada en producción. El párrafo de la Fase
+> III quedó verdadero tal como está escrito. Lo de abajo se conserva como
+> registro de la decisión.
+
 **Acá hay que decidir, no solo redactar.** Y es más grave que las dos anteriores, por dónde está escrito.
 
 ### Lo que el capítulo afirma
@@ -102,6 +108,6 @@ El párrafo de la Fase III está en **pasado** y es una afirmación sobre lo con
 |---|---|---|
 | 1 | Alcance de escritorio: suavizar *"mandatorio"* + declarar la limitación | Vos, en el `.docx` |
 | 2 | Decisión Tabla 10 vs. 15 sobre las vidas | Vos, en el `.docx` |
-| 3 | Insignias: **decidir** entre implementar o ajustar el texto | Vos decidís, yo implemento si elegís A |
+| 3 | ~~Insignias~~ | ✅ Implementado el 2026-09-23, el documento no se toca |
 
 Los dos primeros son pegar y revisar. El tercero es la única decisión de fondo que queda.
