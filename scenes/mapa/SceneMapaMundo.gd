@@ -471,6 +471,9 @@ func _ready() -> void:
 	_construir_hud()
 	_construir_panel_completado()
 	_actualizar_hud()
+	# Recupera del servidor las insignias ya ganadas. La primera respuesta
+	# de la sesión es la línea base: EconomiaManager no avisa por ellas.
+	EconomiaManager.evaluar_insignias()
 	# HU-002: "lo devuelve al mapa en el punto exacto donde lo dejó". Antes se
 	# restauraba el progreso pero no la posición, y no se le decía nada.
 	if _volvio_donde_quedo and _hud_aviso:
@@ -1475,7 +1478,9 @@ func _on_tutorial_completado() -> void:
 func _on_crisis_resulta(modulo_id: int, exito: bool) -> void:
 	if exito:
 		_aplicar_xp(25, "crisis_%d" % modulo_id)
-		EconomiaManager.otorgar_insignia("crisis_resuelta")
+		# La insignia la decide el servidor: crisis_evento.gd ya registra el
+		# evento 'crisis_resuelta' con correcto=true, y de ahí la deriva.
+		EconomiaManager.evaluar_insignias()
 	_timer_crisis = randf_range(_CRISIS_MIN, _CRISIS_MAX)
 
 

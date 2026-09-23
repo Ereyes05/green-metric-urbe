@@ -51,25 +51,19 @@ var _contador_refs : int = 0
 # Ver docs/auditoria_capitulo4.md.
 
 # ── Insignias ─────────────────────────────────────────────────
-const INSIGNIAS : Dictionary = {
-	"m1_completo":    {"nombre": "Guardián Verde",    "icono": "🌿"},
-	"m2_completo":    {"nombre": "Ahorrista Solar",   "icono": "⚡"},
-	"m3_completo":    {"nombre": "Eco Clasificador",  "icono": "♻"},
-	"m4_completo":    {"nombre": "Gota Vital",        "icono": "💧"},
-	"m5_completo":    {"nombre": "Ciclista Campus",   "icono": "🚲"},
-	"m6_completo":    {"nombre": "EcoInvestigador",   "icono": "📚"},
-	"quiz_perfecto":  {"nombre": "Puntaje Perfecto",  "icono": "⭐"},
-	"racha_fuego":    {"nombre": "Racha Ardiente",    "icono": "🔥"},
-	"crisis_resuelta":{"nombre": "Héroe de Crisis",   "icono": "🚨"},
-	"ecolider":       {"nombre": "EcoLíder URBE",     "icono": "🏆"},
-}
+# El catálogo (nombres e íconos) vive en public.catalogo_insignias, no acá:
+# el Cap. 4 promete "un motor de reglas en el backend" y el cliente no debe
+# tener su propia copia que se desincronice. Llega en la respuesta de
+# evaluar_insignias().
 var _insignias_obtenidas : Array = []
+var _insignias_cargadas  : bool  = false
 
 
 
 func _ready() -> void:
 	randomize()
 	SupabaseManager.billetera_cargada.connect(_on_billetera_cargada)
+	SupabaseManager.insignias_evaluadas.connect(_on_insignias_evaluadas)
 	SupabaseManager.catalogo_cargado.connect(_on_catalogo_cargado)
 	SupabaseManager.billetera_actualizada.connect(_on_billetera_actualizada)
 	SupabaseManager.compra_resuelta.connect(_on_compra_resuelta)
@@ -251,19 +245,39 @@ func aplicar_bono_xp(xp: int) -> int:
 
 
 # ── Insignias ─────────────────────────────────────────────────
-func otorgar_insignia(id: String) -> void:
-	if id in _insignias_obtenidas or not INSIGNIAS.has(id): return
-	_insignias_obtenidas.append(id)
-	var ins : Dictionary = INSIGNIAS[id]
-	insignia_obtenida.emit(id, ins["nombre"], ins["icono"])
+# Las decide el servidor, derivándolas de lo que ya tiene guardado
+# (sql/insignias.sql). Antes vivían en este arreglo y se perdían al cerrar el
+# juego, aunque el Cap. 4 afirmara que quedaban "guardadas en su perfil".
+# Acá solo se pide la evaluación y se muestra lo que vuelve.
+func evaluar_insignias() -> void:
+	SupabaseManager.evaluar_insignias()
 
 
-func on_modulo_completado(modulo_id: int, xp_ganado: int, xp_maximo: int) -> void:
+func insignias_obtenidas() -> Array:
+	return _insignias_obtenidas.duplicate()
+
+
+# La primera respuesta de la sesión fija la línea base sin avisar: son las que
+# el estudiante ya tenía. Sin esto, al entrar le aparecerían de golpe todas
+# las insignias viejas como si las acabara de ganar.
+func _on_insignias_evaluadas(nuevas: Array, todas: Array, _catalogo: Array) -> void:
+	_insignias_obtenidas.clear()
+	for d in todas:
+		if d is Dictionary:
+			_insignias_obtenidas.append(str(d.get("insignia_id", "")))
+	if not _insignias_cargadas:
+		_insignias_cargadas = true
+		return
+	for id in nuevas:
+		for d in todas:
+			if d is Dictionary and str(d.get("insignia_id", "")) == str(id):
+				insignia_obtenida.emit(str(id), str(d.get("nombre", "")), str(d.get("icono", "")))
+				break
+
+
+func on_modulo_completado(modulo_id: int, xp_ganado: int, _xp_maximo: int) -> void:
 	ganar_creditos(xp_ganado / 5, "quiz")
-	otorgar_insignia("m%d_completo" % modulo_id)
-	if xp_ganado >= xp_maximo:
-		otorgar_insignia("quiz_perfecto")
-	if _insignias_obtenidas.size() >= INSIGNIAS.size() - 1:
-		otorgar_insignia("ecolider")
+	# modulo_id ya no se usa para elegir la insignia: el servidor la deriva.
+	evaluar_insignias()
 
 

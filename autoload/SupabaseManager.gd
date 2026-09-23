@@ -27,6 +27,7 @@ signal progreso_cargado(lista: Array)
 # lista: [{"modulo_id": int, "mision_id": String}, ...] — una fila por
 # misión ya registrada en misiones_estudiante para la cuenta logueada.
 signal misiones_estudiante_cargadas(lista: Array)
+signal insignias_evaluadas(nuevas: Array, todas: Array, catalogo: Array)
 signal solicitud_qr_creada(token: String)
 signal solicitud_qr_creada_fallida(token: String)
 signal solicitud_qr_estado(token: String, escaneada: bool)
@@ -293,6 +294,16 @@ func cargar_misiones_estudiante() -> void:
 # RPC pública (sql/ranking_publico.sql): nombre + inicial, XP, niveles
 # completos, título y es_yo. Con sesión se manda el JWT para que el
 # servidor pueda marcar la fila propia.
+# Insignias: el servidor DERIVA cuáles se ganaron de lo que ya tiene
+# guardado (sql/insignias.sql). El cliente no manda ninguna, solo pide que
+# se evalúen; así el estudiante no puede otorgarse una que no ganó.
+func evaluar_insignias() -> void:
+	if jwt_token.is_empty():
+		return
+	_encolar("insignias", SUPABASE_URL + "/rest/v1/rpc/evaluar_insignias",
+			 HTTPClient.METHOD_POST, _headers_auth(), "{}")
+
+
 func cargar_ranking() -> void:
 	var headers := _headers_anon() if jwt_token.is_empty() else _headers_auth()
 	_encolar("cargar_ranking", SUPABASE_URL + "/rest/v1/rpc/ranking_publico",
@@ -517,6 +528,7 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"catalogo"        : _procesar_catalogo(code, datos)
 		"billetera_mov"   : _procesar_billetera_mov(code, datos, ctx)
 		"comprar"         : _procesar_compra(code, datos, ctx)
+		"insignias"       : _procesar_insignias(code, datos)
 		"puntaje"         : _procesar_puntaje(code, datos)
 		"calidad"         : _procesar_calidad(code, datos, ctx)
 		"detalle"         : _procesar_detalle(code, datos, ctx)
@@ -723,6 +735,16 @@ func _procesar_compra(code: int, datos: Variant, ctx: Dictionary) -> void:
 	else:
 		push_error("SupabaseManager: falló comprar_item %s (HTTP %d)" % [item_id, code])
 		emit_signal("compra_resuelta", {"ok": false, "error": "http_%d" % code}, item_id)
+
+
+func _procesar_insignias(code: int, datos: Variant) -> void:
+	if code != 200 or not (datos is Dictionary):
+		push_warning("SupabaseManager: evaluar_insignias falló (HTTP %d)" % code)
+		return
+	emit_signal("insignias_evaluadas",
+		(datos.get("nuevas", []) as Array),
+		(datos.get("todas", []) as Array),
+		(datos.get("catalogo", []) as Array))
 
 
 func _procesar_puntaje(code: int, datos: Variant) -> void:
