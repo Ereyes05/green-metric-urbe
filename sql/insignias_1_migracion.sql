@@ -1,43 +1,17 @@
 -- ============================================================
--- insignias.sql — GreenMetric_URBE
+-- PASO 1 — MIGRACIÓN (esta es la que crea todo)
+-- GreenMetric_URBE — insignias
 --
--- Motor de reglas de insignias EN EL SERVIDOR. El Cap. 4 afirma que "se
--- definirá un motor de reglas en el backend que dispare diferentes tipos de
--- insignias" (Tabla 6) y que las insignias se integraron "guardándolas en su
--- perfil" (Fase III). Hasta el 2026-09-23 vivían en un arreglo en memoria del
--- cliente (EconomiaManager._insignias_obtenidas) y se perdían al cerrar.
---
--- Las reglas NO se evalúan en el cliente y se mandan al servidor: se DERIVAN
--- de lo que el servidor ya guarda (misiones_estudiante, catalogo_misiones,
--- eventos_aprendizaje). Así el estudiante no puede otorgarse una insignia
--- que no ganó, y el "motor de reglas en el backend" es literal.
---
--- CÓMO APLICARLA
---   1. Abrí https://supabase.com/dashboard/project/ikohikbpvtbvsgyumvbr/sql/new
---   2. Corré primero el PASO 0 (diagnóstico) y pasame el resultado.
---   3. Después corré el PASO 1 completo.
---   4. Al final está el PASO 2, una prueba que no deja datos.
+-- Panel: https://supabase.com/dashboard/project/ikohikbpvtbvsgyumvbr/sql/new
+-- Abrí este archivo, seleccioná TODO (Ctrl+A), copiá (Ctrl+C), pegalo en el
+-- editor y dale Run. Al terminar debe decir "Success. No rows returned".
 -- ============================================================
 
-
--- ════════════════════════════════════════════════════════════
--- PASO 0 — Diagnóstico. Solo lectura, no cambia nada.
---
--- El proyecto tiene dos tablas `insignias` e `insignias_estudiante` creadas
--- a mano en el panel que el juego nunca usó, y su definición no está en el
--- repositorio. Esta consulta dice qué hay adentro. NO las toca: la migración
--- de abajo usa nombres propios para no pisarlas.
--- ════════════════════════════════════════════════════════════
-select c.table_name, c.column_name, c.data_type, c.is_nullable
-  from information_schema.columns c
- where c.table_schema = 'public'
-   and c.table_name in ('insignias', 'insignias_estudiante')
- order by c.table_name, c.ordinal_position;
-
-
--- ════════════════════════════════════════════════════════════
--- PASO 1 — Migración. Pegá desde acá hasta el final del bloque.
--- ════════════════════════════════════════════════════════════
+-- POR QUÉ: el Cap. 4 afirma que hay "un motor de reglas en el backend que
+-- dispare diferentes tipos de insignias" (Tabla 6) y que se integraron
+-- "guardándolas en su perfil" (Fase III). Hasta ahora vivían en memoria del
+-- cliente y se perdían al cerrar el juego. Acá el servidor las DERIVA de lo
+-- que ya tiene guardado, así que el estudiante no puede otorgarse ninguna.
 
 -- ── Catálogo (en el servidor, no en el cliente) ──────────────
 create table if not exists public.catalogo_insignias (
@@ -197,56 +171,3 @@ grant  execute on function public.evaluar_insignias()        to authenticated;
 -- ════════════════════════════════════════════════════════════
 -- FIN DEL PASO 1
 -- ════════════════════════════════════════════════════════════
-
-
--- ════════════════════════════════════════════════════════════
--- PASO 2 — Prueba. Corre sobre datos inventados y NO deja nada:
--- termina lanzando una excepción, que revierte toda la transacción.
--- Que diga "PRUEBA_OK" es el resultado esperado.
--- ════════════════════════════════════════════════════════════
-do $$
-declare
-  v_user uuid;
-  v_n    int;
-begin
-  insert into auth.users (id, instance_id, aud, role, email,
-                          encrypted_password, email_confirmed_at,
-                          created_at, updated_at)
-  values (gen_random_uuid(), '00000000-0000-0000-0000-000000000000',
-          'authenticated', 'authenticated',
-          'prueba.insignias.' || floor(random() * 1e9)::text || '@gmail.com',
-          crypt('prueba-insignias', gen_salt('bf')), now(), now(), now())
-  returning id into v_user;
-
-  -- Sin nada hecho: ninguna insignia.
-  select count(*) into v_n from _insignias_merecidas(v_user);
-  if v_n <> 0 then
-    raise exception 'Un estudiante sin actividad no debería tener insignias, tiene %', v_n;
-  end if;
-
-  -- Un quiz con 3 respuestas correctas -> quiz_perfecto.
-  insert into eventos_aprendizaje (user_id, session_id, nivel, mision_id, tipo_evento, correcto)
-  select v_user, 'ses-prueba', 6, 'mision_rector', 'respuesta_quiz', true
-    from generate_series(1, 3);
-  if not exists (select 1 from _insignias_merecidas(v_user) where insignia_id = 'quiz_perfecto') then
-    raise exception 'Tres respuestas correctas deberían dar quiz_perfecto';
-  end if;
-
-  -- Una respuesta incorrecta en el MISMO quiz lo descalifica.
-  insert into eventos_aprendizaje (user_id, session_id, nivel, mision_id, tipo_evento, correcto)
-  values (v_user, 'ses-prueba', 6, 'mision_rector', 'respuesta_quiz', false);
-  if exists (select 1 from _insignias_merecidas(v_user) where insignia_id = 'quiz_perfecto') then
-    raise exception 'Un quiz con una respuesta incorrecta no debería dar quiz_perfecto';
-  end if;
-
-  -- Tres días seguidos -> racha_fuego. (Dos no alcanzan.)
-  insert into eventos_aprendizaje (user_id, session_id, nivel, mision_id, tipo_evento, creado_en)
-  values (v_user, 's1', 1, 'x', 'mision_iniciada', now() - interval '2 days'),
-         (v_user, 's2', 1, 'x', 'mision_iniciada', now() - interval '1 day');
-  if not exists (select 1 from _insignias_merecidas(v_user) where insignia_id = 'racha_fuego') then
-    raise exception 'Tres días seguidos deberían dar racha_fuego';
-  end if;
-
-  raise exception 'PRUEBA_OK';
-end;
-$$;
