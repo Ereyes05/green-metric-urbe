@@ -2,6 +2,16 @@
 
 **Proyecto:** `ikohikbpvtbvsgyumvbr` · **Última revisión:** 2026-09-24
 
+> ## Estado actual: los correos están fuera de servicio, a propósito
+>
+> El **2026-09-24 se apagó la confirmación por correo** (`Confirm email` en *Authentication → Sign In / Providers → Email*). El estudiante se registra y entra directo. Verificado en `/auth/v1/settings`: `mailer_autoconfirm = true`.
+>
+> **Por qué:** el servicio de correo que Supabase trae de fábrica **solo entrega a las direcciones del equipo del proyecto** y admite **2 mensajes por hora** para todo el proyecto. A los estudiantes no les llegaba nada — ni se notaba, porque la pantalla decía que sí se había enviado.
+>
+> **Consecuencia:** la recuperación de contraseña **tampoco funciona** y muestra *"¡Código enviado!"* igual. Se resuelve a mano: *Authentication → Users* → cambiar la contraseña del estudiante.
+>
+> Lo de abajo (plantillas y Site URL) queda escrito para cuando se contrate un servicio de correo externo. **Hasta entonces no se puede aplicar**: Supabase no deja editar las plantillas sin SMTP propio.
+
 Esto vive **solo en el panel de Supabase**, no en el código. Se guarda acá porque si alguien lo cambia o se pierde, no hay de dónde recuperarlo — y porque cuando está mal, el juego no lo puede arreglar desde su lado.
 
 ---

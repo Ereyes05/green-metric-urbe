@@ -15,7 +15,7 @@
 >
 > **No es el manual terminado.** Es una base sobre la que trabajar, y le falta lo siguiente antes de que se pueda entregar:
 >
-> 1. **Las 21 capturas de pantalla.** Están marcadas `[CAPTURA 1]` … `[CAPTURA 21]`, y cada una dice qué debe mostrar. Se toman abriendo el juego publicado, con la herramienta **Recortes** de Windows.
+> 1. **Las 20 capturas de pantalla.** Están marcadas `[CAPTURA 1]` … `[CAPTURA 20]`, y cada una dice qué debe mostrar. Se toman abriendo el juego publicado, con la herramienta **Recortes** de Windows.
 > 2. **La revisión del equipo.** El texto lo redactó el asistente a partir del código fuente, no de haber jugado el juego como estudiante. Puede haber cosas que en la práctica se entiendan distinto.
 > 3. **El formato final** que pida la universidad: portada, numeración, tipografía, y pasarlo a Word o PDF.
 > 4. **Borrar este recuadro y el encabezado "BORRADOR"** cuando lo anterior esté hecho.
@@ -79,7 +79,7 @@ El juego **no se instala**. Se abre desde el navegador.
 | **Conexión** | Permanente. El progreso se guarda en un servidor, no en la computadora. |
 | **Descarga inicial** | Aproximadamente 41 MB la primera vez. Después el navegador reutiliza casi todo: en los ingresos siguientes solo baja 1,4 MB. |
 | **Dispositivo** | Computadora de escritorio, portátil, tableta o teléfono. En pantalla táctil aparecen controles en pantalla automáticamente. |
-| **Correo electrónico** | Necesario para registrarse, y hay que poder **abrirlo**: la cuenta se confirma con un enlace que llega ahí. No hace falta correo institucional (ver 3.1). |
+| **Correo electrónico** | Necesario para registrarse, pero **no hay que abrirlo**: no se envía ninguna confirmación. No hace falta correo institucional (ver 3.1). |
 
 > **Sobre la primera carga.** Al abrir la dirección aparece una barra de progreso. En una conexión lenta puede tardar uno o dos minutos. No es un bloqueo: es la descarga del juego.
 
@@ -109,10 +109,8 @@ Al terminar la carga aparece la pantalla de acceso.
 | **Confirmar contraseña** | La misma contraseña, otra vez. |
 
 3. Pulsar **Registrarme**.
-4. **Abrir el correo y confirmar la cuenta.** Llegará un mensaje con un enlace. **Hasta no pulsarlo, la cuenta no puede iniciar sesión.**
-5. Volver al juego e iniciar sesión normalmente.
 
-> **El paso 4 no es opcional.** Es el que más confusión causa: la cuenta *se crea* al pulsar Registrarme, pero queda sin confirmar. Si se intenta entrar antes de abrir el correo, el juego avisa *"Cuenta creada. Te enviamos un correo para confirmarla"*. **Revisar también la carpeta de correo no deseado**, que es donde suele caer.
+**Eso es todo: se entra al juego de una vez.** No hay que confirmar nada por correo ni esperar ningún mensaje.
 
 ### Qué correos se aceptan
 
@@ -133,13 +131,12 @@ Si los datos son correctos, el juego carga el progreso guardado y lleva directam
 
 ### 3.3. Si se olvidó la contraseña
 
-1. Pulsar **¿Olvidaste tu contraseña?**
-2. Escribir el correo registrado y pulsar **Enviar código**.
-3. Revisar la bandeja de entrada (y la carpeta de correo no deseado). Llegará un código.
-4. Escribir el código y pulsar **Verificar**.
-5. Escribir la contraseña nueva dos veces y pulsar **Cambiar contraseña**.
+**Avisarle al docente o responsable de la actividad**, que la cambia en el momento. No hay que hacer ningún trámite.
 
-**[CAPTURA 4]** — El primer paso del panel de recuperación de contraseña.
+> **Nota para el equipo — borrar antes de entregar.**
+> La pantalla *"¿Olvidaste tu contraseña?"* existe en el juego y está programada, pero **hoy no funciona para los estudiantes** y peor: dice *"¡Código enviado!"* aunque no se haya enviado nada. El correo lo manda el servicio interno de Supabase, que solo entrega a las direcciones del equipo del proyecto y admite 2 mensajes por hora.
+> Para que funcione hay que contratar un servicio de correo externo. Detalle y pasos en [supabase_correos.md](supabase_correos.md).
+> **Mientras tanto se resuelve a mano:** panel de Supabase → *Authentication → Users* → buscar al estudiante → cambiar la contraseña. Diez segundos.
 
 ---
 
@@ -158,14 +155,14 @@ El tutorial aparece **una sola vez por cuenta**. A partir del segundo ingreso, e
 
 Después del tutorial, lo demás se enseña solo: cuando el estudiante se acerca por primera vez a algo nuevo, aparece un globo de ayuda explicando qué hacer.
 
-**[CAPTURA 5]** — El primer paso del tutorial.
-**[CAPTURA 6]** — El segundo paso, con la lista de los seis módulos GreenMetric.
+**[CAPTURA 4]** — El primer paso del tutorial.
+**[CAPTURA 5]** — El segundo paso, con la lista de los seis módulos GreenMetric.
 
 ---
 
 ## 5. La pantalla del juego
 
-**[CAPTURA 7]** — El campus con el HUD completo visible. Es la captura más importante del manual: conviene que se vean los cuatro elementos a la vez.
+**[CAPTURA 6]** — El campus con el HUD completo visible. Es la captura más importante del manual: conviene que se vean los cuatro elementos a la vez.
 
 La pantalla tiene cuatro zonas de información:
 
@@ -195,7 +192,7 @@ Al pasar el cursor sobre una fila aparece el desglose: cuánto hay en cada tramo
 
 > **Por qué importa este panel.** Es lo que convierte el juego en una herramienta de aprendizaje y no en un pasatiempo: el estudiante ve, en el mismo momento en que actúa, cómo su decisión mueve un indicador real del ranking mundial.
 
-**[CAPTURA 8]** — El panel GreenMetric, y si es posible, otra con el desglose abierto al pasar el cursor por una fila.
+**[CAPTURA 7]** — El panel GreenMetric, y si es posible, otra con el desglose abierto al pasar el cursor por una fila.
 
 ### 5.3. Barra de acciones (abajo)
 
@@ -236,7 +233,7 @@ Los controles táctiles aparecen solos al detectar la pantalla táctil:
 - **Joystick (mitad izquierda):** se toca en cualquier punto y aparece ahí. Arrastrando se mueve el personaje.
 - **Botón E (abajo a la derecha):** hace lo mismo que la tecla E.
 
-**[CAPTURA 9]** — El juego en teléfono, con el joystick y el botón E visibles. (Se puede tomar desde el navegador de un teléfono, o con el modo de dispositivo móvil del navegador: **F12 → icono de teléfono**.)
+**[CAPTURA 8]** — El juego en teléfono, con el joystick y el botón E visibles. (Se puede tomar desde el navegador de un teléfono, o con el modo de dispositivo móvil del navegador: **F12 → icono de teléfono**.)
 
 ---
 
@@ -250,7 +247,7 @@ Los **NPC** (personajes no jugadores) son los coordinadores de cada área del ca
 
 Al acercarse y pulsar **E**, el NPC explica el módulo GreenMetric que le corresponde: qué mide, por qué importa, y qué se espera del estudiante. Es el contenido teórico del juego.
 
-**[CAPTURA 10]** — Un diálogo con un NPC abierto.
+**[CAPTURA 9]** — Un diálogo con un NPC abierto.
 
 ### 7.2. Cuestionarios (quiz)
 
@@ -266,8 +263,8 @@ Cómo funciona:
 
 > **Por qué solo cuenta el primer intento.** Si la repetición sumara, bastaría con reintentar hasta acertar por descarte y el tramo de comprensión dejaría de medir comprensión. Repetir sigue siendo útil para estudiar; lo que no hace es inflar el puntaje.
 
-**[CAPTURA 11]** — Un cuestionario, con las opciones de respuesta y la barra de tiempo.
-**[CAPTURA 12]** — La retroalimentación tras fallar una pregunta, mostrando la respuesta correcta.
+**[CAPTURA 10]** — Un cuestionario, con las opciones de respuesta y la barra de tiempo.
+**[CAPTURA 11]** — La retroalimentación tras fallar una pregunta, mostrando la respuesta correcta.
 
 ### 7.3. Misiones de campo
 
@@ -277,7 +274,7 @@ Se activan acercándose al punto señalado y pulsando **E**. Cada una explica qu
 
 Algunas misiones **necesitan una herramienta comprada en la tienda** (ver sección 11). Si falta, el juego lo dice y ofrece abrir la tienda con la herramienta ya señalada.
 
-**[CAPTURA 13]** — Una misión de campo iniciándose.
+**[CAPTURA 12]** — Una misión de campo iniciándose.
 
 ### 7.4. Decisiones
 
@@ -287,8 +284,8 @@ El caso más desarrollado es el **Nivel 5 (Plan de Movilidad)**: el estudiante r
 
 Las respuestas no se revelan de antemano: el estudiante decide con la información que los NPC le dieron, y ve las consecuencias después.
 
-**[CAPTURA 14]** — Un panel de decisión del Plan de Movilidad, con el presupuesto visible.
-**[CAPTURA 15]** — El resultado del Consejo de Movilidad.
+**[CAPTURA 13]** — Un panel de decisión del Plan de Movilidad, con el presupuesto visible.
+**[CAPTURA 14]** — El resultado del Consejo de Movilidad.
 
 ### 7.5. Crisis ambientales
 
@@ -300,7 +297,7 @@ Durante la exploración pueden aparecer **crisis al azar**: un apagón, una fuga
 
 Sirven para comprobar si el estudiante puede **aplicar** lo aprendido bajo presión, no solo recordarlo.
 
-**[CAPTURA 16]** — Una crisis activa, con el contador de tiempo.
+**[CAPTURA 15]** — Una crisis activa, con el contador de tiempo.
 
 ---
 
@@ -323,7 +320,7 @@ Se empieza en el **Nivel 1**. Cada nivel se abre al completar **todas** las misi
 
 La última misión, el **informe final**, recopila las decisiones que el estudiante fue tomando a lo largo de todo el juego y las cita textualmente. El estudiante ve, en un solo documento, el recorrido completo que hizo y qué defendió en cada punto.
 
-**[CAPTURA 17]** — El informe final del Nivel 6.
+**[CAPTURA 16]** — El informe final del Nivel 6.
 
 ---
 
@@ -345,7 +342,7 @@ El estudiante descubre estas relaciones al ver subir una barra que no estaba toc
 
 El botón **📊 Reporte** (tecla **2**) muestra el desglose completo: cuánto tiene cada módulo, en qué componente, y qué falta para completarlo.
 
-**[CAPTURA 18]** — El Reporte GreenMetric abierto.
+**[CAPTURA 17]** — El Reporte GreenMetric abierto.
 
 ---
 
@@ -398,7 +395,7 @@ Se otorgan automáticamente al cumplir la condición. **Las evalúa el servidor*
 
 > **Una decisión de diseño que conviene explicar.** La insignia *EcoLíder URBE* **ignora las dos insignias que se compran**. Si contara las compradas, un estudiante podría conseguir el máximo reconocimiento del juego gastando EcoCredits en cosméticos en vez de completar el contenido educativo. Eso vaciaría de sentido la insignia.
 
-**[CAPTURA 19]** — El panel de insignias, con algunas obtenidas y otras bloqueadas.
+**[CAPTURA 18]** — El panel de insignias, con algunas obtenidas y otras bloqueadas.
 
 ---
 
@@ -406,7 +403,7 @@ Se otorgan automáticamente al cumplir la condición. **Las evalúa el servidor*
 
 Se abre con el botón **🛒 Tienda** o la tecla **5**.
 
-**[CAPTURA 20]** — La tienda abierta, con el saldo de EcoCredits y los artículos.
+**[CAPTURA 19]** — La tienda abierta, con el saldo de EcoCredits y los artículos.
 
 ### 11.1. Herramientas — necesarias para avanzar
 
@@ -450,7 +447,7 @@ Se abre con el botón **🏆 Ranking** o la tecla **3**. Muestra los **50 mejore
 
 > **Sobre la privacidad.** El ranking muestra **únicamente** el nombre, el rango y la experiencia. **La cédula y el correo electrónico nunca aparecen**, ni en el ranking ni en ninguna otra pantalla visible para otros estudiantes. Es una restricción aplicada en el servidor, no una decisión de la interfaz.
 
-**[CAPTURA 21]** — El ranking abierto.
+**[CAPTURA 20]** — El ranking abierto.
 
 ---
 
@@ -480,9 +477,7 @@ El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar 
 |---|---|---|
 | La pantalla de carga no avanza | Conexión lenta o intermitente | Esperar. Si pasan varios minutos, recargar con **F5**. |
 | "Correo no permitido" al registrarse | El dominio del correo no está en la lista autorizada | Usar un correo de un dominio permitido; el mensaje indica cuáles. |
-| **Me registré pero no puedo entrar** | **La cuenta no está confirmada** | **Abrir el correo de confirmación y pulsar el enlace. Revisar *Spam*.** |
-| No llega el correo de confirmación | Tarda, o cayó en correo no deseado | Esperar unos minutos y revisar *Spam*. Si varios se registran a la vez, los correos pueden demorar. |
-| No llega el código de recuperación | Está en la carpeta de correo no deseado | Revisar *Spam* o *Correo no deseado*. |
+| Olvidé mi contraseña | — | Avisarle al docente, que la cambia en el momento. La pantalla de recuperación por correo todavía no está en servicio. |
 | Pulso **E** y no pasa nada | El personaje está demasiado lejos | Acercarse más al NPC o al punto de la misión. |
 | Una misión dice que falta una herramienta | No se ha comprado el kit correspondiente | Abrir la tienda (tecla **5**) y comprarlo. El juego señala cuál. |
 | No alcanzan los EcoCredits | Se gastaron en artículos opcionales | Completar más misiones de los niveles ya abiertos: cada una da EcoCredits. |
