@@ -48,20 +48,26 @@ El equipo aplicó los cambios el 2026-09-24. No quedaron marcas de control de ca
 En el **Cuadro 2** quedó corregido a *"Lenguaje de programación (GDScript, SQL)"*. Pero **hay un segundo lugar que no señalé**: la sección **6.2 SOFTWARE**, al final del capítulo, que lista:
 
 ```
-JavaScript
+JavaScript      <- la única línea mal
 SQL
 Visual Studio Code
+Supabase
+Godot
 ```
 
-Ahí sigue diciendo `JavaScript`, y sigue faltando `GDScript` y `Godot`. Es el mismo error en otro sitio, y yo solo marqué uno de los dos.
+**El cambio es una sola palabra: `JavaScript` → `GDScript`.** Nada más. El resto de la lista está bien.
 
-**Corregir a:** `GDScript`, `SQL`, `Godot`, `Visual Studio Code`.
+> **Corrección a lo que dije el 2026-09-24:** escribí que "sigue faltando GDScript y Godot". **Godot y Supabase sí están en la lista** — me los perdí al leer. Lo único que sobra es JavaScript.
 
-Recordatorio del dato: el proyecto tiene **25.492 líneas de GDScript**, 1.962 de SQL, 154 de Python y **0 de JavaScript** escritas por el equipo.
+Recordatorio del dato, recontado el 2026-09-24: el proyecto tiene **25.588 líneas de GDScript** en 91 archivos, 2.158 de SQL en 14, 207 de Python (el script de exportación), 74 de TypeScript (una función de Supabase) y **0 archivos de JavaScript** escritos por el equipo. El `index.js` del juego publicado lo genera Godot solo.
 
 ### 2.2. La coma que faltó
 
-Sigue estando *"...seleccionados aleatoriamente. quienes evaluarán..."* — punto de más y minúscula después. Es cosmético pero está a la vista.
+Texto exacto del documento:
+
+> *"...el cuestionario será sometido a la validación a través del Juicio de un experto en la sustentabilidad y estudiantes seleccionados **aleatoriamente. quienes** evaluarán la pertinencia, claridad y congruencia de cada ítem..."*
+
+**Cambiar `aleatoriamente. quienes` por `aleatoriamente, quienes`.** Un punto que debería ser coma, y la minúscula después lo deja a la vista.
 
 ---
 
