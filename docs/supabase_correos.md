@@ -87,9 +87,9 @@ https://supabase.com/dashboard/project/ikohikbpvtbvsgyumvbr/auth/rate-limits
 
 Ahí se ve el número exacto vigente.
 
-**Para la sesión con los 4 estudiantes piloto:** que cada uno se registre **el día anterior**, desde su casa y en distintos momentos. Si los cuatro se registran seguidos, es probable que a los últimos no les llegue nada y queden afuera sin explicación.
+**Esto ya no afecta al registro**, porque desde el 2026-09-24 el registro no manda ningún correo (ver el recuadro del principio). Sigue afectando a cualquier cosa que sí use correo, o sea hoy solo la recuperación de contraseña.
 
-Si hiciera falta mandar muchos correos, la salida es configurar un SMTP propio en **Authentication → Emails → SMTP Settings**. Para cuatro estudiantes no hace falta.
+Con un SMTP propio el tope sube a 30 registros por hora y los mensajes llegan a cualquier dirección, no solo a las del equipo. Se configura en **Authentication → Emails → SMTP Settings**, y recién ahí se destraban las plantillas de más arriba.
 
 ---
 
