@@ -842,18 +842,29 @@ Kendall y Kendall (ciclo de vida clásico) + Scrum.
    sección 3 y 8 de este documento). Sigue pendiente el login y cualquier
    otra pantalla en pixel art — la tesis tiene que reflejar el HUD nuevo y no
    puede seguir afirmando sin matices que "el juego es pixel art".
-5.a 🟡 **El juego no llenaba la ventana del navegador (2026-09-24).** Reportado
-   por el usuario: *"cuando se abre el juego en la web no se abre completo"*.
-   **No era el desvío móvil: era un defecto de escritorio.** El preset tenía
-   `html/canvas_resize_policy=1` ("Project"), que fija la resolución interna
-   del lienzo en 1280x720 y le escribe estilos en píxeles que pisan el CSS del
-   shell (`width:min(100vw, 100vh*16/9)`). En una pantalla de laptop, con la
-   barra del navegador, el borde inferior quedaba cortado. Se cambió a `2`
-   ("Adaptive"): el lienzo sigue el tamaño de la ventana y, con
-   `stretch/mode=canvas_items` + `aspect=expand` que ya estaban bien, el juego
-   escala completo. Solo cambia una línea del `index.html`; el `.pck` y el
-   `.wasm` no se tocan. **Falta que el usuario lo confirme en su navegador**:
-   no hay forma de verificarlo desde acá.
+5.a ✅ ~~**El juego no llenaba la ventana del navegador.**~~ Resuelto y
+   **verificado por el usuario en su navegador el 2026-09-24**: entra completo,
+   el panel queda centrado y escala al achicar la ventana.
+
+   Se conserva el diagnóstico porque fueron **dos** defectos distintos y el
+   primer intento de arreglo empeoró el problema. Reportado por el usuario:
+   *"cuando se abre el juego en la web no se abre completo"*. **No era el
+   desvío móvil: era un defecto de escritorio.**
+
+   - `html/canvas_resize_policy=1` ("Project"): `updateSize()` del motor
+     escribe `canvas.style.width/height` en píxeles del tamaño del proyecto
+     (1280x720) y pisa el `width:min(100vw, 100vh*16/9)` de la plantilla. En
+     una laptop, con la barra del navegador, el borde inferior quedaba fuera.
+     **Ese era el problema original.**
+   - Pasar a `2` ("Adaptive") **solo** no alcanzaba: con esa política
+     `_godot_js_display_setup_canvas()` fuerza `position:absolute; top:0;
+     left:0` pero **no borra** el `transform:translate(-50%,-50%)` que la
+     plantilla usa para centrar, y el lienzo quedaba corrido media pantalla
+     arriba y a la izquierda, con el login fuera de vista.
+   - El arreglo es la política 2 **más** quitarle ese centrado al CSS. Lo hace
+     `parchear_canvas()` en `scripts/exportar_web.py` después de exportar; si
+     Godot cambia su plantilla, esa función corta la exportación en vez de
+     publicar una pantalla rota. El `.pck` y el `.wasm` no se tocan.
 
 5. 🔴 **Requisito responsive/móvil — DESVÍO DECIDIDO (2026-09-20).** El
    equipo decidió que el alcance del juego es **navegador de escritorio
