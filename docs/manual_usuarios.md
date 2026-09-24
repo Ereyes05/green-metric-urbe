@@ -77,9 +77,9 @@ El juego **no se instala**. Se abre desde el navegador.
 | **Dirección** | https://ereyes05.github.io/green-metric-urbe/juego/ |
 | **Navegador** | Google Chrome, Microsoft Edge, Firefox u Opera, en una versión de los últimos dos años. |
 | **Conexión** | Permanente. El progreso se guarda en un servidor, no en la computadora. |
-| **Descarga inicial** | Aproximadamente 45 MB la primera vez. Después el navegador reutiliza casi todo y la carga es mucho más rápida. |
+| **Descarga inicial** | Aproximadamente 41 MB la primera vez. Después el navegador reutiliza casi todo: en los ingresos siguientes solo baja 1,4 MB. |
 | **Dispositivo** | Computadora de escritorio, portátil, tableta o teléfono. En pantalla táctil aparecen controles en pantalla automáticamente. |
-| **Correo electrónico** | Necesario para registrarse. Debe ser de un dominio permitido (por ejemplo `@gmail.com`). |
+| **Correo electrónico** | Necesario para registrarse, y hay que poder **abrirlo**: la cuenta se confirma con un enlace que llega ahí. No hace falta correo institucional (ver 3.1). |
 
 > **Sobre la primera carga.** Al abrir la dirección aparece una barra de progreso. En una conexión lenta puede tardar uno o dos minutos. No es un bloqueo: es la descarga del juego.
 
@@ -109,8 +109,18 @@ Al terminar la carga aparece la pantalla de acceso.
 | **Confirmar contraseña** | La misma contraseña, otra vez. |
 
 3. Pulsar **Registrarme**.
+4. **Abrir el correo y confirmar la cuenta.** Llegará un mensaje con un enlace. **Hasta no pulsarlo, la cuenta no puede iniciar sesión.**
+5. Volver al juego e iniciar sesión normalmente.
 
-> **Si el correo es rechazado**, el formulario lo avisa antes de enviarlo e indica cuáles dominios se aceptan. No es un error del sistema: es una restricción de seguridad para que solo se registren correos legítimos.
+> **El paso 4 no es opcional.** Es el que más confusión causa: la cuenta *se crea* al pulsar Registrarme, pero queda sin confirmar. Si se intenta entrar antes de abrir el correo, el juego avisa *"Cuenta creada. Te enviamos un correo para confirmarla"*. **Revisar también la carpeta de correo no deseado**, que es donde suele caer.
+
+### Qué correos se aceptan
+
+No hace falta tener un correo institucional. Se acepta cualquiera de estos dominios:
+
+`urbe.edu` · `gmail.com` · `outlook.com` · `hotmail.com` · `yahoo.com` · `icloud.com`
+
+> **Si el correo es rechazado**, el formulario lo avisa antes de enviarlo e indica cuáles dominios se aceptan. No es un error del sistema: es una restricción para que no se registren correos inventados. La lista se valida **dos veces**: en el formulario, para dar un mensaje claro, y otra vez en el servidor, para que no se pueda saltar.
 
 **[CAPTURA 3]** — El formulario de registro con todos los campos visibles.
 
@@ -470,6 +480,8 @@ El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar 
 |---|---|---|
 | La pantalla de carga no avanza | Conexión lenta o intermitente | Esperar. Si pasan varios minutos, recargar con **F5**. |
 | "Correo no permitido" al registrarse | El dominio del correo no está en la lista autorizada | Usar un correo de un dominio permitido; el mensaje indica cuáles. |
+| **Me registré pero no puedo entrar** | **La cuenta no está confirmada** | **Abrir el correo de confirmación y pulsar el enlace. Revisar *Spam*.** |
+| No llega el correo de confirmación | Tarda, o cayó en correo no deseado | Esperar unos minutos y revisar *Spam*. Si varios se registran a la vez, los correos pueden demorar. |
 | No llega el código de recuperación | Está en la carpeta de correo no deseado | Revisar *Spam* o *Correo no deseado*. |
 | Pulso **E** y no pasa nada | El personaje está demasiado lejos | Acercarse más al NPC o al punto de la misión. |
 | Una misión dice que falta una herramienta | No se ha comprado el kit correspondiente | Abrir la tienda (tecla **5**) y comprarlo. El juego señala cuál. |
