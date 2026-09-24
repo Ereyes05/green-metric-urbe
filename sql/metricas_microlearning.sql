@@ -100,3 +100,53 @@ select 'D. tamaño de la muestra', 'sesiones distintas',
        count(distinct session_id)::text from completadas
 
  order by 1, 2;
+
+
+-- ════════════════════════════════════════════════════════════
+-- SEGUIMIENTO (2026-09-24) — corré esto aparte, después del bloque de
+-- arriba. Responde dos preguntas que el primer resultado dejó abiertas.
+--
+-- Qué salió la primera vez: 14 misiones medidas, 0,8 min de promedio, la
+-- más lenta 2,7 min, y 0 de 6 sesiones en el rango de 10 a 15 minutos.
+-- O sea que el "14 de 14 por debajo de 15 min" se cumple de forma trivial
+-- —nada llega a 3 minutos— y la promesa de la sesión no se cumple.
+--
+-- Hipótesis a comprobar: (1) las 14 medidas son sobre todo quizzes de NPC,
+-- porque varias misiones de campo registran el final pero no el inicio, así
+-- que no forman par; (2) la unidad de 10 a 15 minutos de la Tabla 9 no es la
+-- misión sino el NIVEL completo.
+-- ════════════════════════════════════════════════════════════
+
+-- 1. QUÉ se midió exactamente.
+select m.mision_id,
+       coalesce(c.tipo, 'fuera del catálogo')       as tipo,
+       count(*)                                     as veces,
+       round(avg(m.minutos)::numeric, 1)            as min_promedio
+  from (select user_id, session_id, mision_id,
+               extract(epoch from (
+                 max(creado_en) filter (where tipo_evento = 'mision_completada')
+               - min(creado_en) filter (where tipo_evento = 'mision_iniciada'))) / 60.0 as minutos
+          from eventos_aprendizaje
+         group by user_id, session_id, mision_id) m
+  left join catalogo_misiones c on c.mision_id = m.mision_id
+ where m.minutos is not null and m.minutos > 0
+ group by m.mision_id, c.tipo
+ order by veces desc, m.mision_id;
+
+
+-- 2. Cuánto tarda un NIVEL completo, que es la unidad que la Tabla 9
+-- probablemente describe. Del primer al último evento del nivel dentro de
+-- una misma sesión: esto NO infla como la sesión entera, porque se acota al
+-- nivel, pero sigue contando las pausas dentro de él.
+select nivel,
+       count(*)                                   as veces,
+       round(avg(minutos)::numeric, 1)            as min_promedio,
+       round(min(minutos)::numeric, 1)            as min_mas_corto,
+       round(max(minutos)::numeric, 1)            as min_mas_largo
+  from (select user_id, session_id, nivel,
+               extract(epoch from (max(creado_en) - min(creado_en))) / 60.0 as minutos
+          from eventos_aprendizaje
+         group by user_id, session_id, nivel) t
+ where minutos > 0
+ group by nivel
+ order by nivel;
