@@ -103,7 +103,7 @@ Al terminar la carga aparece la pantalla de acceso.
 | **Nombre completo** | Nombre y apellido del estudiante. Es el que aparece en el ranking. |
 | **Cédula** | Número de cédula. **No se muestra a nadie más**: solo sirve para identificar al estudiante internamente. |
 | **Correo electrónico** | Un correo válido y de un dominio permitido. Será el usuario para entrar. |
-| **Carrera** | Se elige de la lista. |
+| **Carrera** | Se elige de la lista. **Ingeniería en Informática** es la primera opción. |
 | **Trimestre** | Se elige de la lista. |
 | **Contraseña** | Mínimo seis caracteres. |
 | **Confirmar contraseña** | La misma contraseña, otra vez. |
@@ -132,6 +132,8 @@ Si los datos son correctos, el juego carga el progreso guardado y lleva directam
 ### 3.3. Si se olvidó la contraseña
 
 **Avisarle al docente o responsable de la actividad**, que la cambia en el momento. No hay que hacer ningún trámite.
+
+En el juego no aparece ninguna opción de recuperar la contraseña: está oculta a propósito mientras no haya un servicio de correo (ver la nota de abajo).
 
 > **Nota para el equipo — borrar antes de entregar.**
 > La pantalla *"¿Olvidaste tu contraseña?"* existe en el juego y está programada, pero **hoy no funciona para los estudiantes** y peor: dice *"¡Código enviado!"* aunque no se haya enviado nada. El correo lo manda el servicio interno de Supabase, que solo entrega a las direcciones del equipo del proyecto y admite 2 mensajes por hora.

@@ -56,6 +56,20 @@ const FONDO_ILUSTRADO_PATH : String = "res://assets/sprites/login_fondo.png"
 const EMAIL_REGEX          : String = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
 const DOMINIOS_PERMITIDOS  : Array  = ["urbe.edu", "gmail.com", "outlook.com",
 										"hotmail.com", "yahoo.com", "icloud.com"]
+
+# ¿Se muestra "¿Olvidaste tu contraseña?"?
+#
+# En false desde el 2026-09-24. La pantalla de recuperación está completa y
+# funciona contra la API, pero el correo no sale: el servicio que Supabase
+# trae de fábrica solo entrega a las direcciones del equipo del proyecto y
+# admite 2 mensajes por hora. Al estudiante no le llega nada y la pantalla
+# le dice "¡Código enviado! Revisa tu bandeja" igual — o sea que afirma en
+# falso, que es peor que no ofrecer la opción.
+#
+# El código de la recuperación NO se borra: sigue entero y probado. Cuando
+# se contrate un SMTP propio (ver docs/supabase_correos.md), esto vuelve a
+# true y la pantalla reaparece tal cual estaba.
+const RECUPERACION_POR_CORREO : bool = false
 var _re_email : RegEx = null
 
 # ── Estado ───────────────────────────────────────────────────
@@ -221,12 +235,14 @@ func _ready() -> void:
 	# Estilizar panel login (nodos del .tscn)
 	_aplicar_estilo_panel_tscn()
 
-	# Botón "¿Olvidaste tu contraseña?"
-	var btn_olvide := _btn_link("¿Olvidaste tu contraseña?",
-								TEMA.CIAN)
 	var vlogin := _btn_reg.get_parent() as VBoxContainer
-	vlogin.add_child(btn_olvide)
-	vlogin.move_child(btn_olvide, _btn_reg.get_index() + 1)
+
+	# Botón "¿Olvidaste tu contraseña?" — oculto mientras no haya correo.
+	var btn_olvide : Button = null
+	if RECUPERACION_POR_CORREO:
+		btn_olvide = _btn_link("¿Olvidaste tu contraseña?", TEMA.CIAN)
+		vlogin.add_child(btn_olvide)
+		vlogin.move_child(btn_olvide, _btn_reg.get_index() + 1)
 
 	# Spinner de carga
 	_spinner_label = Label.new()
@@ -240,9 +256,10 @@ func _ready() -> void:
 	# Conexiones botones login
 	_btn_login.pressed.connect(_on_login_pressed)
 	_btn_reg.pressed.connect(func(): _cambiar_panel("registro"))
-	btn_olvide.pressed.connect(func():
-		_resetear_panel_recuperacion()
-		_cambiar_panel("recuperar"))
+	if btn_olvide:
+		btn_olvide.pressed.connect(func():
+			_resetear_panel_recuperacion()
+			_cambiar_panel("recuperar"))
 
 	# Hover en botón principal
 	_btn_login.mouse_entered.connect(func():
@@ -454,7 +471,12 @@ func _crear_panel_registro() -> void:
 	_lbl_sec(vbox, "Información académica")
 	_lbl(vbox, "Carrera:")
 	_reg_carrera = OptionButton.new()
-	for c in ["Ingeniería en Computación", "Ingeniería Industrial",
+	# Informática va primera porque es la población del estudio (el Cap. 3
+	# define la muestra como "estudiantes de Informática de la URBE") y
+	# faltaba: hasta el 2026-09-24 tenían que anotarse como "Computación"
+	# o "Otra", justo los que más van a usar el juego.
+	for c in ["Ingeniería en Informática", "Ingeniería en Computación",
+			  "Ingeniería Industrial",
 			  "Ingeniería Eléctrica", "Ingeniería de Telecomunicaciones",
 			  "Arquitectura", "Administración de Empresas",
 			  "Contaduría Pública", "Comunicación Social",
