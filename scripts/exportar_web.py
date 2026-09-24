@@ -114,7 +114,7 @@ def verificar_secretos() -> None:
     print(f"Verificado: {len(rutas)} archivos empaquetados, ninguno sensible.")
 
 
-PESO_ESPERADO_MB = 5.5
+PESO_ESPERADO_MB = 2.0
 """Techo del .pck. Los estudiantes lo descargan por internet en cada
 partida, así que un salto de peso es un problema, no un detalle.
 
@@ -122,9 +122,21 @@ Ya pasó dos veces que una imagen sin usar se empaquetara igual: el export
 va con export_filter="all_resources", o sea que mete TODO lo que esté en
 el proyecto, la referencie alguien o no. mapa_campus_urbe.png (2,4 MB) se
 descargó durante meses sin dibujarse nunca, y urbe_removed (1).png
-(6,8 MB, el mapa nuevo todavía sin usar) casi duplica el build. Si este
-chequeo salta: o el archivo se agrega a exclude_filter en
-export_presets.cfg, o de verdad hace falta y se sube el techo a mano.
+(6,8 MB, el mapa nuevo todavía sin usar) casi duplica el build.
+
+Y una tercera vez el problema no fue un archivo de más sino su AJUSTE de
+importación: login_fondo.png entraba como textura sin pérdida y ocupaba
+3,37 MB de un .pck de 4,6 MB. El 76 % de lo que cada estudiante bajaba era
+la ilustración del login. Con compress/mode=1 (con pérdida, calidad 0,85)
+quedó en 0,30 MB, con una diferencia media de 1,3/255 a la resolución en
+que se ve: invisible. El techo bajó de 5,5 a 2,0 MB por eso — con 4,6 MB
+de techo, un descuido de este tamaño vuelve a pasar sin que nadie se
+entere.
+
+Si este chequeo salta: puede ser un archivo que sobra (se agrega a
+exclude_filter en export_presets.cfg) o una textura mal importada
+(revisar compress/mode en su .import). Subir el techo es la última
+opción, no la primera.
 """
 
 
