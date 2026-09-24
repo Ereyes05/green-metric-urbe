@@ -150,3 +150,47 @@ select nivel,
  where minutos > 0
  group by nivel
  order by nivel;
+
+
+-- ════════════════════════════════════════════════════════════
+-- TIEMPO ACTIVO POR NIVEL (2026-09-24) — la medición buena.
+--
+-- Por qué hace falta. El seguimiento anterior midió del primer al último
+-- evento de un nivel, y el Nivel 1 dio 783,9 minutos: trece horas. Nadie
+-- jugó trece horas — alguien dejó la pestaña abierta. Esa medida cuenta
+-- tiempo TRANSCURRIDO, no tiempo jugando, así que sirve como techo y no
+-- como dato.
+--
+-- Cómo se corrige. Se suman los huecos entre eventos consecutivos, pero
+-- ignorando los mayores a 5 minutos: si pasaron más de 5 minutos sin que el
+-- estudiante hiciera nada, no estaba jugando. Es la técnica habitual para
+-- estimar tiempo activo, y la regla queda declarada en vez de escondida.
+--
+-- El umbral de 5 minutos es una decisión, no una verdad: está en la
+-- constante de abajo para poder probarlo con otro valor y ver si cambia la
+-- conclusión. Si con 3 y con 10 minutos da parecido, el resultado es sólido.
+-- ════════════════════════════════════════════════════════════
+with pasos as (
+  select user_id, session_id, nivel, creado_en,
+         creado_en - lag(creado_en) over (
+           partition by user_id, session_id, nivel order by creado_en) as hueco
+    from eventos_aprendizaje
+),
+activo as (
+  select user_id, session_id, nivel,
+         sum(extract(epoch from hueco)) filter (
+           where hueco <= interval '5 minutes')          -- <<< el umbral
+         / 60.0 as minutos
+    from pasos
+   group by user_id, session_id, nivel
+)
+select nivel,
+       count(*)                                            as recorridos,
+       round(avg(minutos)::numeric, 1)                     as min_activo_prom,
+       round(min(minutos)::numeric, 1)                     as min_mas_corto,
+       round(max(minutos)::numeric, 1)                     as min_mas_largo,
+       count(*) filter (where minutos between 10 and 15)   as en_rango_10_15
+  from activo
+ where minutos is not null and minutos > 0
+ group by nivel
+ order by nivel;
