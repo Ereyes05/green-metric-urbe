@@ -1,18 +1,28 @@
-# Manual de usuarios
+# BORRADOR — Manual de usuarios
 
 ## URBE Rangers: Eco-Quest
 
 ### Entorno virtual de aprendizaje gamificado para el empoderamiento estudiantil en los indicadores UI GreenMetric
 
 **Universidad Dr. Rafael Belloso Chacín (URBE)** · Maracaibo, Venezuela
-**Versión del manual:** 1.0 · **Fecha:** 2026-09-24
+**Estado:** 🚧 **BORRADOR — no entregar en esta forma**
+**Versión:** 0.1 · **Fecha:** 2026-09-24
 **Dirigido a:** estudiantes usuarios del sistema y al personal docente o administrativo que lo supervise.
 
 ---
 
-> **Nota para el equipo — borrar antes de entregar.**
-> Este documento cubre el **objetivo específico 6** (*"Explicar el funcionamiento del modelo pedagógico gamificado a través del manual de usuarios"*, Fase V). El texto está completo y verificado contra el código.
-> Faltan las **capturas de pantalla**: cada una está marcada con `[CAPTURA N]` y dice exactamente qué debe mostrar. Se toman abriendo el juego publicado y usando la tecla **Impr Pant** o la herramienta **Recortes** de Windows.
+> ## 🚧 Esto es un borrador
+>
+> **No es el manual terminado.** Es una base sobre la que trabajar, y le falta lo siguiente antes de que se pueda entregar:
+>
+> 1. **Las 21 capturas de pantalla.** Están marcadas `[CAPTURA 1]` … `[CAPTURA 21]`, y cada una dice qué debe mostrar. Se toman abriendo el juego publicado, con la herramienta **Recortes** de Windows.
+> 2. **La revisión del equipo.** El texto lo redactó el asistente a partir del código fuente, no de haber jugado el juego como estudiante. Puede haber cosas que en la práctica se entiendan distinto.
+> 3. **El formato final** que pida la universidad: portada, numeración, tipografía, y pasarlo a Word o PDF.
+> 4. **Borrar este recuadro y el encabezado "BORRADOR"** cuando lo anterior esté hecho.
+>
+> **Qué sí está resuelto:** el contenido está **verificado contra el código**, no escrito de memoria. Los precios de la tienda salen de `sql/tienda_ecocredits.sql`; las insignias, de `sql/insignias_1_migracion.sql` y `sql/insignias_3_compras.sql`; los niveles y sus misiones, de `autoload/NivelManager.gd`; los rangos, de `autoload/rangos.gd`; los controles, del mapa de entradas de `project.godot`.
+>
+> **Para qué sirve:** cubre el **objetivo específico 6** del Capítulo 1 — *"Explicar el funcionamiento del modelo pedagógico gamificado a través del manual de usuarios"* (Fase V) —, que hasta ahora no tenía ningún documento que lo respaldara.
 
 ---
 
