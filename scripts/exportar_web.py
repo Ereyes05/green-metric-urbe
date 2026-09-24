@@ -138,11 +138,52 @@ def verificar_peso() -> None:
         sys.exit("No publiques sin entender de dónde salió el peso.")
 
 
+CSS_CANVAS_GODOT = ("canvas{display:block;position:absolute;top:50%;left:50%;"
+                    "transform:translate(-50%,-50%);width:min(100vw,calc(100vh*16/9));"
+                    "height:min(100vh,calc(100vw*9/16))}")
+
+CSS_CANVAS_NUESTRO = "canvas{display:block;position:absolute;top:0;left:0;width:100vw;height:100vh}"
+
+
+def parchear_canvas() -> None:
+    """Quita el centrado del shell de Godot, que pelea con canvas_resize_policy=2.
+
+    Con la política 2 ("Adaptive") el motor hace dos cosas en su propio
+    JavaScript: fuerza `position:absolute; top:0; left:0` sobre el lienzo, y en
+    cada updateSize() le escribe `style.width`/`style.height` en píxeles del
+    tamaño de la ventana. Lo que NO hace es borrar el
+    `transform:translate(-50%,-50%)` que trae su plantilla para centrar, así
+    que el lienzo termina corrido media pantalla hacia arriba y a la izquierda.
+
+    (Con la política 1, el mismo updateSize() escribía 1280x720 px fijos y
+    pisaba el `width:min(100vw,...)` de la plantilla: por eso en pantallas de
+    laptop el borde inferior quedaba fuera. Ese era el problema original.)
+
+    El reemplazo deja el lienzo ocupando la ventana entera. El escalado del
+    juego lo resuelve Godot con stretch/mode=canvas_items y aspect=expand, que
+    ya estaban bien configurados.
+
+    Si algún día Godot cambia su plantilla, el assert corta la exportación en
+    vez de publicar una pantalla rota sin que nadie se entere.
+    """
+    ruta = DESTINO / "index.html"
+    html = ruta.read_text(encoding="utf-8")
+    if CSS_CANVAS_NUESTRO in html:
+        print("Lienzo: ya estaba parcheado.")
+        return
+    if CSS_CANVAS_GODOT not in html:
+        sys.exit("El CSS del lienzo en index.html no es el esperado: revisar "
+                 "parchear_canvas() en este script antes de publicar.")
+    ruta.write_text(html.replace(CSS_CANVAS_GODOT, CSS_CANVAS_NUESTRO, 1), encoding="utf-8")
+    print("Lienzo: centrado del shell reemplazado por ventana completa.")
+
+
 def main() -> None:
     godot = buscar_godot()
     exportar(godot)
     verificar_secretos()
     verificar_peso()
+    parchear_canvas()
     version = versionar_pck()
     marcadores()
     mb = (DESTINO / "index.pck").stat().st_size / 1e6
