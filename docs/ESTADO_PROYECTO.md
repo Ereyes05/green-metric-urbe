@@ -4,9 +4,18 @@ Este documento es el contexto completo del proyecto para cualquiera que se
 sume: qué es, qué hay hecho, por qué se hizo así, y qué falta. **Se actualiza
 en cada cambio importante** — ver la sección final para las reglas de eso.
 
-Última actualización: 2026-09-17 (Nivel 5 — Plan de Movilidad, proyecto B del
-puntaje GreenMetric, implementado en el cliente; migración de misiones,
-re-export y prueba con cuenta real pendientes — ver secciones 3, 4 y 8).
+Última actualización: **2026-09-24**. Desde el 2026-09-17 (Nivel 5) cambiaron
+varias cosas de fondo — están todas en la sección 12, al final. Lo más
+importante en una línea cada una:
+
+- **Faltan dos de los seis objetivos específicos** de la tesis. Eso manda sobre
+  todo lo demás: ver [revision_capitulos.md](revision_capitulos.md).
+- Existe un **borrador del manual de usuarios**: [manual_usuarios.md](manual_usuarios.md).
+- Las **insignias las decide el servidor**, no el cliente.
+- Se eliminaron **energía y vidas**.
+- El **registro ya no manda correo** y la recuperación de contraseña está oculta.
+- La descarga del juego bajó de **4,6 a 1,4 MB**.
+- Hay **22 suites de prueba** en `tests/`.
 
 > ⚠️ **Si vas a tomar cualquier decisión de diseño, leé primero la
 > [sección 9: El marco académico](#9-el-marco-académico-la-tesis--leer-antes-de-decidir-diseño).**
@@ -81,7 +90,7 @@ escena principal. No lo repito aquí para no duplicar y desincronizar.
   los crea y les pasa los datos:
   - `hud_tema.gd` — únicos tokens de color/fuente/radio del HUD.
   - `hud_barra.gd` — barra de progreso genérica (fracción → ancho, con tween).
-  - `hud_ficha_jugador.gd` — nombre, vidas, nivel de misiones, rango,
+  - `hud_ficha_jugador.gd` — nombre, nivel de misiones, rango,
     EcoCredits y barra hacia el siguiente rango. **No muestra categorías**:
     hasta el 2026-09-20 repetía Verde/Agua/Educación con el mismo número que
     el panel GreenMetric y con otro nombre para la categoría 1. El panel es la
@@ -666,13 +675,16 @@ mecanismo técnico de escaneo → activación a distancia.
   **Falta: una compra real de punta a punta con una cuenta** (no se pudo
   hacer sin credenciales). Verificable consultando
   `movimientos_ecocredits` e `inventario_estudiante` después de probar.
-- [ ] **Insignias no se guardan** — siguen solo en memoria. Existen tablas
-  `insignias` e `insignias_estudiante` en Supabase que el juego no usa.
-- [ ] **Las 3 vidas del HUD son decorativas.** `energia_actual` arranca en 3
-  y nada la baja: el código que la descontaba (racha de fallos en quiz) y el
-  que la recuperaba (25 EC, o un quiz remedial de 7 preguntas) nunca tuvo
-  quien lo llamara, y se borró el 2026-09-20. Hay que decidir: darle
-  significado a las vidas, o sacar los corazones de `hud_ficha_jugador`.
+- [x] **Insignias no se guardan** — resuelto el 2026-09-23. Las decide el
+  servidor (`sql/insignias_1_migracion.sql` + `sql/insignias_3_compras.sql`):
+  `evaluar_insignias()` las otorga y el cliente solo refleja el resultado, así
+  que no se pueden falsear desde el navegador. **Pendiente de decisión:** las
+  tablas viejas `insignias` e `insignias_estudiante` quedaron sin uso y
+  conviene borrarlas.
+- [x] **Las 3 vidas del HUD son decorativas** — resuelto el 2026-09-20
+  sacándolas. Ningún capítulo de la tesis pedía un sistema de vidas, y el
+  código que las movía nunca tuvo quien lo llamara. Se eliminó el sistema
+  completo en vez de inventarle un significado.
 - [x] **Zonas verdes mejorables: código muerto** — resuelto el 2026-09-20:
   se borró `zona_verde.gd` con su panel de mejora, `DATOS_ZONAS_VERDES` y
   `refs_zonas`/`zonas_restauradas` en `EconomiaManager`. **Ojo si se
@@ -1093,3 +1105,109 @@ Al actualizar:
 - Si resolviste un pendiente de la sección 8, sacalo de ahí (o marcalo
   hecho con la fecha, si vale la pena el rastro).
 - Actualizá la fecha y el commit de "Última actualización" al principio.
+
+---
+
+## 12. Qué cambió entre el 2026-09-17 y el 2026-09-24
+
+Esta sección existe para que quien vuelva después del Nivel 5 no tenga que
+leer el historial de commits. Lo de arriba ya está corregido; esto es el
+resumen de por qué.
+
+### 12.1. Lo más importante no es del código: faltan dos objetivos
+
+El **Capítulo 1 define seis objetivos específicos** y el **Capítulo 4 solo
+documenta las Fases I, II y III**. Quedaron sin sección:
+
+- **Objetivo 5** — *"Validar el funcionamiento mediante pruebas técnicas"* (Fase IV)
+- **Objetivo 6** — *"Explicar el funcionamiento a través del manual de usuarios"* (Fase V)
+
+Es más grande que cualquier cosa de la auditoría del Cap. 4, porque son dos
+de los seis objetivos de la investigación. Detalle y las dos preguntas para
+el tutor: [revision_capitulos.md](revision_capitulos.md).
+
+**Del lado del código no falta nada que la tesis exija.** Antes de proponer
+trabajo nuevo, revisar si algún capítulo lo pide.
+
+### 12.2. Insignias en el servidor
+
+`evaluar_insignias()` (`sql/insignias_1_migracion.sql`, `sql/insignias_3_compras.sql`,
+aplicadas el 2026-09-23) decide qué insignias corresponden leyendo la base:
+misiones completas por categoría, quiz sin fallos, crisis resuelta, racha de
+tres días y las dos compradas en la tienda. El cliente solo refleja lo que el
+servidor responde — `EconomiaManager` ya no tiene catálogo propio.
+
+`ecolider` **ignora las insignias compradas**: si contaran, se podría comprar
+el máximo reconocimiento del juego con EcoCredits en vez de jugarlo.
+
+### 12.3. Se eliminaron energía y vidas
+
+Ningún capítulo las pedía y el código que las movía nunca tuvo quien lo
+llamara. Divulgado en [auditoria_capitulo4.md](auditoria_capitulo4.md);
+recuperable en git (commit `38b2d1a`).
+
+### 12.4. Registro y correo
+
+- **La confirmación por correo está apagada** (2026-09-24). El servicio de
+  correo de fábrica de Supabase **solo entrega a las direcciones del equipo
+  del proyecto** y admite 2 mensajes por hora: a los estudiantes no les
+  llegaba nada. Sin esto, la prueba de usabilidad era imposible.
+- **"¿Olvidaste tu contraseña?" está oculto**, detrás de
+  `RECUPERACION_POR_CORREO` en `SceneLogin.gd`. La pantalla funciona contra la
+  API pero el correo no sale, y decía *"¡Código enviado!"* igual. Afirmar en
+  falso es peor que no ofrecer la opción. Se resuelve a mano desde
+  *Authentication → Users*.
+- **Faltaba "Ingeniería en Informática"** en las carreras del registro — la
+  población del estudio. Estaba solo "Computación", que es otra carrera.
+- Todo el porqué y qué haría falta para tener correo de verdad:
+  [supabase_correos.md](supabase_correos.md).
+
+### 12.5. El juego pesa un tercio
+
+El `.pck` pasó de **4,6 a 1,4 MB**. No sobraba nada: `login_fondo.png` entraba
+con `compress/mode=0` (sin pérdida) y ocupaba 3,37 MB — el **76 %** de lo que
+cada estudiante descargaba era el fondo del login. Con `compress/mode=1`
+(calidad 0,85) quedó en 0,30 MB, con una diferencia media de 1,27/255 a la
+resolución en que se ve.
+
+El techo de `scripts/exportar_web.py` bajó de 5,5 a **2,0 MB**: con 5,5 este
+descuido cabía holgado y nadie se enteraba.
+
+> **Si agregás una imagen, mirá su `.import` antes de exportar.** El export va
+> con `export_filter="all_resources"`: empaqueta todo lo que esté en el
+> proyecto, lo use alguien o no, y con el ajuste de importación que tenga.
+
+### 12.6. Hay pruebas
+
+**22 suites** en `tests/`. Se corren a mano, no hay CI:
+
+```
+godot --headless --path . res://tests/test_login.tscn
+```
+
+Código de salida 0 = pasa. No tocan la red ni dejan datos.
+
+**Lo que las pruebas no ven:** cómo se ve la pantalla, y si una misión quedó
+dentro de una pared. Eso sigue siendo jugar y mirar — que es exactamente cómo
+apareció lo del correo de recuperación.
+
+### 12.7. Cosas que siguen sin versionar
+
+Viven **solo en el panel de Supabase**. Si alguien las borra, no hay de dónde
+sacarlas:
+
+- `handle_new_user` — el trigger que valida el dominio del correo y crea la
+  ficha del estudiante al registrarse. **Si se pierde, nadie puede
+  registrarse.**
+- Las tablas `progreso_estudiante`, `modulos_greenmetric` y la de estudiantes.
+- Las plantillas de correo (respaldadas en [supabase_correos.md](supabase_correos.md),
+  aunque hoy no se pueden editar sin SMTP propio).
+
+### 12.8. Decisión tomada: el mapa nuevo queda para después de la defensa
+
+`assets/urbe_removed (1).png` (2814×1536) **no se borra** — es el que se va a
+usar. Pero no se implementa ahora: el campus son 773 líneas de código que lo
+dibujan a mano más ~57 coordenadas escritas a mano (10 colisiones, 12 NPC,
+~32 puntos de misión) que habría que reubicar contra un dibujo distinto, y eso
+no se verifica con pruebas sino jugando. **Ningún capítulo promete un mapa
+específico.**

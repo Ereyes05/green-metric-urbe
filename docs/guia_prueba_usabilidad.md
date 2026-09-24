@@ -25,6 +25,8 @@ Con **4 estudiantes alcanza**. En usabilidad, con 5 usuarios se detecta la mayor
 - [ ] Una computadora con navegador y buen internet. **No sirve el celular**: el juego es de escritorio.
 - [ ] La URL: **https://ereyes05.github.io/green-metric-urbe/juego/**
 - [ ] Cada estudiante con **su propia cuenta**, creada por él en el momento (es la Tarea 1). El correo tiene que ser de un dominio aceptado: `urbe.edu`, `gmail.com`, `outlook.com`, `hotmail.com`, `yahoo.com` o `icloud.com`.
+- [ ] **No hace falta que abran el correo.** Desde el 2026-09-24 el registro no manda ninguna confirmación: se llena el formulario y se entra. Si alguien se queda esperando un correo, es que algo se volvió a cambiar en Supabase — revisá [supabase_correos.md](supabase_correos.md).
+- [ ] **Si alguno olvida su contraseña**, se la cambiás vos desde el panel de Supabase (*Authentication → Users*). En el juego no hay opción de recuperarla: está oculta a propósito, porque el correo no sale y la pantalla decía que sí.
 - [ ] **Dos personas por sesión:** uno facilita (habla), otro observa y anota. No se puede hacer bien solo.
 - [ ] Una planilla impresa por estudiante (está al final de esta guía).
 - [ ] Reloj o cronómetro.
@@ -68,6 +70,8 @@ No se los digas: si el estudiante no los descubre, eso es un hallazgo.
 **Se logró si:** llega al mapa del campus con su avatar.
 
 **Mirá:** ¿entiende que tiene que registrarse y no iniciar sesión? ¿el mensaje de error del correo se entiende si pone uno de dominio no aceptado? ¿cuánto tarda?
+
+**Miralo especialmente acá:** ¿encuentra **su carrera** en la lista? *Ingeniería en Informática* se agregó el 2026-09-24 y va primera — antes no estaba, así que los estudiantes del estudio tenían que anotarse como *Computación* o *Otra*. Si alguno duda o elige mal igual, eso es un hallazgo de la lista, no del estudiante.
 
 ### Tarea 2 — El tutorial · HU-003
 

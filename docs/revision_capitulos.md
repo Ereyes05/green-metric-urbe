@@ -24,7 +24,7 @@ El **Capítulo 1** define seis objetivos específicos. El **Capítulo 4** docume
 Y se enlaza con lo que ya sabíamos:
 
 - **El objetivo 5 es la prueba de usabilidad.** El Cuadro 2 del Cap. 3 la detalla: *"pruebas funcionales y de usabilidad con estudiantes"*, recurso *"estudiantes piloto"*. Nunca se hizo. La guía para hacerla está en [guia_prueba_usabilidad.md](guia_prueba_usabilidad.md).
-- **El objetivo 6 es el manual de usuarios.** No existe: no está en el repositorio ni en la carpeta de la tesis.
+- **El objetivo 6 es el manual de usuarios.** Al 2026-09-24 hay un **borrador completo** en [manual_usuarios.md](manual_usuarios.md), verificado contra el código. Le faltan las 20 capturas, la revisión de alguien que haya jugado, y el formato de la universidad.
 
 **Qué hacer:** son dos secciones nuevas al final del Capítulo 4, una por fase. La de la Fase IV se escribe con los resultados de la prueba de usabilidad; la de la Fase V, con el manual. **Consultarlo con el tutor antes de escribir**, porque puede que él espere que las fases IV y V vayan en un capítulo aparte y no dentro del 4.
 
@@ -115,8 +115,21 @@ Detalle completo en [auditoria_capitulo4.md](auditoria_capitulo4.md).
 |---|---|---|
 | 1 | **Preguntarle al tutor** las dos dudas: dónde van las Fases IV y V, y qué hacer con "incremento" en el Cap. 2 | Los tres |
 | 2 | **Hacer la prueba de usabilidad** con los 4 estudiantes piloto → cierra el objetivo 5 y la Tabla 9 | Los tres |
-| 3 | **Escribir el manual de usuarios** → cierra el objetivo 6 | Los tres |
+| 3 | **Terminar el manual de usuarios** (borrador listo; faltan las 20 capturas y la revisión) → cierra el objetivo 6 | Los tres |
 | 4 | Aceptar los cambios del `Capítulo 4 - CAMBIOS PROPUESTOS.docx` | El encargado del Cap. 4 |
 | 5 | Corregir el `JavaScript` de la sección 6.2 y la coma del Cap. 3 | El encargado del Cap. 3 |
 
 **Del lado del código no falta nada que la tesis exija.** Los cinco puntos de arriba son trabajo de documento y de sesiones con estudiantes.
+
+---
+
+## Apéndice: qué se hizo después de esta revisión (2026-09-24)
+
+Nada de esto lo pedía un capítulo — salió de probar el juego — pero dos cosas habrían arruinado la sesión con los estudiantes:
+
+- **El registro pedía confirmar por correo y el correo no llegaba.** El servicio de Supabase solo entrega a las direcciones del equipo del proyecto. Ningún estudiante habría podido entrar. Se apagó la confirmación: ahora se registran y entran.
+- **Faltaba "Ingeniería en Informática"** en la lista de carreras — la población que el Cap. 3 define como muestra. Se habrían registrado todos con la carrera equivocada.
+- Se ocultó *"¿Olvidaste tu contraseña?"*, que decía *"¡Código enviado!"* sin enviar nada.
+- La descarga del juego bajó de 4,6 a 1,4 MB.
+
+Detalle en [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md), sección 12.
