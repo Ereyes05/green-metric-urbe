@@ -1,0 +1,96 @@
+# Correos de Supabase — plantillas y configuración
+
+**Proyecto:** `ikohikbpvtbvsgyumvbr` · **Última revisión:** 2026-09-24
+
+Esto vive **solo en el panel de Supabase**, no en el código. Se guarda acá porque si alguien lo cambia o se pierde, no hay de dónde recuperarlo — y porque cuando está mal, el juego no lo puede arreglar desde su lado.
+
+---
+
+## Por qué existe este archivo
+
+El 2026-09-24 la recuperación de contraseña estaba **rota en producción**.
+
+El juego pide un **código de 6 dígitos** (`SupabaseManager.verificar_codigo_recuperacion` llama a `/auth/v1/verify` con `type=recovery` y `token=<código>`). La plantilla de correo que Supabase trae de fábrica **no muestra ese código**: manda un enlace. Y al pulsar el enlace, el código se consume, así que después ya no sirve.
+
+Encima el enlace apuntaba a `http://localhost:3000`, que es el valor de ejemplo de fábrica, así que terminaba en `ERR_CONNECTION_REFUSED`.
+
+**Regla para el futuro:** si el juego pide un código, la plantilla tiene que mostrar `{{ .Token }}`. Si la plantilla manda un enlace, el juego tendría que aceptar el enlace. Las dos cosas a la vez no funcionan.
+
+---
+
+## 1. URL Configuration
+
+**Authentication → URL Configuration**
+https://supabase.com/dashboard/project/ikohikbpvtbvsgyumvbr/auth/url-configuration
+
+| Campo | Valor |
+|---|---|
+| **Site URL** | `https://ereyes05.github.io/green-metric-urbe/juego/` |
+
+Esto es a dónde vuelve el estudiante después de confirmar su cuenta al registrarse.
+
+> **Ojo con el registro:** aunque el Site URL esté mal, **la cuenta igual queda confirmada** — Supabase la confirma en su servidor *antes* de redirigir. Lo único que falla es la pantalla final. Por eso el registro "funcionaba" con `localhost:3000` y nadie se dio cuenta.
+
+---
+
+## 2. Plantilla: Reset Password
+
+**Authentication → Emails → Reset Password**
+https://supabase.com/dashboard/project/ikohikbpvtbvsgyumvbr/auth/templates
+
+**Asunto:** `Tu código para recuperar la contraseña`
+
+```html
+<h2>Recuperar tu contraseña</h2>
+<p>Tu código para <b>URBE Rangers: Eco-Quest</b> es:</p>
+<p style="font-size:32px;letter-spacing:6px;font-weight:bold;font-family:monospace">{{ .Token }}</p>
+<p>Escribilo en el juego, en la pantalla <b>Recuperar Contraseña</b>.</p>
+<p>El código vence en una hora. Si no pediste esto, ignorá este correo.</p>
+```
+
+**No debe llevar enlace.** Si lo lleva, el estudiante lo pulsa, el código se consume y la recuperación falla con `otp_expired`.
+
+---
+
+## 3. Plantilla: Confirm signup
+
+**Authentication → Emails → Confirm signup**
+
+Esta **sí** usa enlace, y está bien así: el juego no pide código para confirmar la cuenta.
+
+```html
+<h2>Confirmá tu cuenta</h2>
+<p>¡Bienvenido a <b>URBE Rangers: Eco-Quest</b>!</p>
+<p>Pulsá acá para activar tu cuenta y poder entrar al juego:</p>
+<p><a href="{{ .ConfirmationURL }}">Confirmar mi cuenta</a></p>
+<p>Si no te registraste, ignorá este correo.</p>
+```
+
+---
+
+## 4. Límite de envíos — importante para la prueba con estudiantes
+
+El correo lo manda el servicio propio de Supabase, que es **para desarrollo** y tiene un tope bajo de envíos por hora. No avisa: simplemente el correo no llega.
+
+**Authentication → Rate Limits**
+https://supabase.com/dashboard/project/ikohikbpvtbvsgyumvbr/auth/rate-limits
+
+Ahí se ve el número exacto vigente.
+
+**Para la sesión con los 4 estudiantes piloto:** que cada uno se registre **el día anterior**, desde su casa y en distintos momentos. Si los cuatro se registran seguidos, es probable que a los últimos no les llegue nada y queden afuera sin explicación.
+
+Si hiciera falta mandar muchos correos, la salida es configurar un SMTP propio en **Authentication → Emails → SMTP Settings**. Para cuatro estudiantes no hace falta.
+
+---
+
+## Cómo comprobar que quedó bien
+
+1. En el juego, **¿Olvidaste tu contraseña?** → poner un correo real → **Enviar código**.
+2. El correo que llega tiene que traer **6 dígitos a la vista**, y ningún botón que invite a pulsar.
+3. Escribir esos 6 dígitos en el juego → **Verificar código**.
+4. Poner una contraseña nueva → **Cambiar contraseña**.
+5. Entrar con la contraseña nueva.
+
+Si el paso 3 dice *"Código incorrecto o vencido"*, revisar que la plantilla tenga `{{ .Token }}` y **no** un enlace.
+
+> No repetir el paso 1 muchas veces seguidas: se choca con el límite de envíos y después parece que el arreglo no funcionó, cuando el problema es otro.
