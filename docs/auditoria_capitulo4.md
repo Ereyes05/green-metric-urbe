@@ -20,7 +20,7 @@
 | 6 | *"motor de reglas en el backend"* de insignias, con rachas de acceso | 🟢 Cumplido (2026-09-23) |
 | 7 | Trivia contrarreloj + módulo de simulación de decisiones | 🟢 Cumplido |
 | 8 | *"se contempla"* Web Push API / Service Workers | 🟡 No existe, pero el verbo lo salva |
-| 9 | Microlearning: sesiones de 10–15 min | ⚪ Sin verificar (medible hoy) |
+| 9 | Microlearning: sesiones de 10–15 min | 🟡 Medido el 2026-09-24 — parcial |
 | 10 | Sistema de vidas + reposición con quiz remedial | 🟢 **Superada por la Tabla 15** (2026-09-20) |
 | 11 | Tutorial interactivo **obligatorio** | 🟢 Cumplido (2026-09-20) |
 | 12 | Progresión por rangos Semilla→Brote→Árbol→Estratega | 🟢 Cumplido |
@@ -31,7 +31,7 @@
 | 17 | Zonas verdes (M1) y puntos de residuos (M3) | 🟢 Cumplido |
 | 18 | Minijuego de clasificación con tiempo límite | 🟢 Cumplido |
 
-**16 cumplidas, 1 no cumplida, 1 sin verificar.**
+**16 cumplidas, 1 parcial, 1 no cumplida.**
 
 > **Actualizado el 2026-09-20** tras la primera tanda de arreglos: las Tablas
 > 2, 10 y 11 pasaron a cumplidas. El detalle original de cada una se conserva
@@ -176,11 +176,21 @@ relleno sólido.
 
 ---
 
-## La que se puede cerrar con datos que ya tenés
+## Tabla 9 — Microlearning: medido el 2026-09-24
 
-**Tabla 9 — Microlearning, sesiones de 10 a 15 minutos.** Nadie lo verificó, pero `eventos_aprendizaje` ya guarda `mision_iniciada` y `mision_completada` con `creado_en`. La diferencia entre ambos **es** la duración de cada misión.
+Se midió con `sql/metricas_microlearning.sql`. Resultado en dos partes:
 
-Es la única promesa del capítulo que podés **demostrar con evidencia del propio sistema** en vez de afirmarla. Ver `sql/metricas_tesis.sql`.
+**Lo que queda verificado.** Las misiones individuales se completan en menos de tres minutos: promedio **0,8 min**, máximo **2,7 min**, sobre **14 casos** (9 quizzes de NPC entre 0,3 y 0,7 min, y 5 misiones de campo entre 0,6 y 2,7 min). La afirmación *"no deben requerir más de 15 minutos para completarse"* se cumple con holgura. Esto es sólido.
+
+**Lo que NO queda verificado.** El *"rango ideal de interacción continua por sesión entre los 10 y los 15 minutos"* no se observa. Midiendo **tiempo activo** —sumando los huecos entre acciones e ignorando los mayores a 5 minutos— los tramos por nivel dan entre **0,9 y 14,3 minutos**, y solo **1 de 14** cae en el rango declarado.
+
+**Por qué no alcanza para concluir nada en contra.** Cada "recorrido" es la combinación (estudiante, sesión, nivel), o sea **un tramo de juego, no un nivel completo**. Un estudiante que hizo dos misiones del Nivel 2 en una sentada cuenta como un recorrido de 0,9 min. Se están midiendo fragmentos, no recorridos completos, así que el número no puede leerse como "un nivel dura un minuto". Con 2 estudiantes y 14 tramos, el dato no da para afirmar ni desmentir la promesa.
+
+**Qué haría falta:** recorridos completos de estudiantes que jueguen un nivel de punta a punta. Eso llega con la **prueba de usabilidad con los 4 estudiantes piloto** (`docs/guia_prueba_usabilidad.md`). Conviene volver a correr la consulta después de esas sesiones.
+
+**Sobre la limpieza del dato.** Sin descartar la inactividad, el Nivel 1 daba **783,9 minutos** (trece horas: alguien dejó la pestaña abierta). Con el umbral de 5 minutos baja a **4,1**. El umbral es una decisión declarada, no un dato, y está en una sola línea de la consulta para poder probarla con 3 y con 10 minutos y ver si la conclusión aguanta.
+
+**Hallazgo de diseño, aparte de la tesis:** el **Nivel 5** es el único que se acerca al rango (14,3 min de promedio activo, máximo 25,2). Tiene sentido —9 misiones y un Plan de Movilidad con presupuesto— y es el único que roza el techo de 15 minutos que el propio capítulo declara.
 
 ---
 
