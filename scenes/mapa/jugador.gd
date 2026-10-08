@@ -1,6 +1,3 @@
-# ============================================================
-# jugador.gd — URBE Rangers: Eco-Quest
-# ============================================================
 extends CharacterBody2D
 
 const VELOCIDAD     : float  = 120.0
@@ -24,8 +21,7 @@ func _ready() -> void:
 	add_to_group(GRUPO_JUGADOR)
 	if sprite:
 		sprite.play("idle_abajo")
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		sprite.scale = Vector2(1.5, 1.5)
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
 func _physics_process(delta: float) -> void:
