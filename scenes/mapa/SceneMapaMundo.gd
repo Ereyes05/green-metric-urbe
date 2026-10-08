@@ -459,7 +459,7 @@ func _ready() -> void:
 	camara.limit_top    = 0
 	camara.limit_right  = int(MAPA_ANCHO)
 	camara.limit_bottom = int(MAPA_ALTO)
-	camara.zoom         = Vector2(1.5, 1.5)
+	camara.zoom         = Vector2(1.3, 1.3)
 
 	# _progreso_modulos (sidebar) y los índices del HUD (💧🌿📚) solo se
 	# actualizaban de forma reactiva, al completar una misión EN ESA
@@ -1307,9 +1307,9 @@ func _flotar_estrella(idx: int) -> void:
 # ════════════════════════════════════════════════════════════
 func _on_interaccion_iniciada() -> void:
 	var tw := create_tween().set_ease(Tween.EASE_OUT)
-	tw.tween_property(camara, "zoom", Vector2(1.7, 1.7), 0.22)
+	tw.tween_property(camara, "zoom", Vector2(1.5, 1.5), 0.22)
 	tw.tween_interval(0.3)
-	tw.tween_property(camara, "zoom", Vector2(1.5, 1.5), 0.40)
+	tw.tween_property(camara, "zoom", Vector2(1.3, 1.3), 0.40)
 
 
 # ════════════════════════════════════════════════════════════
