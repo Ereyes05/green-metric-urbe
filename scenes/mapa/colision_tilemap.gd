@@ -3,6 +3,7 @@
 # Colisiones alineadas al layout de cuadrícula de mapa_campus.gd
 # Tile 16x16 px. Formato: [cx, cy, ancho, alto] en píxeles.
 # ============================================================
+
 extends TileMapLayer
 
 const TS : int = 16
@@ -43,7 +44,6 @@ const EDIFICIOS : Array = [
 ]
 
 var _source_id : int = 0
-
 
 func _ready() -> void:
 	_crear_tileset()
