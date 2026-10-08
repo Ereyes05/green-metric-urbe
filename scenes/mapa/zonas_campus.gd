@@ -1,6 +1,6 @@
 # ============================================================
 # zonas_campus.gd - URBE Rangers: Eco-Quest
-# Zonas calibradas sobre imagen real del campus URBE 1408x768.
+# Zonas de los NPCs sobre el mapa nuevo (urbe_removed (1).png).
 # pos = CENTRO del area de zona (igual que el Area2D).
 # La señal emite zona_key para lookup directo en SceneMapaMundo.
 # ============================================================
@@ -10,120 +10,97 @@ signal zona_activada(zona_key: String, modulo_id: int, nombre_modulo: String, co
 signal zona_salida()
 
 # ─────────────────────────────────────────────────────────────
-# Tamaños calculados para que las zonas se extiendan ~30px
-# DENTRO del pasillo accesible, compensando el redondeo de tiles
-# (tx0/ty0 = floor → colisión empieza hasta 15px antes del edif.)
-# más el radio del jugador (~7px). Esto garantiza que body_entered
-# dispare cuando el jugador toca la pared del edificio.
+# Mapa nuevo: cada zona está centrada en su NPC (10 px por encima de
+# sus pies) y mide 150x130, apenas más que el radio de 60 px en el que
+# el NPC responde a la E. Así el cartel del módulo aparece justo cuando
+# ya se puede hablar, y ninguna zona se solapa con otra.
+# pos = misma posición LOCAL que el NPC en DATOS_NPCS (SceneMapaMundo.gd).
+# Las claves no cambian: las usan ZONA_A_MISION y escena_edificio.gd.
 # ─────────────────────────────────────────────────────────────
 const ZONAS : Dictionary = {
-	# ── Módulo 5 — Transporte ─────────────────────────────────
-	# Corredor oeste x=220..280; colisión EstacionamientoEste en x≈224
-	# Jugador toca pared → centro en x≈231; zona debe llegar a x≥231
-	"ZonaEstacionamiento": {
+	"ZonaEstacionamiento": {   # Carlos
 		"modulo_id": 5,
 		"nombre":    "Transporte - Estacionamiento M5",
 		"color":     Color(0.05, 0.27, 0.63),
-		"pos":       Vector2(110, 330),
-		"size":      Vector2(260, 428),   # right=240 (alcanza corredor oeste)
+		"pos":       Vector2(136, -86),
+		"size":      Vector2(150, 130),
 	},
-	# ── Módulo 3 — Residuos ───────────────────────────────────
-	# Camino norte y=82..120; colisión Cafetín-Norte en y≈112
-	# Jugador toca pared → centro y≈105; zona_top debe ser ≤98
-	# Corredor sur Cafetín↔D y=280..320; zona_bottom ≤ 290
-	"ZonaCafetin": {
+	"ZonaCafetin": {   # Yulimar
 		"modulo_id": 3,
-		"nombre":    "Residuos - Cafetín Campus",
+		"nombre":    "Residuos - Canchas Deportivas",
 		"color":     Color(0.80, 0.65, 0.00),
-		"pos":       Vector2(380, 190),
-		"size":      Vector2(208, 200),   # top=90, bottom=290
+		"pos":       Vector2(587, 770),
+		"size":      Vector2(150, 130),
 	},
-	# ── Módulo 4 — Agua — Patio Central (espacio abierto) ────
-	"ZonaPatio": {
+	"ZonaPatio": {   # Lic. Torres
 		"modulo_id": 4,
-		"nombre":    "Agua - Patio Central",
+		"nombre":    "Agua - Laguna URBE",
 		"color":     Color(0.00, 0.42, 0.51),
-		"pos":       Vector2(590, 300),
-		"size":      Vector2(220, 220),
+		"pos":       Vector2(1249, 694),
+		"size":      Vector2(150, 130),
 	},
-	# ── Módulo 2 — Energía ────────────────────────────────────
-	# Camino norte y=82..120; colisión BloqueE-Norte en y≈112
-	"ZonaBloqueE": {
+	"ZonaBloqueE": {   # Coord. Salinas
 		"modulo_id": 2,
 		"nombre":    "Energia - Bloque E",
 		"color":     Color(0.90, 0.45, 0.00),
-		"pos":       Vector2(890, 265),
-		"size":      Vector2(388, 350),   # top=90 (alcanza camino norte)
+		"pos":       Vector2(1074, 69),
+		"size":      Vector2(150, 130),
 	},
-	# ── Módulo 1 — Entorno ────────────────────────────────────
-	# Corredor este x=1080..1120; colisión EstDistancia-Oeste en x≈1120
-	# Jugador toca → centro x≈1113; zona_left debe ser ≤1106
-	"ZonaBloqueF": {
+	"ZonaBloqueF": {   # Ing. Ramírez
 		"modulo_id": 1,
-		"nombre":    "Entorno - Estudios a Distancia",
+		"nombre":    "Entorno - Bloque F",
 		"color":     Color(0.18, 0.49, 0.20),
-		"pos":       Vector2(1264, 390),
-		"size":      Vector2(316, 548),   # left=1106 (alcanza corredor este)
+		"pos":       Vector2(1074, 328),
+		"size":      Vector2(150, 130),
 	},
-	# Corredor Cafetín↔D y=280..320 (norte) y D↔C y=480..520 (sur)
-	"ZonaBloqueD": {
+	"ZonaBloqueD": {   # Técn. Ruiz
 		"modulo_id": 2,
 		"nombre":    "Energia - Bloque D",
 		"color":     Color(0.90, 0.45, 0.00),
-		"pos":       Vector2(380, 400),
-		"size":      Vector2(208, 180),   # top=310 (pasillo norte), bottom=490 (pasillo sur)
+		"pos":       Vector2(1074, -122),
+		"size":      Vector2(150, 130),
 	},
-	# Pasillo BloqueC/B↔A y=640..680; colisión BloqueA-Norte en y≈672
-	# Jugador toca → centro y≈665; zona_top debe ser ≤658
-	"ZonaBloqueA": {
+	"ZonaBloqueA": {   # Prof. González
 		"modulo_id": 2,
 		"nombre":    "Energia - Bloque A",
 		"color":     Color(0.90, 0.45, 0.00),
-		"pos":       Vector2(490, 695),
-		"size":      Vector2(428,  90),   # top=650 (bien dentro del pasillo)
+		"pos":       Vector2(78, 53),
+		"size":      Vector2(150, 130),
 	},
-	# Corredor C↔B x=460..520; colisión BloqueB-Oeste en x≈512
-	# Jugador toca → centro x≈505; zona_left debe ser ≤498
-	"ZonaBloqueB": {
+	"ZonaBloqueB": {   # Dr. Pérez
 		"modulo_id": 2,
 		"nombre":    "Energia - Bloque B",
 		"color":     Color(0.90, 0.45, 0.00),
-		"pos":       Vector2(610, 580),
-		"size":      Vector2(224, 128),   # left=498 (alcanza corredor C↔B)
+		"pos":       Vector2(78, 267),
+		"size":      Vector2(150, 130),
 	},
-	# Corredor Fotoc↔BloqueC x=180..280; colisión Fotoc-Este en x≈192
-	# Jugador toca → centro x≈199; zona_right debe ser ≥206
-	"ZonaFotocopiado": {
+	"ZonaFotocopiado": {   # Sr. Blanco
 		"modulo_id": 1,
-		"nombre":    "Entorno - Centro de Fotocopiado",
+		"nombre":    "Entorno - Bloque G (Fotocopiado)",
 		"color":     Color(0.18, 0.49, 0.20),
-		"pos":       Vector2(105, 640),
-		"size":      Vector2(210, 128),   # right=210 (alcanza corredor)
+		"pos":       Vector2(1074, 505),
+		"size":      Vector2(150, 130),
 	},
-	# Pasillo BloqueD↔BloqueC y=480..520; colisión BloqueC-Norte en y≈512
-	# Jugador toca → centro y≈505; zona_top debe ser ≤498
-	"ZonaBloqueC": {
+	"ZonaBloqueC": {   # Ing. Herrera
 		"modulo_id": 2,
 		"nombre":    "Energia - Bloque C",
 		"color":     Color(0.90, 0.45, 0.00),
-		"pos":       Vector2(370, 565),
-		"size":      Vector2(188, 150),   # top=490 (alcanza pasillo D↔C)
+		"pos":       Vector2(78, 481),
+		"size":      Vector2(150, 130),
 	},
-	# ── Módulo 6 — Educación ─────────────────────────────────
-	# Pasillo BloqueE↔Rectorado y=420..480; colisión Rectorado-Norte en y≈480
-	"ZonaRectorado": {
+	"ZonaRectorado": {   # Rector Morales
 		"modulo_id": 6,
 		"nombre":    "Educacion e Investigacion - Rectorado",
 		"color":     Color(0.27, 0.00, 0.56),
-		"pos":       Vector2(900, 572),
-		"size":      Vector2(328, 200),   # top=472 (alcanza pasillo)
+		"pos":       Vector2(536, 259),
+		"size":      Vector2(150, 130),
 	},
-	"ZonaAreaServicios": {
+	"ZonaAreaServicios": {   # Dra. Luna
 		"modulo_id": 6,
-		"nombre":    "Educacion - SERVIEDUCA",
+		"nombre":    "Educacion - Biblioteca",
 		"color":     Color(0.27, 0.00, 0.56),
-		"pos":       Vector2(1264, 650),
-		"size":      Vector2(296,  80),
+		"pos":       Vector2(624, -82),
+		"size":      Vector2(150, 130),
 	},
 }
 

@@ -45,12 +45,29 @@ func _puntos_existentes() -> Array:
 	return out
 
 
-func _edificios() -> Array:
-	var out := []
-	var col : Script = load("res://scenes/mapa/colision_tilemap.gd")
-	for e in col.get_script_constant_map()["EDIFICIOS"]:
-		out.append(Rect2(float(e[0]) - float(e[2]) * 0.5, float(e[1]) - float(e[3]) * 0.5,
-			float(e[2]), float(e[3])))
+# Colisiones reales del mapa nuevo (hijas de Sprite2D/StaticBody2D en la
+# escena), en coordenadas LOCALES al nodo raíz — las mismas que LUGARES.
+# El "Borde" es el anillo de bosque que rodea el campus: el punto NO debe
+# caer dentro de ese polígono.
+func _colisiones() -> Dictionary:
+	var escena : Node = (load("res://scenes/mapa/scene_mapa_mundo.tscn") as PackedScene).instantiate()
+	var spr : Node2D = escena.get_node("Sprite2D")
+	var out := {"rects": [], "polis": [], "borde": PackedVector2Array()}
+	for h in escena.get_node("Sprite2D/StaticBody2D").get_children():
+		if h.get("disabled") and h.name != "Laguna":
+			continue
+		if h is CollisionShape2D and h.shape is RectangleShape2D:
+			var s : Vector2 = (h.shape as RectangleShape2D).size
+			out["rects"].append(Rect2(spr.position + h.position - s / 2.0, s))
+		elif h is CollisionPolygon2D:
+			var pts := PackedVector2Array()
+			for q in (h as CollisionPolygon2D).polygon:
+				pts.append(spr.position + h.position + q)
+			if h.name == "Borde":
+				out["borde"] = pts
+			else:
+				out["polis"].append(pts)
+	escena.free()
 	return out
 
 
@@ -63,21 +80,24 @@ func _ready() -> void:
 		_check(LUGARES.existe(c), "existe %s" % c)
 	_check(LUGARES.LUGARES.size() == claves.size(), "10 lugares")
 	_check(not LUGARES.existe("no_existe"), "lugar desconocido no existe")
-	_check(LUGARES.posicion("rectorado") == Vector2(720, 560), "posición del Rectorado")
-	_check(LUGARES.posicion("rectorado", Vector2(10, -5)) == Vector2(730, 555), "desplazamiento se suma")
-	# Heredadas del Nivel 5 viejo (mismas coordenadas que hoy).
-	_check(LUGARES.posicion("oficina_movilidad") == Vector2(600, 100), "oficina en su lugar actual")
-	_check(LUGARES.posicion("bicicletero_bloque_e") == Vector2(1020, 460), "bicicletero Bloque E actual")
-	_check(LUGARES.posicion("bicicletero_cafetin") == Vector2(200, 360), "bicicletero Cafetín actual")
+	_check(LUGARES.posicion("rectorado") == Vector2(684, 262), "posición del Rectorado")
+	_check(LUGARES.posicion("rectorado", Vector2(10, -5)) == Vector2(694, 257), "desplazamiento se suma")
+	# Mapa nuevo (urbe_removed (1).png), coordenadas locales al nodo raíz.
+	_check(LUGARES.posicion("oficina_movilidad") == Vector2(-166, 870), "oficina frente a la caseta")
+	_check(LUGARES.posicion("bicicletero_bloque_e") == Vector2(1584, -45), "bicicletero Bloque E")
+	_check(LUGARES.posicion("bicicletero_cafetin") == Vector2(1764, 672), "bicicletero del picnic")
 
 	var existentes := _puntos_existentes()
 	_check(existentes.size() >= 40, "se leyeron los puntos existentes (%d)" % existentes.size())
-	var edificios := _edificios()
+	var col := _colisiones()
+	# Límites del mapa nuevo en coordenadas locales: imagen 2814x1536 − (816, 412)
+	var mundo := Rect2(-816, -412, 2814, 1536)
 	var nombres : Array = LUGARES.LUGARES.keys()
 	for i in nombres.size():
 		var nombre : String = nombres[i]
 		var p : Vector2 = LUGARES.LUGARES[nombre]
-		_check(p.x >= 0 and p.x <= 1408 and p.y >= 0 and p.y <= 768, "%s dentro del mapa" % nombre)
+		_check(mundo.has_point(p), "%s dentro del mapa" % nombre)
+		_check(not Geometry2D.is_point_in_polygon(p, col["borde"]), "%s fuera del bosque del borde" % nombre)
 		var peor := INF
 		var cual := ""
 		for e in existentes:
@@ -90,8 +110,11 @@ func _ready() -> void:
 			var d2 := p.distance_to(LUGARES.LUGARES[nombres[j]])
 			_check(d2 >= MINIMO, "%s a %.0f px de %s" % [nombre, d2, nombres[j]])
 		var dentro := false
-		for r in edificios:
+		for r in col["rects"]:
 			if (r as Rect2).has_point(p):
+				dentro = true
+		for pl in col["polis"]:
+			if Geometry2D.is_point_in_polygon(p, pl):
 				dentro = true
 		_check(not dentro, "%s fuera de edificios" % nombre)
 

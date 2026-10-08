@@ -10,7 +10,6 @@
 [ext_resource type="Script" uid="uid://cihynlskdl05h" path="res://scenes/mapa/limite_mundo.gd" id="6_cpu1u"]
 [ext_resource type="Texture2D" uid="uid://cmgb64hgny8k1" path="res://spritesheet-walk_abajo-sin_fondo2.png" id="6_e0ko0"]
 [ext_resource type="Texture2D" uid="uid://kaft533npv3a" path="res://idle_back_64.png" id="6_nybfg"]
-[ext_resource type="Script" uid="uid://8f1d8hefniw1" path="res://scenes/mapa/colision_tilemap.gd" id="7_b6lp1"]
 [ext_resource type="Texture2D" uid="uid://cwsnho0xfeotl" path="res://sprite-walk_izquierda.png" id="7_e014t"]
 [ext_resource type="Texture2D" uid="uid://bcb3uck6qjs4s" path="res://spritesheet-walk_arriba-sin_fondo.png" id="7_qq1hk"]
 [ext_resource type="Texture2D" uid="uid://bwkpakod002ro" path="res://idle_right_64.png" id="7_w2o51"]
@@ -17115,8 +17114,19 @@ polygon = PackedVector2Array(454, 578, 454, 528, 652, 528, 652, 579, 646, 579, 6
 polygon = PackedVector2Array(1105, 215, 1105, -347, 1318, -346, 1319, 100, 1248, 101, 1248, 218)
 
 [node name="Laguna" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=688080535]
-polygon = PackedVector2Array(826, 518, 928, 495, 944, 509, 979, 506, 1005, 532, 1006, 576, 957, 607, 941, 632, 833, 631, 791, 654, 751, 652, 730, 624, 689, 597, 678, 556, 689, 514, 741, 482, 759, 463, 912, 462, 928, 494)
-disabled = true
+polygon = PackedVector2Array(794, 470, 801, 472, 827, 470, 831, 472, 854, 470, 857, 472, 869, 472, 880, 470, 885, 473, 903, 470, 908, 472, 912, 485, 924, 499, 925, 507, 935, 516, 949, 519, 977, 517, 990, 528, 997, 537, 997, 552, 995, 556, 997, 569, 993, 576, 984, 578, 966, 589, 953, 593, 948, 599, 948, 607, 936, 625, 926, 626, 918, 622, 907, 622, 901, 625, 896, 622, 880, 624, 859, 622, 851, 624, 844, 621, 836, 621, 811, 630, 789, 646, 764, 647, 758, 645, 746, 636, 746, 627, 741, 622, 722, 607, 701, 599, 696, 589, 690, 583, 688, 574, 689, 536, 692, 529, 702, 520, 717, 515, 721, 502, 733, 494, 745, 496, 760, 472)
+
+[node name="EstanqueChico" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1544234307]
+polygon = PackedVector2Array(1070, 18, 1082, 20, 1088, 26, 1087, 40, 1092, 53, 1093, 63, 1080, 71, 1074, 79, 1075, 120, 1080, 127, 1078, 132, 1068, 136, 1052, 128, 1054, 123, 1053, 109, 1055, 107, 1054, 85, 1052, 81, 1042, 68, 1029, 68, 1024, 62, 1030, 52, 1045, 50, 1051, 46, 1050, 23)
+
+[node name="FuenteBiblioteca" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1965871947]
+polygon = PackedVector2Array(360, -618, 488, -618, 488, -520, 360, -520)
+
+[node name="Monumento" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1810077530]
+polygon = PackedVector2Array(-1086, 402, -1021, 402, -1021, 450, -1086, 450)
+
+[node name="Caseta" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=231472158]
+polygon = PackedVector2Array(-820, 384, -702, 384, -702, 474, -820, 474)
 
 [node name="MapaCampus" type="TileMapLayer" parent="." unique_id=1180690893]
 visible = false
@@ -17176,8 +17186,5 @@ script = ExtResource("4_mrfj7")
 
 [node name="LimiteMundo" type="StaticBody2D" parent="." unique_id=95619807]
 script = ExtResource("6_cpu1u")
-
-[node name="ColisionEdificios" type="TileMapLayer" parent="." unique_id=108283612]
-script = ExtResource("7_b6lp1")
 
 [node name="DialogoNPC" parent="." unique_id=815487550 instance=ExtResource("9_dlgnpc")]

@@ -61,14 +61,20 @@ const HUD_BANNER     := preload("res://scenes/ui/hud_banner_zona.gd")
 const HUD_AVISO      := preload("res://scenes/ui/hud_aviso.gd")
 const HUD_LEYENDA    := preload("res://scenes/ui/hud_leyenda_avance.gd")
 
-# ── Datos de los NPCs (uno por zona) — posiciones en nuevo mapa URBE ─
+# ── Datos de los NPCs (uno por zona) — mapa nuevo (urbe_removed (1).png) ─
+# "pos" es LOCAL al nodo raíz SceneMapaMundo (que en la escena está en
+# (818, 414)): pos = píxel de la imagen del mapa − (816, 412).
+# Orden: Bloques A-C en el camino al este de su bloque, Bloques D-G en el
+# camino al oeste del suyo (cada columna alineada), y el resto en la
+# entrada de su edificio o área (Rectorado, Biblioteca, Estacionamiento,
+# Canchas, Laguna). Verificado contra las colisiones de la escena.
 var DATOS_NPCS : Array = [
 	# ── M6 Educación ────────────────────────────────────────
 	{
 		"nombre":    "Rector Morales",
 		"mision_id": "mision_rector",
 		"tipo":      "rector",
-		"pos":       Vector2(778, 464),   # plaza norte del Rectorado, fuera del edificio
+		"pos":       Vector2(536, 269),   # Rectorado: frente a la puerta principal, junto a la bandera
 		"color":     Color(0.5, 0.1, 0.9),
 		"dialogos":  PackedStringArray([
 			"Bienvenido, Eco-Ranger. Soy el Rector de URBE.",
@@ -81,7 +87,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Dra. Luna",
 		"mision_id": "mision_educacion",
 		"tipo":      "prof_m",
-		"pos":       Vector2(1100, 400),   # corredor este (BloqueE↔EstDistancia x=1080..1120)
+		"pos":       Vector2(624, -72),   # Biblioteca: frente a la entrada principal
 		"color":     Color(0.35, 0.0, 0.65),
 		"dialogos":  PackedStringArray([
 			"Por fin llegas! Soy la Dra. Luna, coordinadora de Educacion e Investigacion.",
@@ -95,7 +101,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Prof. González",
 		"mision_id": "mision_bloque_a",
 		"tipo":      "prof_h",
-		"pos":       Vector2(440, 660),   # pasillo BloqueC/B↔BloqueA
+		"pos":       Vector2(78, 63),   # Bloque A: camino peatonal al este del bloque
 		"color":     Color(0.9, 0.45, 0.0),
 		"dialogos":  PackedStringArray([
 			"Hola! Soy el Prof. Gonzalez, docente del Bloque A.",
@@ -108,7 +114,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Dr. Pérez",
 		"mision_id": "mision_bloque_b",
 		"tipo":      "prof_h",
-		"pos":       Vector2(570, 660),   # corredor sur BloqueB
+		"pos":       Vector2(78, 277),   # Bloque B: camino peatonal al este del bloque
 		"color":     Color(0.85, 0.35, 0.0),
 		"dialogos":  PackedStringArray([
 			"Doctor Perez, coordinador de Energia y Cambio Climatico.",
@@ -121,7 +127,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Ing. Herrera",
 		"mision_id": "mision_bloque_c",
 		"tipo":      "prof_m",
-		"pos":       Vector2(440, 500),   # pasillo BloqueD↔BloqueC
+		"pos":       Vector2(78, 491),   # Bloque C: camino peatonal al este del bloque
 		"color":     Color(0.95, 0.55, 0.0),
 		"dialogos":  PackedStringArray([
 			"Buenas! Soy la Ing. Herrera, tecnica del Bloque C.",
@@ -134,7 +140,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Técn. Ruiz",
 		"mision_id": "mision_bloque_d",
 		"tipo":      "prof_h",
-		"pos":       Vector2(440, 300),   # pasillo Cafetín↔BloqueD
+		"pos":       Vector2(1074, -112),   # Bloque D: camino peatonal al oeste del bloque
 		"color":     Color(0.80, 0.40, 0.0),
 		"dialogos":  PackedStringArray([
 			"Hola! Soy el Tecn. Ruiz, responsable de instalaciones del Bloque D.",
@@ -147,7 +153,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Coord. Salinas",
 		"mision_id": "mision_bloque_e",
 		"tipo":      "prof_m",
-		"pos":       Vector2(600, 170),   # patio central, norte (frente a BloqueE)
+		"pos":       Vector2(1074, 79),   # Bloque E: camino peatonal al oeste del bloque
 		"color":     Color(0.90, 0.50, 0.05),
 		"dialogos":  PackedStringArray([
 			"Soy la Coord. Salinas, encargada del Bloque E norte del campus.",
@@ -161,7 +167,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Ing. Ramírez",
 		"mision_id": "mision_bloque_f",
 		"tipo":      "prof_m",
-		"pos":       Vector2(1100, 250),   # corredor este, zona norte
+		"pos":       Vector2(1074, 338),   # Bloque F: camino peatonal al oeste del bloque
 		"color":     Color(0.2, 0.7, 0.2),
 		"dialogos":  PackedStringArray([
 			"Hola! Soy la Ing. Ramirez, coordinadora de Entorno e Infraestructura.",
@@ -174,7 +180,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Sr. Blanco",
 		"mision_id": "mision_fotocopiado",
 		"tipo":      "prof_h",
-		"pos":       Vector2(90, 558),   # pasillo Estac↔Fotocopiado (y=540..580, x=0..180)
+		"pos":       Vector2(1074, 515),   # Bloque G: camino peatonal al oeste del bloque
 		"color":     Color(0.3, 0.65, 0.3),
 		"dialogos":  PackedStringArray([
 			"Buenas! Soy el Sr. Blanco, del Centro de Fotocopiado.",
@@ -188,7 +194,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Lic. Torres",
 		"mision_id": "mision_agua",
 		"tipo":      "prof_m",
-		"pos":       Vector2(560, 430),   # patio central sur (fuente, zona de agua)
+		"pos":       Vector2(1249, 704),   # Laguna: camino principal, al norte de la laguna
 		"color":     Color(0.0, 0.55, 0.75),
 		"dialogos":  PackedStringArray([
 			"Buenas, soy la Lic. Torres, responsable del modulo de Agua.",
@@ -202,7 +208,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Carlos",
 		"mision_id": "mision_transporte",
 		"tipo":      "est_h",
-		"pos":       Vector2(250, 330),   # corredor oeste, junto al Estacionamiento
+		"pos":       Vector2(136, -76),   # Estacionamiento norte: salida peatonal (lado este)
 		"color":     Color(0.1, 0.3, 0.8),
 		"dialogos":  PackedStringArray([
 			"Hola! Soy Carlos, coordinador de Transporte Sostenible.",
@@ -216,7 +222,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Yulimar",
 		"mision_id": "mision_residuos",
 		"tipo":      "est_m",
-		"pos":       Vector2(340, 100),   # camino norte, frente al Cafetín
+		"pos":       Vector2(587, 780),   # Canchas: paseo entre las canchas de básquet
 		"color":     Color(0.85, 0.75, 0.0),
 		"dialogos":  PackedStringArray([
 			"Eco-Ranger! Soy Yulimar, del comite estudiantil de reciclaje.",
@@ -1544,105 +1550,90 @@ func _on_insignia_obtenida(_id: String, nombre: String, icono: String) -> void:
 # Nivel 2: Energía y Cambio Climático (LED + paneles solares)
 # ════════════════════════════════════════════════════════════
 
+# ════════════════════════════════════════════════════════════
+# POSICIONES DE MISIONES — mapa nuevo (urbe_removed (1).png)
+# "pos" es LOCAL al nodo raíz SceneMapaMundo: pos = píxel de la imagen
+# del mapa − (816, 412). "escala" achica el ícono Y su radio de
+# interacción (Area2D) por igual, para que entre en el espacio real del
+# lugar (pasillos angostos, puertas). Reglas usadas al ubicarlas:
+#   · Plantar: solo sobre césped despejado (nunca camino, cancha, ni
+#     debajo de un árbol), y el árbol que crece no tapa ningún edificio.
+#   · LED: sobre la entrada (puerta) de su bloque.
+#   · Solar / captación: junto al edificio que nombran.
+#   · Papeleras, llaves y Nivel 6: en caminos de paso y plazas.
+# Validado contra las colisiones de la escena, sin solaparse con otra
+# misión ni con un NPC, y alcanzable caminando desde el spawn.
+# ════════════════════════════════════════════════════════════
 const DATOS_ZONAS_TIERRA : Array = [
-	# ── Plaza central (interacción clic) ──────────────────────
-	{"id": "plantar_rectorado",  "nombre": "Jardín del Rectorado", "indice": 1, "modo": "click",
-	 "pos": Vector2(680, 410)},
-	{"id": "plantar_patio",      "nombre": "Patio Central",        "indice": 2, "modo": "click",
-	 "pos": Vector2(640, 260)},
-	{"id": "plantar_este",       "nombre": "Corredor Central",     "indice": 5, "modo": "click",
-	 "pos": Vector2(530, 370)},
-	# ── Áreas verdes (interacción frotando) ───────────────────
-	{"id": "plantar_corredores", "nombre": "Corredor Principal",   "indice": 0, "modo": "drag",
-	 "pos": Vector2(250, 200)},
-	{"id": "plantar_norte",      "nombre": "Camino Norte",         "indice": 3, "modo": "drag",
-	 "pos": Vector2(160, 110)},
-	{"id": "plantar_oeste",      "nombre": "Corredor Oeste Sur",   "indice": 7, "modo": "drag",
-	 "pos": Vector2(250, 640)},
+	# "modo": click = cavar con clics, drag = frotando
+	{"id": "plantar_rectorado", "nombre": "Jardín Este", "indice": 1, "modo": "click", "pos": Vector2(1662, 213), "escala": 0.7},
+	{"id": "plantar_patio", "nombre": "Jardín de la Plazoleta", "indice": 2, "modo": "click", "pos": Vector2(946, 486), "escala": 0.65},
+	{"id": "plantar_este", "nombre": "Jardín del Estacionamiento", "indice": 5, "modo": "click", "pos": Vector2(-116, -297), "escala": 0.8},
+	{"id": "plantar_corredores", "nombre": "Corredor Oeste", "indice": 0, "modo": "drag", "pos": Vector2(-486, 238), "escala": 0.9},
+	{"id": "plantar_norte", "nombre": "Jardín Norte", "indice": 3, "modo": "drag", "pos": Vector2(1194, -262), "escala": 1.0},
+	{"id": "plantar_oeste", "nombre": "Área de Picnic", "indice": 7, "modo": "drag", "pos": Vector2(1742, 918), "escala": 0.9},
 ]
 
 const DATOS_PUNTOS_ENERGIA : Array = [
-	# Misiones LED (entradas de los bloques en pasillos transitables, separadas >100px de los NPCs)
-	{"id": "led_bloque_a", "nombre": "Bloque A", "tipo": "led", "indice_bloque": 0,
-	 "pos": Vector2(310, 660)},
-	{"id": "led_bloque_b", "nombre": "Bloque B", "tipo": "led", "indice_bloque": 1,
-	 "pos": Vector2(680, 660)},
-	{"id": "led_bloque_c", "nombre": "Bloque C", "tipo": "led", "indice_bloque": 2,
-	 "pos": Vector2(310, 500)},
-	{"id": "led_bloque_d", "nombre": "Bloque D", "tipo": "led", "indice_bloque": 3,
-	 "pos": Vector2(310, 300)},
-	{"id": "led_bloque_e", "nombre": "Bloque E", "tipo": "led", "indice_bloque": 4,
-	 "pos": Vector2(685, 270)},
-	{"id": "led_bloque_f", "nombre": "Bloque F", "tipo": "led", "indice_bloque": 5,
-	 "pos": Vector2(1100, 330)},
-	# Misiones de paneles solares
-	{"id": "solar_rectorado",       "nombre": "Rectorado",      "tipo": "solar", "indice_mision": 0,
-	 "pos": Vector2(900, 450)},
-	{"id": "solar_estacionamiento", "nombre": "Estacionamiento","tipo": "solar", "indice_mision": 1,
-	 "pos": Vector2(250, 670)},
+	# LED: sobre la puerta de cada bloque
+	{"id": "led_bloque_a", "nombre": "Bloque A", "tipo": "led", "indice_bloque": 0, "pos": Vector2(-204, 170), "escala": 0.8},
+	{"id": "led_bloque_b", "nombre": "Bloque B", "tipo": "led", "indice_bloque": 1, "pos": Vector2(-204, 383), "escala": 0.75},
+	{"id": "led_bloque_c", "nombre": "Bloque C", "tipo": "led", "indice_bloque": 2, "pos": Vector2(-204, 606), "escala": 0.85},
+	{"id": "led_bloque_d", "nombre": "Bloque D", "tipo": "led", "indice_bloque": 3, "pos": Vector2(1391, -45), "escala": 0.85},
+	{"id": "led_bloque_e", "nombre": "Bloque E", "tipo": "led", "indice_bloque": 4, "pos": Vector2(1391, 198), "escala": 0.65},
+	{"id": "led_bloque_f", "nombre": "Bloque F", "tipo": "led", "indice_bloque": 5, "pos": Vector2(1391, 410), "escala": 0.65},
+	# Paneles solares
+	{"id": "solar_rectorado", "nombre": "Rectorado", "tipo": "solar", "indice_mision": 0, "pos": Vector2(904, -64), "escala": 0.75},
+	{"id": "solar_estacionamiento", "nombre": "Estacionamiento", "tipo": "solar", "indice_mision": 1, "pos": Vector2(-116, -167), "escala": 0.8},
 ]
 
 
 const DATOS_ZONAS_RECICLAJE : Array = [
-	{"id": "reciclar_corredor_n", "nombre": "Corredor Norte",      "pos": Vector2(440, 95)},
-	{"id": "reciclar_patio_e",    "nombre": "Patio Este",          "pos": Vector2(660, 450)},
-	{"id": "reciclar_bloque_e",   "nombre": "Frente al Bloque E",  "pos": Vector2(685, 170)},
-	{"id": "reciclar_oeste",      "nombre": "Corredor Oeste",      "pos": Vector2(250, 480)},
-	{"id": "reciclar_sur",        "nombre": "Zona Sur Campus",     "pos": Vector2(750, 700)},
-	{"id": "reciclar_este",       "nombre": "Est. a Distancia",    "pos": Vector2(1100, 520)},
+	{"id": "reciclar_corredor_n", "nombre": "Corredor Norte", "pos": Vector2(314, -64), "escala": 0.8},
+	{"id": "reciclar_patio_e", "nombre": "Plazoleta Este", "pos": Vector2(806, 465), "escala": 1.0},
+	{"id": "reciclar_bloque_e", "nombre": "Frente al Bloque E", "pos": Vector2(1090, 203), "escala": 1.0},
+	{"id": "reciclar_oeste", "nombre": "Entrada Oeste", "pos": Vector2(-476, 674), "escala": 1.0},
+	{"id": "reciclar_sur", "nombre": "Camino de las Canchas", "pos": Vector2(184, 676), "escala": 1.0},
+	{"id": "reciclar_este", "nombre": "Entrada del Picnic", "pos": Vector2(1514, 676), "escala": 1.0},
 ]
 
 
-# NOTA sobre posiciones — 2ª revisión: la primera verificación (Nivel 4)
-# solo comprobaba contra los rectángulos de EDIFICIOS, no contra los otros
-# ~30 puntos de misión ya existentes en el mapa. Jugando se detectaron
-# solapamientos reales (radios de detección que se cruzan) entre puntos
-# de niveles distintos, lo que dejaba una misión inalcanzable si el
-# jugador quedaba parado en la zona compartida. Se recalcularon las 9
-# posiciones de Nivel 4/5 con un chequeo contra los 30 puntos existentes
-# a la vez (script aparte, no a ojo) — cero solapamientos nuevos excepto
-# unos pocos residuales de ~10px. El Nivel 5 ya no tiene constantes acá:
-# sus puntos salen de scenes/mapa/lugares_campus.gd (ver
-# tests/test_lugares_campus.gd, que revisa las distancias mínimas). Los
-# solapamientos que quedan están mitigados por mision_mas_cercana(), que
-# elige el punto más cercano —y nunca uno bloqueado— en vez de ir por
-# prioridad fija de nivel.
+# Nivel 4 — Agua. El Nivel 5 no tiene constantes acá: sus puntos salen de
+# scenes/mapa/lugares_campus.gd (ver tests/test_lugares_campus.gd). Si dos
+# puntos quedan cerca, mision_mas_cercana() elige el más cercano —y nunca
+# uno bloqueado— en vez de ir por prioridad fija de nivel.
 const DATOS_LLAVES_AGUA : Array = [
-	{"id": "llave_bloque_c",   "nombre": "Baños cerca Bloque C",   "pos": Vector2(490, 510)},
-	{"id": "llave_bloque_a",   "nombre": "Baños cerca Bloque A",   "pos": Vector2(150, 550)},
-	{"id": "llave_corredor_n", "nombre": "Bebedero Corredor Norte", "pos": Vector2(300, 100)},
-	{"id": "llave_patio_e",    "nombre": "Bebedero Corredor Sur",  "pos": Vector2(495, 630)},
-	{"id": "llave_este",       "nombre": "Baños Est. a Distancia", "pos": Vector2(1090, 640)},
-	{"id": "llave_bloque_b",   "nombre": "Bebedero Plaza Este",    "pos": Vector2(990, 690)},
+	{"id": "llave_bloque_c", "nombre": "Llave del Bloque C", "pos": Vector2(-56, 676), "escala": 1.0},
+	{"id": "llave_bloque_a", "nombre": "Llave del Bloque A", "pos": Vector2(-53, -47), "escala": 0.75},
+	{"id": "llave_corredor_n", "nombre": "Fuente del Jardín Norte", "pos": Vector2(934, -267), "escala": 1.0},
+	{"id": "llave_patio_e", "nombre": "Bebedero de la Plazoleta", "pos": Vector2(369, 468), "escala": 1.0},
+	{"id": "llave_este", "nombre": "Llave del Edificio Este", "pos": Vector2(1657, 620), "escala": 1.0},
+	{"id": "llave_bloque_b", "nombre": "Llave del Bloque B", "pos": Vector2(-396, 383), "escala": 1.0},
 ]
 
 const DATOS_PUNTOS_CAPTACION : Array = [
-	{"id": "captacion_biblioteca", "nombre": "Techo de la Biblioteca", "indice_mision": 0,
-	 "pos": Vector2(520, 210)},
-	{"id": "captacion_bloque_c",   "nombre": "Techo del Bloque C",     "indice_mision": 1,
-	 "pos": Vector2(420, 300)},
+	{"id": "captacion_biblioteca", "nombre": "Techo de la Biblioteca", "indice_mision": 0, "pos": Vector2(286, -250), "escala": 0.65},
+	{"id": "captacion_bloque_c", "nombre": "Techo del Bloque C", "indice_mision": 1, "pos": Vector2(-481, 433), "escala": 0.7},
 ]
 
 # Nivel 5 (Plan de Movilidad): sus puntos se ubican por lugar con nombre en
 # scenes/mapa/lugares_campus.gd (lo crea nivel5_movilidad.gd).
 
-# Posiciones de Nivel 6 verificadas con el mismo chequeo (script aparte)
-# contra los ~34 puntos de misión existentes — cero solapamientos, cero
-# colisiones con edificios.
+# Nivel 6 — Educación: alrededor del Rectorado y de la Plazoleta Central.
 const DATOS_PUNTO_MALLA_VERDE : Array = [
-	{"id": "malla_verde", "nombre": "Decanato — Rediseño Curricular", "pos": Vector2(795, 99)},
+	{"id": "malla_verde", "nombre": "Rectorado — Rediseño Curricular", "pos": Vector2(774, -64), "escala": 0.75},
 ]
 
 const DATOS_PUNTO_COMITE : Array = [
-	{"id": "comite_ambiental", "nombre": "Mesa del Comité Ambiental", "pos": Vector2(870, 700)},
+	{"id": "comite_ambiental", "nombre": "Mesa del Comité Ambiental", "pos": Vector2(594, 578), "escala": 1.0},
 ]
 
 const DATOS_PUNTO_SEMANA_VERDE : Array = [
-	{"id": "semana_verde", "nombre": "Auditorio — Semana Verde URBE", "pos": Vector2(100, 438)},
+	{"id": "semana_verde", "nombre": "Plazoleta — Semana Verde URBE", "pos": Vector2(419, 368), "escala": 0.85},
 ]
 
 const DATOS_PUNTO_INFORME : Array = [
-	{"id": "informe_final", "nombre": "Decanato — Informe de Sostenibilidad", "pos": Vector2(920, 98)},
+	{"id": "informe_final", "nombre": "Rectorado — Informe de Sostenibilidad", "pos": Vector2(774, 351), "escala": 1.0},
 ]
 
 
@@ -1724,6 +1715,7 @@ func _spawn_zonas_tierra() -> void:
 		zt.set("indice_mision",    dato["indice"])
 		zt.set("modo_interaccion", dato.get("modo", "click"))
 		zt.position = dato["pos"]
+		zt.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		zt.z_index  = 1
 		add_child(zt)
 		zt.plantar_solicitado.connect(_on_plantar_solicitado)
@@ -1751,6 +1743,7 @@ func _spawn_puntos_energia() -> void:
 		if dato.has("indice_mision"):
 			pe.set("indice_mision", dato["indice_mision"])
 		pe.position = dato["pos"]
+		pe.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		pe.z_index  = 1
 		add_child(pe)
 		pe.energia_solicitada.connect(_on_energia_solicitada)
@@ -1771,6 +1764,7 @@ func _spawn_zonas_reciclaje() -> void:
 		zr.set("mision_id",   dato["id"])
 		zr.set("nombre_zona", dato["nombre"])
 		zr.position = dato["pos"]
+		zr.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		zr.z_index  = 1
 		add_child(zr)
 		zr.reciclar_solicitado.connect(_on_reciclar_solicitado)
@@ -1793,6 +1787,7 @@ func _spawn_llaves_agua() -> void:
 		la.set("mision_id",    dato["id"])
 		la.set("nombre_llave", dato["nombre"])
 		la.position = dato["pos"]
+		la.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		la.z_index  = 1
 		add_child(la)
 		la.llave_cerrada.connect(_on_llave_cerrada)
@@ -1814,6 +1809,7 @@ func _spawn_puntos_captacion() -> void:
 		pc.set("nombre_punto",  dato["nombre"])
 		pc.set("indice_mision", dato["indice_mision"])
 		pc.position = dato["pos"]
+		pc.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		pc.z_index  = 1
 		add_child(pc)
 		pc.captacion_solicitada.connect(_on_captacion_solicitada)
@@ -1834,6 +1830,7 @@ func _spawn_punto_malla_verde() -> void:
 		pmv.set("mision_id",    dato["id"])
 		pmv.set("nombre_punto", dato["nombre"])
 		pmv.position = dato["pos"]
+		pmv.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		pmv.z_index  = 1
 		add_child(pmv)
 		pmv.malla_verde_solicitada.connect(_on_malla_verde_solicitada)
@@ -1854,6 +1851,7 @@ func _spawn_punto_comite() -> void:
 		pc.set("mision_id",    dato["id"])
 		pc.set("nombre_punto", dato["nombre"])
 		pc.position = dato["pos"]
+		pc.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		pc.z_index  = 1
 		add_child(pc)
 		pc.comite_solicitado.connect(_on_comite_solicitado)
@@ -1874,6 +1872,7 @@ func _spawn_punto_semana_verde() -> void:
 		psv.set("mision_id",    dato["id"])
 		psv.set("nombre_punto", dato["nombre"])
 		psv.position = dato["pos"]
+		psv.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		psv.z_index  = 1
 		add_child(psv)
 		psv.semana_verde_solicitada.connect(_on_semana_verde_solicitada)
@@ -1894,6 +1893,7 @@ func _spawn_punto_informe() -> void:
 		pi.set("mision_id",    dato["id"])
 		pi.set("nombre_punto", dato["nombre"])
 		pi.position = dato["pos"]
+		pi.scale    = Vector2.ONE * float(dato.get("escala", 1.0))
 		pi.z_index  = 1
 		add_child(pi)
 		pi.informe_solicitado.connect(_on_informe_solicitado)

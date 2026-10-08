@@ -4,27 +4,28 @@
 # ubica por LUGAR + un desplazamiento chico, nunca con coordenadas en el
 # código de la misión.
 #
-# PROVISIONAL: coordenadas del mapa actual (1408×768, mapa_campus.gd). El
-# mapa se está rediseñando aparte; cuando llegue, reubicar = editar SOLO
-# este archivo y volver a correr tests/test_lugares_campus.tscn (chequeo de
-# solapamientos contra los puntos existentes).
+# Mapa nuevo (urbe_removed (1).png): las coordenadas son LOCALES al nodo
+# raíz SceneMapaMundo, igual que los DATOS_* de SceneMapaMundo.gd:
+# posición = píxel de la imagen − (816, 412). Validadas contra las
+# colisiones de la escena, sin solaparse con otra misión ni con un NPC, y
+# con su decorado (cambios_movilidad.gd) sobre asfalto o camino libre.
+# Reubicar = editar SOLO este archivo y volver a correr
+# tests/test_lugares_campus.tscn.
 # Diseño: docs/superpowers/specs/2026-09-17-nivel5-plan-movilidad-design.md §3
 # ============================================================
 extends RefCounted
 
 const LUGARES : Dictionary = {
-	# Mismas coordenadas que tenían los puntos del Nivel 5 viejo.
-	"oficina_movilidad":    Vector2(600, 100),   # camino norte, frente al Patio
-	"bicicletero_bloque_e": Vector2(1020, 460),  # plaza entre Bloque E y Rectorado
-	"bicicletero_cafetin":  Vector2(200, 360),   # borde este del M5, camino al Cafetín
-	# Nuevos (Plan de Movilidad).
-	"garita_m5":            Vector2(60, 330),    # entrada vehicular del M5
-	"estacionamiento_m5":   Vector2(110, 240),   # zona norte del M5
-	"lote_este":            Vector2(1340, 710),  # lote poco usado detrás de Estudios a Distancia
-	"parada_rectorado":     Vector2(1060, 752),  # Av. URBE frente a la esquina del Rectorado
-	"porton_vehicular":     Vector2(600, 752),   # portón de la Av. URBE
-	"zona_mantenimiento":   Vector2(1190, 715),  # patio de servicios, sureste
-	"rectorado":            Vector2(720, 560),   # entrada oeste del Rectorado (Consejo)
+	"oficina_movilidad":    Vector2(-166, 870),    # frente a la caseta del lote sur
+	"bicicletero_bloque_e": Vector2(1584, -45),   # césped al este del Bloque D/E
+	"bicicletero_cafetin":  Vector2(1764, 672),   # camino principal, entrada del picnic
+	"garita_m5":            Vector2(-511, -187),   # entrada vehicular del estacionamiento norte
+	"estacionamiento_m5":   Vector2(-236, -182),   # carril del estacionamiento norte
+	"lote_este":            Vector2(-386, 973),    # lote de estacionamiento sur
+	"parada_rectorado":     Vector2(434, 676),    # camino principal al sur de la Plazoleta
+	"porton_vehicular":     Vector2(-316, 748),   # portón con barrera de la entrada oeste
+	"zona_mantenimiento":   Vector2(1869, 523),   # patio de servicios, al este del edificio este
+	"rectorado":            Vector2(684, 262),    # frente al Rectorado (Consejo Universitario)
 }
 
 
