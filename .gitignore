@@ -11,3 +11,6 @@ supabase/.temp/
 .playwright-mcp/
 
 .superpowers/
+
+# Archivos temporales que el editor de Godot deja al guardar escenas.
+*.tmp
