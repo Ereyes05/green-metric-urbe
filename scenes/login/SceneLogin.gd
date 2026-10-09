@@ -84,6 +84,20 @@ var _spinner_chars  : Array = ["◐","◓","◑","◒"]
 var _spinner_idx    : int   = 0
 var _spinner_timer  : float = 0.0
 
+# ── Pantalla de carga (del login al mapa) ─────────────────────
+# Entre "login correcto" y el mapa pasan varios segundos: tres consultas
+# al servidor y la carga del mapa. Antes eso se veía como un mensaje chico
+# debajo del formulario, con los botones otra vez activos, así que parecía
+# trabado y un segundo clic lanzaba otra entrada en paralelo.
+const MAPA_PATH : String = "res://scenes/mapa/scene_mapa_mundo.tscn"
+const PASOS_CARGA : int  = 4   # progreso, billetera, detalles, mapa
+var _carga         : ColorRect   = null
+var _carga_titulo  : Label       = null
+var _carga_paso    : Label       = null
+var _carga_barra   : ProgressBar = null
+var _carga_spinner : Label       = null
+var _entrando      : bool        = false
+
 
 
 # ════════════════════════════════════════════════════════════
@@ -269,17 +283,20 @@ func _ready() -> void:
 
 	_crear_panel_registro()
 	_crear_panel_recuperacion()
+	_crear_pantalla_carga()   # al final: tiene que quedar encima de todo
 	_cambiar_panel("login")
 
 
 func _process(delta: float) -> void:
-	if not _cargando: return
+	if not _cargando and not _entrando: return
 	_spinner_timer += delta
 	if _spinner_timer >= 0.17:
 		_spinner_timer = 0.0
 		_spinner_idx = (_spinner_idx + 1) % _spinner_chars.size()
 		if is_instance_valid(_spinner_label):
 			_spinner_label.text = _spinner_chars[_spinner_idx]
+		if is_instance_valid(_carga_spinner):
+			_carga_spinner.text = _spinner_chars[_spinner_idx]
 
 
 # ════════════════════════════════════════════════════════════
@@ -627,6 +644,79 @@ func _resetear_panel_recuperacion() -> void:
 # ════════════════════════════════════════════════════════════
 # CONSTRUCTOR INTERNO DE PANELES
 # ════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
+# PANTALLA DE CARGA
+# ════════════════════════════════════════════════════════════
+# Tapa todo (también los clics: MOUSE_FILTER_STOP), así no hay forma de
+# volver a tocar "Iniciar sesión" mientras se entra.
+func _crear_pantalla_carga() -> void:
+	_carga = ColorRect.new()
+	_carga.color = TEMA.POPOVER_BG
+	_carga.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_carga.mouse_filter = Control.MOUSE_FILTER_STOP
+	_carga.visible = false
+
+	var centro := CenterContainer.new()
+	centro.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_carga.add_child(centro)
+
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _style_panel())
+	centro.add_child(panel)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 14)
+	panel.add_child(vb)
+
+	vb.add_child(_crear_logo_widget())
+
+	_carga_titulo = Label.new()
+	_carga_titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_carga_titulo.add_theme_font_size_override("font_size", 18)
+	_carga_titulo.add_theme_color_override("font_color", TEMA.VERDE)
+	vb.add_child(_carga_titulo)
+
+	_carga_barra = ProgressBar.new()
+	_carga_barra.custom_minimum_size = Vector2(290, 10)
+	_carga_barra.show_percentage = false
+	_carga_barra.max_value = 100.0
+	_carga_barra.add_theme_stylebox_override("background", TEMA.caja(TEMA.TRACK, TEMA.VACIO, 1, 5))
+	_carga_barra.add_theme_stylebox_override("fill", TEMA.caja(TEMA.VERDE, TEMA.VERDE, 0, 5))
+	vb.add_child(_carga_barra)
+
+	var fila := HBoxContainer.new()
+	fila.alignment = BoxContainer.ALIGNMENT_CENTER
+	fila.add_theme_constant_override("separation", 8)
+	vb.add_child(fila)
+
+	_carga_spinner = Label.new()
+	_carga_spinner.text = _spinner_chars[0]
+	_carga_spinner.add_theme_font_size_override("font_size", 16)
+	_carga_spinner.add_theme_color_override("font_color", TEMA.VERDE)
+	fila.add_child(_carga_spinner)
+
+	_carga_paso = Label.new()
+	_carga_paso.add_theme_font_size_override("font_size", 12)
+	_carga_paso.add_theme_color_override("font_color", TEMA.TEXTO_2)
+	fila.add_child(_carga_paso)
+
+	add_child(_carga)
+
+
+func _mostrar_carga(titulo: String) -> void:
+	_carga_titulo.text = titulo
+	_carga_barra.value = 0.0
+	_carga.modulate.a  = 0.0
+	_carga.visible     = true
+	create_tween().tween_property(_carga, "modulate:a", 1.0, 0.2)
+
+
+# paso: 0..PASOS_CARGA-1. La barra marca los pasos ya terminados.
+func _paso_carga(texto: String, paso: int) -> void:
+	_carga_paso.text   = texto
+	_carga_barra.value = 100.0 * paso / PASOS_CARGA
+
+
 func _nuevo_panel() -> VBoxContainer:
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -790,11 +880,12 @@ func _on_cambiar_pass_pressed() -> void:
 # ════════════════════════════════════════════════════════════
 # CALLBACKS SUPABASE
 # ════════════════════════════════════════════════════════════
+# Sin _set_cargando(false) en los dos éxitos: los botones siguen
+# deshabilitados hasta que cambia la escena.
 func _en_login_exitoso(_datos: Dictionary) -> void:
-	_set_cargando(false)
+	var titulo := "¡Cuenta creada!" if _login_es_post_registro else "¡Bienvenido al campus!"
 	_login_es_post_registro = false
-	_msg(_msg_login, "¡Bienvenido al campus!", TEMA.VERDE)
-	await _preparar_progreso_y_entrar(_msg_login)
+	await _preparar_progreso_y_entrar(titulo)
 
 
 func _en_login_fallido(error: String, error_code: String) -> void:
@@ -810,10 +901,7 @@ func _en_login_fallido(error: String, error_code: String) -> void:
 # El registro sí guardó sesión (signup devolvió access_token) — entrar
 # directo, sin ningún mensaje de error de por medio.
 func _en_registro_exitoso(_usuario: Dictionary) -> void:
-	_set_cargando(false)
-	_msg(_msg_reg, "¡Cuenta creada! Entrando al campus...", TEMA.VERDE)
-	await get_tree().create_timer(1.0).timeout
-	await _preparar_progreso_y_entrar(_msg_reg)
+	await _preparar_progreso_y_entrar("¡Cuenta creada!")
 
 
 # Ata el guardado local de NivelManager a la cuenta que acaba de iniciar
@@ -824,7 +912,10 @@ func _en_registro_exitoso(_usuario: Dictionary) -> void:
 # servidor), necesario cuando el estudiante juega desde una máquina sin
 # save local. Con timeout y fail-open: si no hay red, entra igual con lo
 # que haya en el archivo local en vez de trabar al estudiante acá.
-func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
+func _preparar_progreso_y_entrar(titulo: String) -> void:
+	if _entrando: return
+	_entrando = true
+	_mostrar_carga(titulo)
 	# Estas trazas son permanentes a propósito: en el export web no hay
 	# panel de Salida del editor al que recurrir, y cuando el progreso no
 	# aparece esto es lo único que distingue "el servidor no contestó" de
@@ -835,7 +926,7 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 		"si" if not SupabaseManager.jwt_token.is_empty() else "NO",
 	])
 	NivelManager.iniciar_sesion(SupabaseManager.user_id)
-	_msg(msg_lbl, "Cargando tu progreso...", TEMA.TEXTO_2)
+	_paso_carga("Cargando tu progreso...", 0)
 	var lista = await _cargar_misiones_con_timeout()
 	if lista is Array:
 		print("SceneLogin: el servidor devolvió %d misiones completadas" % lista.size())
@@ -847,6 +938,7 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 	# EcoCredits, inventario de la tienda y mejoras de zona (HU-012). Se
 	# espera, con límite, para que el mapa arranque con el saldo real y las
 	# zonas ya mejoradas; si no llega, el mapa se actualiza solo cuando llegue.
+	_paso_carga("Cargando tus EcoCredits...", 1)
 	EconomiaManager.iniciar_sesion()
 	var billetera_ok : bool = await _esperar_billetera_con_timeout()
 	print("SceneLogin: billetera %s (saldo=%d, items=%d)" % [
@@ -861,6 +953,7 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 	# locales que el servidor "no tiene", y sin respuesta real no sabemos qué
 	# tiene; subirlos podría pisar detalles más nuevos guardados desde otro
 	# equipo. Se reintenta en el próximo login.
+	_paso_carga("Cargando tus decisiones...", 2)
 	var detalles = await _esperar_detalles_con_timeout()
 	if detalles is Dictionary:
 		PuntajeManager.restaurar_detalles(detalles)
@@ -868,10 +961,35 @@ func _preparar_progreso_y_entrar(msg_lbl: Label) -> void:
 		"%d del servidor" % detalles.size() if detalles is Dictionary else "NO cargados (fallo o timeout)"))
 	PuntajeManager.iniciar_sesion()
 
-	var tw := create_tween()
-	tw.tween_property(_center, "modulate:a", 0.0, 0.5)
-	tw.tween_callback(func():
-		get_tree().change_scene_to_file("res://scenes/mapa/scene_mapa_mundo.tscn"))
+	_paso_carga("Abriendo el mapa del campus...", 3)
+	await _entrar_al_mapa()
+
+
+# Carga el mapa con load_threaded_request para que la barra se mueva
+# mientras tanto. En el export web no hay hilos (thread_support=false) y
+# la carga congela la pantalla hasta terminar: por eso primero se espera a
+# que el aviso "Abriendo el mapa..." esté dibujado, para que el estudiante
+# vea ese mensaje quieto y no el paso anterior.
+func _entrar_al_mapa() -> void:
+	await RenderingServer.frame_post_draw
+	if ResourceLoader.load_threaded_request(MAPA_PATH) != OK:
+		get_tree().change_scene_to_file(MAPA_PATH)
+		return
+	var avance := []
+	while true:
+		var estado := ResourceLoader.load_threaded_get_status(MAPA_PATH, avance)
+		if estado == ResourceLoader.THREAD_LOAD_LOADED:
+			break
+		if estado != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			# Falló: change_scene_to_file deja el error real en la consola.
+			push_error("SceneLogin: no se pudo cargar el mapa (estado %d)" % estado)
+			get_tree().change_scene_to_file(MAPA_PATH)
+			return
+		if not avance.is_empty():
+			_carga_barra.value = 100.0 * (PASOS_CARGA - 1 + float(avance[0])) / PASOS_CARGA
+		await get_tree().process_frame
+	_carga_barra.value = 100.0
+	get_tree().change_scene_to_packed(ResourceLoader.load_threaded_get(MAPA_PATH))
 
 
 # Pide misiones_estudiante y espera su respuesta (o error_red, o 8s de
@@ -1038,12 +1156,16 @@ func _en_actualizar_contrasena_fallido(error: String) -> void:
 
 
 func _en_error_red(mensaje: String) -> void:
-	_set_cargando(false)
 	# Se muestra el mensaje completo, no un "Sin conexión." pelado: el código
 	# que trae adentro es lo único que distingue un problema de red real de
 	# un 401/403 del servidor, y sin él no hay forma de diagnosticar nada en
 	# el export web.
 	push_error("SceneLogin: error de red -> " + mensaje)
+	# Ya entrando, un fallo (p. ej. la billetera) no frena nada: la carga
+	# sigue con lo local. Ni se reactivan los botones ni se toca el
+	# formulario, que está tapado.
+	if _entrando: return
+	_set_cargando(false)
 	_msg(_msg_login, mensaje, TEMA.ALERTA)
 	if is_instance_valid(_msg_reg): _msg_reg.text = "Sin conexión: " + mensaje
 	if is_instance_valid(_msg_rec): _msg_rec.text = "Sin conexión."

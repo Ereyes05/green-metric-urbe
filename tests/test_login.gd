@@ -62,6 +62,29 @@ func _ready() -> void:
 			  "establecer_nueva_contrasena"]:
 		_check(sm.contains("func %s(" % f), "SupabaseManager.%s sigue existiendo" % f)
 
+	# ── Pantalla de carga al entrar ─────────────────────────────
+	_check(src.contains("func _crear_pantalla_carga("), "existe la pantalla de carga")
+	_check(src.contains("_carga.mouse_filter = Control.MOUSE_FILTER_STOP"),
+		   "la pantalla de carga bloquea los clics al formulario")
+	_check(src.contains("if _entrando: return"), "no se puede entrar dos veces a la vez")
+	var i_login := src.find("func _en_login_exitoso(")
+	var i_reg := src.find("func _en_registro_exitoso(")
+	var cuerpo_login := src.substr(i_login, src.find("\nfunc ", i_login + 1) - i_login)
+	var cuerpo_reg := src.substr(i_reg, src.find("\nfunc ", i_reg + 1) - i_reg)
+	_check(not cuerpo_login.contains("_set_cargando(false)")
+		   and not cuerpo_reg.contains("_set_cargando(false)"),
+		   "al entrar, los botones no se reactivan")
+	_check(not cuerpo_reg.contains("create_timer"), "el registro no agrega una pausa artificial")
+
+	# ── El mapa no arrastra miles de tiles sin usar ─────────────
+	# Usar la imagen del campus como tileset hace que Godot declare un tile
+	# por cada 16×16 px (16.800): la entrada al mapa tardaba ~28 s solo en
+	# eso. Si alguien vuelve a crear el atlas entero, esto lo avisa.
+	var mapa := FileAccess.get_file_as_string("res://scenes/mapa/scene_mapa_mundo.tscn")
+	var re_tile := RegEx.create_from_string("(?m)^\\d+:\\d+/0 = ")
+	var tiles := re_tile.search_all(mapa).size()
+	_check(tiles < 500, "el mapa declara pocos tiles de atlas (%d)" % tiles)
+
 	# ── Que además COMPILE ──────────────────────────────────────
 	# Todo lo de arriba lee texto: pasaría igual con el script roto. Esto
 	# lo carga de verdad. Tiene que correr dentro de una escena y no con
