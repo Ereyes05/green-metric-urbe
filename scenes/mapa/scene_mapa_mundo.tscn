@@ -293,7 +293,6 @@ position = Vector2(818, 414)
 script = ExtResource("1_td5n8")
 
 [node name="FondoCampus" type="Node2D" parent="." unique_id=1259727306]
-visible = false
 z_index = -1
 script = ExtResource("2_wxtnl")
 
@@ -307,6 +306,7 @@ tile_map_data = PackedByteArray("AABRADcAAACGAFUAAABRADgAAACJAE8AAABRADkAAACJAE8
 tile_set = SubResource("TileSet_8w0r3")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Sprite2D" unique_id=721280087]
+visible = false
 
 [node name="Borde" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1390155970]
 polygon = PackedVector2Array(-1410, -772, 1406, -766, 1404, 766, -1406, 768, -1408, -748, -1137, -678, -1266, -675, -1252, 571, -1145, 573, -1136, 751, -995, 717, -692, 717, -645, 680, -581, 740, -401, 719, -99, 723, -77, 676, -32, 685, -7, 736, 75, 723, 49, 678, 101, 644, 133, 687, 150, 725, 396, 721, 1271, 708, 1312, 665, 1327, 524, 1292, 468, 1247, 417, 1185, 365, 1228, 316, 1262, 331, 1269, 354, 1296, 335, 1317, 332, 1341, 353, 1335, 322, 1358, 304, 1361, 284, 1340, 286, 1314, 279, 1292, 242, 1324, 191, 1358, 189, 1336, 158, 1355, 116, 1360, 83, 1322, 45, 1318, -366, 1126, -371, 1124, -550, 1051, -604, 984, -611, 946, -645, 892, -632, 839, -640, 759, -609, 720, -613, 678, -646, 682, -701, 598, -691, 566, -673, 537, -701, 505, -654, 475, -657, 476, -701, 328, -700, 317, -740, -286, -748, -346, -676, -410, -651, -486, -695, -507, -724, -550, -725, -562, -676, -590, -678, -607, -707, -655, -670, -687, -687, -722, -677, -843, -680, -861, -697, -883, -699, -904, -659, -1049, -650, -1070, -607, -1118, -607, -1135, -646, -1109, -692, -1137, -686)
@@ -558,6 +558,37 @@ shape = SubResource("RectangleShape2D_ibty8")
 position = Vector2(415, -156)
 shape = SubResource("RectangleShape2D_ibty8")
 
+[node name="CollisionPolygon2D4" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=875437040]
+polygon = PackedVector2Array(-401, -26, -437, -47, -437, -77, -413, -109, -396, -114, -381, -108, -359, -63, -374, -40)
+
+[node name="CollisionPolygon2D5" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=451254134]
+position = Vector2(312, 159)
+polygon = PackedVector2Array(-401, -26, -429, -50, -437, -77, -413, -109, -396, -114, -381, -108, -363, -85, -359, -63, -374, -40)
+
+[node name="CollisionPolygon2D6" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1420563106]
+position = Vector2(493, 158)
+polygon = PackedVector2Array(-402, -29, -438, -54, -440, -78, -425, -100, -396, -114, -370, -99, -361, -84, -359, -63, -374, -40)
+
+[node name="CollisionPolygon2D7" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1648342356]
+position = Vector2(802, 23)
+polygon = PackedVector2Array(-401, -26, -437, -47, -437, -77, -413, -109, -396, -114, -381, -108, -361, -80, -356, -54, -374, -40)
+
+[node name="CollisionPolygon2D8" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1233952154]
+position = Vector2(525, 440)
+polygon = PackedVector2Array(-401, -26, -437, -47, -437, -77, -413, -109, -396, -114, -381, -108, -365, -85, -358, -69, -360, -51, -374, -40)
+
+[node name="CollisionPolygon2D9" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1813877592]
+position = Vector2(931, 431)
+polygon = PackedVector2Array(-409, -32, -412, -47, -426, -52, -435, -70, -418, -101, -403, -110, -390, -105, -378, -95, -369, -72, -376, -58, -394, -51, -394, -35)
+
+[node name="CollisionPolygon2D10" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=684087962]
+position = Vector2(1107, 471)
+polygon = PackedVector2Array(-401, -26, -437, -47, -437, -77, -418, -103, -401, -107, -382, -104, -359, -63, -374, -40)
+
+[node name="CollisionPolygon2D11" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=805147884]
+position = Vector2(876, 437)
+polygon = PackedVector2Array(-409, -34, -413, -41, -426, -48, -425, -63, -418, -83, -403, -102, -387, -80, -380, -51, -389, -44, -393, -35)
+
 [node name="MapaCampus" type="TileMapLayer" parent="." unique_id=1180690893]
 visible = false
 tile_set = SubResource("TileSet_2pyuy")
@@ -615,6 +646,7 @@ limit_enabled = false
 script = ExtResource("4_mrfj7")
 
 [node name="LimiteMundo" type="StaticBody2D" parent="." unique_id=95619807]
+visible = false
 script = ExtResource("6_cpu1u")
 
 [node name="DialogoNPC" parent="." unique_id=815487550 instance=ExtResource("9_dlgnpc")]
