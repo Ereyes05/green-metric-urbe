@@ -59,7 +59,7 @@ const HUD_GREENMETRIC:= preload("res://scenes/ui/hud_panel_greenmetric.gd")
 const HUD_ACCIONES   := preload("res://scenes/ui/hud_acciones.gd")
 const HUD_BANNER     := preload("res://scenes/ui/hud_banner_zona.gd")
 const HUD_AVISO      := preload("res://scenes/ui/hud_aviso.gd")
-const HUD_LEYENDA    := preload("res://scenes/ui/hud_leyenda_avance.gd")
+const HUD_AVANCE     := preload("res://scenes/ui/hud_panel_avance.gd")
 
 # ── Datos de los NPCs (uno por zona) — mapa nuevo (urbe_removed (1).png) ─
 # "pos" es LOCAL al nodo raíz SceneMapaMundo (que en la escena está en
@@ -394,7 +394,7 @@ var _hud_gm       = null   # hud_panel_greenmetric.gd
 var _hud_acciones = null   # hud_acciones.gd
 var _hud_banner   = null   # hud_banner_zona.gd
 var _hud_aviso    = null   # hud_aviso.gd
-var _hud_leyenda  = null   # hud_leyenda_avance.gd
+var _hud_avance   = null   # hud_panel_avance.gd (botón Avance)
 
 # ── Panel de misión completada ────────────────────────────────
 var _complete_panel  : Panel  = null
@@ -455,11 +455,18 @@ func _ready() -> void:
 	jugador.global_position = _posicion_de_entrada()
 	jugador.z_index = 2
 
-	camara.limit_left   = 0
-	camara.limit_top    = 0
-	camara.limit_right  = int(MAPA_ANCHO)
-	camara.limit_bottom = int(MAPA_ALTO)
-	camara.zoom         = Vector2(1.3, 1.3)
+	# La cámara frena en el borde de la imagen del campus; el jugador sigue
+	# pudiendo caminar hasta el borde (eso lo limitan las colisiones), solo
+	# deja de ir centrado. Antes los límites eran MAPA_ANCHO×MAPA_ALTO
+	# (1408×768, el mapa viejo) y además la escena los tenía apagados
+	# (limit_enabled = false), así que en los bordes se veía el gris de fuera.
+	var borde := borde_mapa()
+	camara.limit_left    = int(ceil(borde.position.x))
+	camara.limit_top     = int(ceil(borde.position.y))
+	camara.limit_right   = int(floor(borde.end.x))
+	camara.limit_bottom  = int(floor(borde.end.y))
+	camara.limit_enabled = true
+	camara.zoom          = Vector2(1.3, 1.3)
 
 	# _progreso_modulos (sidebar) y los índices del HUD (💧🌿📚) solo se
 	# actualizaban de forma reactiva, al completar una misión EN ESA
@@ -565,20 +572,17 @@ func _construir_hud() -> void:
 	_hud_canvas.add_child(_hud_banner)
 	_hud_aviso = HUD_AVISO.new()
 	_hud_canvas.add_child(_hud_aviso)
-	_hud_leyenda = HUD_LEYENDA.new()
-	_hud_canvas.add_child(_hud_leyenda)
+	# Hijo de la escena y no de _hud_canvas: es un CanvasLayer propio (capa
+	# 15, encima del HUD), igual que el ranking.
+	_hud_avance = HUD_AVANCE.new()
+	add_child(_hud_avance)
 
 
 # Barra de acciones del HUD (botones o teclas 1–5).
 func _on_hud_accion(indice: int) -> void:
 	match indice:
 		0:
-			if mapa_campus and mapa_campus.has_method("toggle_mapa_avance"):
-				var estado : bool = mapa_campus.toggle_mapa_avance()
-				if _hud_leyenda:
-					_hud_leyenda.set_activo(estado)
-				if _hud_acciones:
-					_hud_acciones.set_activo(0, estado)
+			_hud_avance.alternar()
 			_sfx("zona")
 		1: _abrir_resultados()
 		2: _leaderboard_ui.mostrar()
@@ -726,6 +730,7 @@ func _toggle_menu_pausa() -> void:
 func _hay_ui_modal_abierta() -> bool:
 	if _tienda_ui and _tienda_ui.visible: return true
 	if _leaderboard_ui and _leaderboard_ui.visible: return true
+	if _hud_avance and _hud_avance.visible: return true
 	if _sim_decision_ui and _sim_decision_ui.visible: return true
 	if _resultados_ui and _resultados_ui.visible: return true
 	if _tutorial_ui and _tutorial_ui.visible: return true
@@ -1409,9 +1414,22 @@ func _exit_tree() -> void:
 
 # Dónde aparece el jugador al entrar. Si hay una posición guardada de esta
 # cuenta y sigue siendo válida, vuelve ahí; si no, al Patio Central.
+# Rectángulo del mapa en coordenadas globales, leído de la imagen del campus
+# (nodo Sprite2D) para no depender de dónde quedó dentro de la escena ni de
+# su tamaño. Si la imagen no está, cae a las medidas del mapa viejo.
+func borde_mapa() -> Rect2:
+	var fondo := get_node_or_null("Sprite2D") as Sprite2D
+	if fondo == null or fondo.texture == null:
+		return Rect2(0, 0, MAPA_ANCHO, MAPA_ALTO)
+	return fondo.global_transform * fondo.get_rect()
+
+
 func _posicion_de_entrada() -> Vector2:
 	var guardada = _leer_posicion()
-	if guardada is Vector2 and posicion_valida(guardada, COLISIONES.EDIFICIOS, MAPA_ANCHO, MAPA_ALTO):
+	# Con el ancho y alto del mapa nuevo: con los del viejo (1408×768), si
+	# el jugador guardaba en la mitad derecha o de abajo, volvía al inicio.
+	var borde := borde_mapa()
+	if guardada is Vector2 and posicion_valida(guardada, COLISIONES.EDIFICIOS, borde.end.x, borde.end.y):
 		_volvio_donde_quedo = true
 		_pos_guardada = guardada
 		return guardada
