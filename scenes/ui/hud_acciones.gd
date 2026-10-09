@@ -10,7 +10,7 @@ const TEMA := preload("res://scenes/ui/hud_tema.gd")
 signal accion(indice: int)
 
 const DEFS : Array = [
-	{"emoji": "🌡", "label": "Avance",  "tip": "Mapa de avance del campus", "color": TEMA.NARANJA},
+	{"emoji": "🌡", "label": "Avance",  "tip": "Tu avance por nivel", "color": TEMA.NARANJA},
 	{"emoji": "📊", "label": "Reporte", "tip": "Reporte GreenMetric",      "color": TEMA.CIAN},
 	{"emoji": "🏆", "label": "Ranking", "tip": "Tabla de clasificación",   "color": TEMA.DORADO},
 	{"emoji": "🔬", "label": "Simular", "tip": "Simulador de decisiones",  "color": TEMA.VIOLETA},
