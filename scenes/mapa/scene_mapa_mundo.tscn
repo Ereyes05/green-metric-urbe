@@ -296,6 +296,8 @@ position = Vector2(818, 414)
 script = ExtResource("1_td5n8")
 
 [node name="FondoCampus" type="Node2D" parent="." unique_id=1259727306]
+process_mode = 4
+visible = false
 z_index = -1
 script = ExtResource("2_wxtnl")
 
