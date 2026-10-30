@@ -17,6 +17,9 @@
 // salir por el 25 ni el 587.
 //
 // Secretos (supabase secrets set ...): GMAIL_USER, GMAIL_APP_PASSWORD.
+// Opcionales, para otro servidor SMTP (p. ej. Brevo) sin tocar el código:
+// SMTP_HOST (smtp.gmail.com), SMTP_PORT (465) y MAIL_FROM (el remitente
+// verificado; por defecto GMAIL_USER).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
@@ -25,6 +28,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GMAIL_USER = Deno.env.get("GMAIL_USER") ?? "";
 const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
+const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp.gmail.com";
+const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") || "465");
+const MAIL_FROM = Deno.env.get("MAIL_FROM") || GMAIL_USER;
 
 // Espejo de NivelManager.NOMBRES_NIVEL / ICONOS_NIVEL y de rangos.gd.
 const NIVELES: Record<string, string> = {
@@ -170,15 +176,15 @@ Deno.serve(async (req: Request) => {
   const { asunto, html } = armarCorreo(resumen as Resumen, testId);
   const smtp = new SMTPClient({
     connection: {
-      hostname: "smtp.gmail.com",
-      port: 465,
+      hostname: SMTP_HOST,
+      port: SMTP_PORT,
       tls: true,
       auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
     },
   });
   try {
     await smtp.send({
-      from: `URBE Rangers: Eco-Quest <${GMAIL_USER}>`,
+      from: `URBE Rangers: Eco-Quest <${MAIL_FROM}>`,
       to: user.email,
       subject: asunto,
       content: "auto",
