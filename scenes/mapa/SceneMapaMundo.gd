@@ -417,6 +417,10 @@ var _quiz_ui            : CanvasLayer = null
 # Tests de cierre de nivel (tests_nivel.gd). {test_id: {aciertos, total}}
 # según el servidor; _test_activo = el que está en pantalla, o "".
 var _tests_hechos       : Dictionary  = {}
+# Niveles cuyo test corresponde: terminados desde que existen los tests
+# (servidor) o durante esta sesión. Sin cargar del servidor, solo los de la
+# sesión: así nunca se piden tests de niveles viejos.
+var _tests_elegibles    : Array       = []
 var _test_activo        : String      = ""
 var _ofreciendo_test    : bool        = false
 var _mision_ui          : CanvasLayer = null
@@ -2308,12 +2312,17 @@ func _on_nivel_greenmetric_completado(nivel: int) -> void:
 		_spawn_punto_informe()
 	print("%s Nivel GreenMetric %d completado! Desbloqueando nivel %d…" % [icono, nivel, sig_nivel])
 	# Después de la celebración (~2,9 s), el test de este nivel.
+	if not nivel in _tests_elegibles:
+		_tests_elegibles.append(nivel)
 	_ofrecer_test_pendiente(3.2)
 
 
 # ── Tests de cierre de nivel ─────────────────────────────────
-func _on_tests_cargados(tests: Dictionary) -> void:
+func _on_tests_cargados(tests: Dictionary, elegibles: Array) -> void:
 	_tests_hechos = tests
+	for n in elegibles:
+		if not n in _tests_elegibles:
+			_tests_elegibles.append(n)
 	# Quien cerró el juego sin hacer un test lo encuentra al volver.
 	_ofrecer_test_pendiente(4.0)
 
@@ -2346,10 +2355,7 @@ func _ofrecer_test_pendiente(espera: float) -> void:
 	var nm = _nivel_mgr()
 	if not nm:
 		return
-	var superados : Array = []
-	for n in range(1, 7):
-		superados.append(nm.nivel_superado(n))
-	var test_id : String = TESTS_NIVEL.pendiente(superados, _tests_hechos)
+	var test_id : String = TESTS_NIVEL.pendiente(_tests_elegibles, _tests_hechos)
 	if test_id == "":
 		return
 	var rng := RandomNumberGenerator.new()

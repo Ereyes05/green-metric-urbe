@@ -59,11 +59,32 @@ begin
 end;
 $$;
 
+-- Migración 2 (2026-10-30): tests_nivel_elegibles. ESTADO: PENDIENTE DE APLICAR.
+-- El test es "al terminar el nivel": a quien ya había completado niveles
+-- antes de que existieran los tests no se le piden. "elegibles" son los
+-- niveles completos (catálogo ACTUAL, tipo 'mision', misma regla que
+-- ranking_publico) cuya última misión se hizo desde el día en que se
+-- publicaron los tests. Los que se completan durante la sesión los agrega
+-- el cliente al vuelo.
 create or replace function public.obtener_tests()
 returns jsonb language sql stable security definer set search_path to 'public' as $$
-  select coalesce(jsonb_object_agg(test_id, jsonb_build_object(
-           'aciertos', aciertos, 'total', total)), '{}'::jsonb)
-  from resultados_test where user_id = auth.uid()
+  with totales as (
+    select categoria, count(*) as total
+    from catalogo_misiones where tipo = 'mision' group by categoria
+  ), hechas as (
+    select cm.categoria, count(distinct me.mision_id) as n, max(me.completada_at) as ultima
+    from misiones_estudiante me
+    join catalogo_misiones cm on cm.mision_id = me.mision_id and cm.tipo = 'mision'
+    where me.user_id = auth.uid()
+    group by cm.categoria
+  )
+  select jsonb_build_object(
+    'tests', (select coalesce(jsonb_object_agg(test_id, jsonb_build_object(
+                'aciertos', aciertos, 'total', total)), '{}'::jsonb)
+              from resultados_test where user_id = auth.uid()),
+    'elegibles', (select coalesce(jsonb_agg(h.categoria order by h.categoria), '[]'::jsonb)
+                  from hechas h join totales t using (categoria)
+                  where h.n >= t.total and h.ultima >= timestamptz '2026-10-30 00:00:00-04'))
 $$;
 
 -- Todo lo que lleva el correo, en una sola llamada. Solo para service_role

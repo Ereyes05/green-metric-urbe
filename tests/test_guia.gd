@@ -16,6 +16,11 @@ func _check(cond: bool, msg: String) -> void:
 		printerr("  FALLA ", msg)
 
 
+func _fin_giro(g: Node) -> void:
+	while g._animando:
+		await get_tree().process_frame
+
+
 func _tecla(g: Node, k: Key) -> void:
 	var e := InputEventKey.new()
 	e.keycode = k
@@ -42,10 +47,18 @@ func _ready() -> void:
 	_check(g.pagina == 0 and g._btn_ant.disabled, "no retrocede antes de la primera")
 	_tecla(g, KEY_RIGHT)
 	_check(g.pagina == 1, "flecha derecha avanza")
+	_tecla(g, KEY_RIGHT)
+	_check(g.pagina == 1, "durante el giro de la hoja no se salta otra")
+	await _fin_giro(g)
 	_tecla(g, KEY_LEFT)
 	_check(g.pagina == 0, "flecha izquierda retrocede")
+	await _fin_giro(g)
+	g.ir_a(6)
+	await _fin_giro(g)
+	_check(g.pagina == 6 and g._hoja_izq.get_child_count() > 0, "pestaña: salta al capítulo 7")
 	for _i in GUIA.PAGINAS.size() + 3:
 		g.pasar(1)
+		await _fin_giro(g)
 	_check(g.pagina == GUIA.PAGINAS.size() - 1 and g._btn_sig.disabled, "no avanza después de la última")
 	_tecla(g, KEY_ESCAPE)
 	_check(not g.esta_abierta(), "Esc cierra")

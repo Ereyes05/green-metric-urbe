@@ -6,7 +6,7 @@
 
 **Universidad Dr. Rafael Belloso Chacín (URBE)** · Maracaibo, Venezuela
 **Estado:** 🚧 **BORRADOR — no entregar en esta forma**
-**Versión:** 0.4 · **Fecha:** 2026-10-30
+**Versión:** 0.5 · **Fecha:** 2026-10-30
 **Dirigido a:** estudiantes usuarios del sistema y al personal docente o administrativo que lo supervise.
 
 ---
@@ -228,10 +228,10 @@ Cuando ocurre algo —se completa una misión, se gana una insignia, sube el ran
 
 ### 5.6. Guía rápida dentro del juego
 
-El botón **?** de la esquina inferior derecha, o la tecla **H**, abre una **guía con forma de libro**: diez páginas con lo esencial de este manual (controles, personajes, misiones, test de cierre, puntaje, tienda, rangos y qué hacer si algo no funciona). Las páginas se pasan con los botones **‹ Anterior** y **Siguiente ›** o con las flechas del teclado, y la guía se cierra con **Esc**, con **H** o con **Cerrar**.
+El botón **?** de la esquina inferior derecha, o la tecla **H**, abre la **Bitácora del Eco-Ranger**: una libreta de campo con diez capítulos que resumen este manual (controles, personajes, misiones, test de cierre, puntaje, tienda, rangos y qué hacer si algo no funciona). Las hojas se pasan con **‹ Anterior** y **Siguiente ›** o con las flechas del teclado, y las **pestañas de colores** del borde llevan directo a cada capítulo. Se cierra con **Esc**, con **H** o con **Cerrar**.
 
-![Figura 7b. Guía rápida dentro del juego, abierta en su primera página.](manual/capturas/guia_1.png)
-*Figura 7b. Guía rápida dentro del juego, abierta en su primera página.*
+![Figura 7b. La Bitácora del Eco-Ranger abierta en su primer capítulo.](manual/capturas/guia_1.png)
+*Figura 7b. La Bitácora del Eco-Ranger abierta en su primer capítulo.*
 
 ---
 

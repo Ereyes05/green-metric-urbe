@@ -76,8 +76,9 @@ signal detalles_recibidos(detalles: Dictionary)
 # llamador no podría distinguirlo de "servidor vacío" y subiría todos los
 # detalles locales, pisando datos más nuevos que sí estaban en el servidor.
 signal detalles_fallidos()
-# Tests de cierre de nivel (sql/tests_nivel.sql). tests: {test_id: {aciertos, total}}.
-signal tests_cargados(tests: Dictionary)
+# Tests de cierre de nivel (sql/tests_nivel.sql). tests: {test_id: {aciertos,
+# total}}; elegibles: niveles terminados desde que existen los tests.
+signal tests_cargados(tests: Dictionary, elegibles: Array)
 signal test_registrado(respuesta: Dictionary, test_id: String)
 # Correo con el resumen (Edge Function enviar_resumen). ok=false si no salió.
 signal resumen_enviado(ok: bool, test_id: String)
@@ -810,8 +811,11 @@ func _procesar_test(code: int, datos: Variant, ctx: Dictionary) -> void:
 # Un fallo acá deja los tests como "pendientes" en el cliente: a lo sumo se
 # vuelve a ofrecer uno ya hecho, y el servidor guarda solo el primero.
 func _procesar_tests(code: int, datos: Variant) -> void:
-	if code == 200 and datos is Dictionary:
-		emit_signal("tests_cargados", datos)
+	if code == 200 and datos is Dictionary and datos.get("tests") is Dictionary:
+		var eleg : Array = []
+		for n in datos.get("elegibles", []):
+			eleg.append(int(n))
+		emit_signal("tests_cargados", datos["tests"], eleg)
 	else:
 		push_warning("SupabaseManager: no se cargaron los tests (HTTP %d)" % code)
 

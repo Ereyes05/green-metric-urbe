@@ -71,12 +71,14 @@ static func preguntas(test_id: String, quiz_por_mision: Dictionary,
 	return _tomar(banco(nivel, quiz_por_mision), PREGUNTAS_TEST, rng)
 
 
-# El test pendiente más bajo, o "" si no hay ninguno. superados[n-1] = nivel n
-# superado; hechos = {test_id: ...} del servidor. El final solo aparece con
-# los 6 tests de nivel hechos.
-static func pendiente(superados: Array, hechos: Dictionary) -> String:
+# El test pendiente más bajo, o "" si no hay ninguno. elegibles = niveles
+# terminados desde que existen los tests (obtener_tests en el servidor, más
+# los que se completan en la sesión): a quien terminó un nivel antes no se le
+# pide. hechos = {test_id: ...} del servidor. El final solo aparece con los
+# 6 tests de nivel hechos.
+static func pendiente(elegibles: Array, hechos: Dictionary) -> String:
 	for n in range(1, 7):
-		if n <= superados.size() and superados[n - 1] and not hechos.has(id_nivel(n)):
+		if n in elegibles and not hechos.has(id_nivel(n)):
 			return id_nivel(n)
 	for n in range(1, 7):
 		if not hechos.has(id_nivel(n)):

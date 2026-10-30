@@ -48,11 +48,13 @@ func _ready() -> void:
 	_check(final.size() == 12, "final: 2 por nivel = 12")
 
 	# Qué test toca.
-	var nada := [false, false, false, false, false, false]
-	var uno  := [true, false, false, false, false, false]
-	var todos := [true, true, true, true, true, true]
-	_check(TESTS.pendiente(nada, {}) == "", "sin niveles, sin test")
-	_check(TESTS.pendiente(uno, {}) == "nivel_1", "nivel 1 superado → test 1")
+	var nada := []
+	var uno  := [1]
+	var todos := [1, 2, 3, 4, 5, 6]
+	_check(TESTS.pendiente(nada, {}) == "", "sin niveles elegibles, sin test")
+	_check(TESTS.pendiente(nada, _hechos([])) == "", "niveles viejos (no elegibles): sin test")
+	_check(TESTS.pendiente(uno, {}) == "nivel_1", "nivel 1 terminado ahora → test 1")
+	_check(TESTS.pendiente([3], {}) == "nivel_3", "solo el nivel recién terminado")
 	_check(TESTS.pendiente(uno, _hechos(["nivel_1"])) == "", "test 1 hecho → nada")
 	_check(TESTS.pendiente(todos, _hechos(["nivel_1", "nivel_3"])) == "nivel_2", "toca el más bajo")
 	var seis := ["nivel_1", "nivel_2", "nivel_3", "nivel_4", "nivel_5", "nivel_6"]

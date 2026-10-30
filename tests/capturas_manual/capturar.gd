@@ -10,7 +10,7 @@ const TESTS := preload("res://scenes/misiones/tests_nivel.gd")
 const CAPTURAS := [
 	"login", "registro", "tutorial_1", "tutorial_2", "hud", "dialogo", "quiz",
 	"quiz_fallo", "mision_campo", "decision", "crisis", "reporte", "simulador",
-	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado", "guia_1", "guia_4", "guia_6",
+	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado", "guia_1", "guia_4", "guia_7",
 ]
 
 const RANKING_DEMO := [
@@ -190,10 +190,22 @@ func _preparar(id: String) -> void:
 			await _esperar(1.0)
 			npc.iniciar_dialogo()
 			await _esperar(0.6)
-		"guia_1", "guia_4", "guia_6":
+		"guia_1", "guia_4", "guia_7":
+			_mapa._guia.pagina = int(id.trim_prefix("guia_")) - 1
 			_mapa._guia.abrir()
-			_mapa._guia._mostrar_pagina(int(id.trim_prefix("guia_")) - 1, 0)
 			await _esperar(0.8)
+		"guia_giro":
+			# A mitad del giro de la hoja (no va al manual).
+			_mapa._guia.abrir()
+			await _esperar(0.5)
+			_mapa._guia.pasar(1)
+			await _esperar(0.12)
+			# Foto a mitad del giro: sin esperar los 0,6 s del final.
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png(OS.get_cmdline_user_args()[1])
+			print("captura guia_giro (a mitad del giro)")
+			get_tree().quit()
+			return
 		"informe":
 			_mapa._informe_ui.iniciar(null)
 			await _esperar(1.5)
