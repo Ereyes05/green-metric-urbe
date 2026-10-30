@@ -76,6 +76,11 @@ signal detalles_recibidos(detalles: Dictionary)
 # llamador no podría distinguirlo de "servidor vacío" y subiría todos los
 # detalles locales, pisando datos más nuevos que sí estaban en el servidor.
 signal detalles_fallidos()
+# Tests de cierre de nivel (sql/tests_nivel.sql). tests: {test_id: {aciertos, total}}.
+signal tests_cargados(tests: Dictionary)
+signal test_registrado(respuesta: Dictionary, test_id: String)
+# Correo con el resumen (Edge Function enviar_resumen). ok=false si no salió.
+signal resumen_enviado(ok: bool, test_id: String)
 
 # ── Estado interno ───────────────────────────────────────────
 var jwt_token      : String = ""
@@ -211,6 +216,10 @@ func _emitir_fallo(accion: String, ctx: Dictionary) -> void:
 		emit_signal("puntaje_fallido")
 	elif accion == "cargar_ranking":
 		emit_signal("ranking_fallido")
+	elif accion == "test":
+		emit_signal("test_registrado", {"ok": false, "error": "red"}, str(ctx.get("test_id", "")))
+	elif accion == "resumen":
+		emit_signal("resumen_enviado", false, str(ctx.get("test_id", "")))
 
 
 # ── LOGIN ─────────────────────────────────────────────────────
@@ -360,6 +369,26 @@ func obtener_puntaje() -> void:
 func registrar_quiz(mision_id: String, aciertos: int) -> void:
 	_rpc("calidad", "registrar_quiz", {"p_mision_id": mision_id, "p_aciertos": aciertos},
 		 {"tipo": "quiz", "mision_id": mision_id})
+
+
+func registrar_test(test_id: String, aciertos: int, total: int) -> void:
+	_rpc("test", "registrar_test",
+		 {"p_test_id": test_id, "p_aciertos": aciertos, "p_total": total},
+		 {"test_id": test_id})
+
+
+func obtener_tests() -> void:
+	_rpc("tests", "obtener_tests", {})
+
+
+# La función toma el usuario del JWT, no de acá: solo manda el resumen
+# propio, al correo con el que se registró.
+func enviar_resumen(test_id: String) -> void:
+	if jwt_token.is_empty():
+		return
+	_encolar("resumen", SUPABASE_URL + "/functions/v1/enviar_resumen",
+			 HTTPClient.METHOD_POST, _headers_auth(),
+			 JSON.stringify({"test_id": test_id}), {"test_id": test_id})
 
 
 func registrar_decision(decision_id: String, opcion_id: String) -> void:
@@ -533,6 +562,9 @@ func _on_respuesta_http(result: int, code: int, hdrs: PackedStringArray, body: P
 		"calidad"         : _procesar_calidad(code, datos, ctx)
 		"detalle"         : _procesar_detalle(code, datos, ctx)
 		"detalles"        : _procesar_detalles(code, datos)
+		"test"            : _procesar_test(code, datos, ctx)
+		"tests"           : _procesar_tests(code, datos)
+		"resumen"         : _procesar_resumen(code, datos, ctx)
 		"diag_red"        : print("AUTOPRUEBA RED: OK — HTTP %d, %d bytes, JSON %s, Content-Encoding=%s"
 			% [code, body.size(), "valido" if datos != null else "INVALIDO",
 			   _valor_cabecera(hdrs, "content-encoding")])
@@ -763,6 +795,33 @@ func _procesar_calidad(code: int, datos: Variant, ctx: Dictionary) -> void:
 		push_error("SupabaseManager: falló registro de calidad %s (HTTP %d): %s"
 			% [str(ctx), code, str(datos).substr(0, 200)])
 		emit_signal("calidad_respuesta", {"ok": false, "error": "http_%d" % code}, ctx)
+
+
+func _procesar_test(code: int, datos: Variant, ctx: Dictionary) -> void:
+	var test_id := str(ctx.get("test_id", ""))
+	if code == 200 and datos is Dictionary:
+		emit_signal("test_registrado", datos, test_id)
+	else:
+		push_error("SupabaseManager: no se guardó el test '%s' (HTTP %d): %s"
+			% [test_id, code, str(datos).substr(0, 200)])
+		emit_signal("test_registrado", {"ok": false, "error": "http_%d" % code}, test_id)
+
+
+# Un fallo acá deja los tests como "pendientes" en el cliente: a lo sumo se
+# vuelve a ofrecer uno ya hecho, y el servidor guarda solo el primero.
+func _procesar_tests(code: int, datos: Variant) -> void:
+	if code == 200 and datos is Dictionary:
+		emit_signal("tests_cargados", datos)
+	else:
+		push_warning("SupabaseManager: no se cargaron los tests (HTTP %d)" % code)
+
+
+func _procesar_resumen(code: int, datos: Variant, ctx: Dictionary) -> void:
+	var ok : bool = code == 200 and datos is Dictionary and bool(datos.get("ok", false))
+	if not ok:
+		push_warning("SupabaseManager: no salió el correo de '%s' (HTTP %d): %s"
+			% [str(ctx.get("test_id", "")), code, str(datos).substr(0, 200)])
+	emit_signal("resumen_enviado", ok, str(ctx.get("test_id", "")))
 
 
 # Un detalle que no se guardó no se pierde: queda en el archivo local de

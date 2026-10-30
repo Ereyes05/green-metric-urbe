@@ -6,6 +6,9 @@
 extends CanvasLayer
 
 signal quiz_completado(xp_total: int)
+# Modo test (cierre de nivel): en vez de quiz_completado. Salir a mitad no
+# emite nada, así el test queda pendiente.
+signal test_completado(aciertos: int, total: int)
 
 const XP_POR_PREGUNTA    : int   = 10
 const XP_BONUS_VELOCIDAD : int   = 5
@@ -48,6 +51,7 @@ var _xp_offset         : int   = 0   # offset vertical para labels flotantes
 # un indicador GreenMetric — por eso conviene siempre pasarlo.
 var _nivel     : int    = 0
 var _mision_id : String = ""
+var _es_test   : bool   = false
 
 
 func _ready() -> void:
@@ -351,20 +355,22 @@ func _on_cancelar_salida() -> void:
 # API PÚBLICA
 # ════════════════════════════════════════════════════════
 func iniciar(preguntas: Array, nombre_npc: String,
-			 nivel: int = 0, mision_id: String = "") -> void:
+			 nivel: int = 0, mision_id: String = "", es_test: bool = false) -> void:
+	_es_test   = es_test
 	_preguntas = preguntas
 	_indice    = 0
 	_xp_total  = 0
 	_racha     = 0
 	_aciertos  = 0
-	_intento   = 2 if PuntajeManager.quiz_hecho(mision_id) else 1
+	_intento   = 2 if (not es_test and PuntajeManager.quiz_hecho(mision_id)) else 1
 	_xp_offset = 0
 	_nivel     = nivel
 	_mision_id = mision_id if mision_id != "" else "quiz_%s" % nombre_npc.to_lower()
 	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_iniciada",
 		{"npc": nombre_npc, "preguntas": preguntas.size()})
-	_titulo_lbl.text = "QUIZ  ─  " + nombre_npc
+	_titulo_lbl.text = ("TEST  ─  " if es_test else "QUIZ  ─  ") + nombre_npc
 	_xp_lbl.text     = "XP ganada: 0"
+	_xp_lbl.visible  = not es_test
 	_racha_lbl.visible = false
 	_dlg_overlay.visible = false
 	_crear_dots()
@@ -453,6 +459,9 @@ func _responder(idx: int) -> void:
 			xp_ganado += XP_BONUS_RACHA
 	else:
 		_racha = 0
+	# El test no da XP: solo comprueba lo aprendido.
+	if _es_test:
+		xp_ganado = 0
 
 	# Colorear respuestas
 	for i in range(_botones.size()):
@@ -483,7 +492,9 @@ func _responder(idx: int) -> void:
 		_xp_total += xp_ganado
 		_xp_lbl.text = "XP ganada: %d" % _xp_total
 		var msg := "✓  Correcto!  +%d XP" % xp_ganado
-		if _racha >= 3:
+		if _es_test:
+			msg = "✓  Correcto!"
+		elif _racha >= 3:
 			msg = "🔥 RACHA x%d!  +%d XP" % [_racha, xp_ganado]
 			_racha_lbl.text    = "🔥 RACHA x%d" % _racha
 			_racha_lbl.visible = true
@@ -495,7 +506,8 @@ func _responder(idx: int) -> void:
 			_racha_lbl.visible = false
 		_feedback_txt(_feedback_lbl, msg, Color(0.25, 0.95, 0.30))
 		_disparar_flash(Color(0.18, 0.82, 0.28, 0.14))
-		_flotar_xp_panel("+%d XP" % xp_ganado, Color(0.28, 1.0, 0.42))
+		if not _es_test:
+			_flotar_xp_panel("+%d XP" % xp_ganado, Color(0.28, 1.0, 0.42))
 	else:
 		_racha_lbl.visible = false
 		var correcta_txt : String = str(q["opciones"][correcta])
@@ -542,19 +554,24 @@ func _tiempo_se_acabo() -> void:
 
 func _finalizar() -> void:
 	# El servidor guarda solo el primer intento (registrar_quiz); repetir el
-	# quiz se juega igual pero no cambia la Comprensión.
-	PuntajeManager.registrar_quiz(_mision_id, _aciertos)
+	# quiz se juega igual pero no cambia la Comprensión. El test no cuenta
+	# para la Comprensión: lo guarda quien escucha test_completado.
+	if not _es_test:
+		PuntajeManager.registrar_quiz(_mision_id, _aciertos)
 	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_completada",
 		{"xp_total": _xp_total, "preguntas": _preguntas.size()})
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
-	if hb:
+	if hb and not _es_test:
 		hb.push("primer_quiz_done",
 			"🏆 ¡Quiz completado! Busca más NPCs en el campus para seguir explorando.")
 	var tw := create_tween()
 	tw.tween_property(_panel, "modulate:a", 0.0, 0.18)
 	tw.tween_callback(func():
 		hide()
-		quiz_completado.emit(_xp_total))
+		if _es_test:
+			test_completado.emit(_aciertos, _preguntas.size())
+		else:
+			quiz_completado.emit(_xp_total))
 
 
 # ════════════════════════════════════════════════════════

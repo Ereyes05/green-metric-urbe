@@ -51,6 +51,7 @@ const PUNTO_SEMANA_VERDE_ESCENA := preload("res://scenes/misiones/punto_semana_v
 const MISION_SEMANA_VERDE_ESCENA:= preload("res://scenes/misiones/mision_semana_verde.gd")
 const PUNTO_INFORME_ESCENA      := preload("res://scenes/misiones/punto_informe_final.gd")
 const MISION_INFORME_ESCENA     := preload("res://scenes/misiones/mision_informe_final.gd")
+const TESTS_NIVEL               := preload("res://scenes/misiones/tests_nivel.gd")
 
 const RANGOS         := preload("res://autoload/rangos.gd")
 const HUD_TEMA       := preload("res://scenes/ui/hud_tema.gd")
@@ -382,6 +383,11 @@ var _nombre_activo      : String      = ""
 var _zona_activa        : String      = ""
 var _mision_activa      : String      = ""
 var _quiz_ui            : CanvasLayer = null
+# Tests de cierre de nivel (tests_nivel.gd). {test_id: {aciertos, total}}
+# según el servidor; _test_activo = el que está en pantalla, o "".
+var _tests_hechos       : Dictionary  = {}
+var _test_activo        : String      = ""
+var _ofreciendo_test    : bool        = false
 var _mision_ui          : CanvasLayer = null
 var _dialogo_ui         : CanvasLayer = null
 var _minijuego_residuos : CanvasLayer = null
@@ -524,6 +530,7 @@ func _ready() -> void:
 	_quiz_ui = QUIZ_ESCENA.instantiate()
 	add_child(_quiz_ui)
 	_quiz_ui.quiz_completado.connect(_on_quiz_completado)
+	_quiz_ui.test_completado.connect(_on_test_completado)
 
 	_minijuego_residuos = MINIJUEGO_RESIDUOS_ESCENA.new()
 	add_child(_minijuego_residuos)
@@ -1721,6 +1728,12 @@ func _init_misiones_nivel() -> void:
 	if nm:
 		nm.nivel_completado.connect(_on_nivel_greenmetric_completado)
 
+	# ── Tests de cierre de nivel + correo con el resumen ─────
+	SupabaseManager.tests_cargados.connect(_on_tests_cargados)
+	SupabaseManager.test_registrado.connect(_on_test_registrado)
+	SupabaseManager.resumen_enviado.connect(_on_resumen_enviado)
+	SupabaseManager.obtener_tests()
+
 
 func _spawn_zonas_tierra() -> void:
 	var nm = _nivel_mgr()
@@ -2208,3 +2221,83 @@ func _on_nivel_greenmetric_completado(nivel: int) -> void:
 		_spawn_punto_semana_verde()
 		_spawn_punto_informe()
 	print("%s Nivel GreenMetric %d completado! Desbloqueando nivel %d…" % [icono, nivel, sig_nivel])
+	# Después de la celebración (~2,9 s), el test de este nivel.
+	_ofrecer_test_pendiente(3.2)
+
+
+# ── Tests de cierre de nivel ─────────────────────────────────
+func _on_tests_cargados(tests: Dictionary) -> void:
+	_tests_hechos = tests
+	# Quien cerró el juego sin hacer un test lo encuentra al volver.
+	_ofrecer_test_pendiente(4.0)
+
+
+func _ui_ocupada() -> bool:
+	if (_dialogo_ui and _dialogo_ui.visible) or (_quiz_ui and _quiz_ui.visible):
+		return true
+	if (_mision_ui and _mision_ui.visible) or (_minijuego_residuos and _minijuego_residuos.visible):
+		return true
+	var tutorial := get_tree().get_first_node_in_group("ui_tutorial")
+	return tutorial != null and tutorial.visible
+
+
+func _ofrecer_test_pendiente(espera: float) -> void:
+	if _ofreciendo_test:
+		return
+	_ofreciendo_test = true
+	await get_tree().create_timer(espera).timeout
+	# Si hay otra ventana abierta (misión, diálogo, tutorial), se espera a
+	# que se cierre; al minuto se desiste y se ofrece en la próxima sesión.
+	var intentos := 0
+	while is_inside_tree() and _ui_ocupada() and intentos < 30:
+		await get_tree().create_timer(2.0).timeout
+		intentos += 1
+	_ofreciendo_test = false
+	if not is_inside_tree() or _ui_ocupada():
+		return
+	var nm = _nivel_mgr()
+	if not nm:
+		return
+	var superados : Array = []
+	for n in range(1, 7):
+		superados.append(nm.nivel_superado(n))
+	var test_id : String = TESTS_NIVEL.pendiente(superados, _tests_hechos)
+	if test_id == "":
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var preguntas : Array = TESTS_NIVEL.preguntas(test_id, QUIZ_POR_MISION, rng)
+	if preguntas.is_empty():
+		return
+	_test_activo = test_id
+	if _hud_aviso:
+		_hud_aviso.avisar("📝 %s: ¿qué te quedó? Responde %d preguntas"
+			% [TESTS_NIVEL.titulo(test_id), preguntas.size()])
+	var nivel := 0 if test_id == TESTS_NIVEL.ID_FINAL else int(test_id.trim_prefix("nivel_"))
+	_quiz_ui.iniciar(preguntas, TESTS_NIVEL.titulo(test_id), nivel, "test_" + test_id, true)
+
+
+func _on_test_completado(aciertos: int, total: int) -> void:
+	var test_id := _test_activo
+	_test_activo = ""
+	if test_id == "":
+		return
+	# Local ya, para no volver a ofrecerlo; el servidor guarda el primero.
+	if not _tests_hechos.has(test_id):
+		_tests_hechos[test_id] = {"aciertos": aciertos, "total": total}
+	SupabaseManager.registrar_test(test_id, aciertos, total)
+	if _hud_aviso:
+		_hud_aviso.avisar("📝 %s: %d de %d correctas" % [TESTS_NIVEL.titulo(test_id), aciertos, total])
+	# Tras el sexto test de nivel, el final.
+	_ofrecer_test_pendiente(3.0)
+
+
+func _on_test_registrado(respuesta: Dictionary, test_id: String) -> void:
+	# Solo con el test guardado: el correo lo lee del servidor.
+	if bool(respuesta.get("ok", false)):
+		SupabaseManager.enviar_resumen(test_id)
+
+
+func _on_resumen_enviado(ok: bool, _test_id: String) -> void:
+	if ok and _hud_aviso:
+		_hud_aviso.avisar("📧 Te enviamos tu avance a tu correo")
