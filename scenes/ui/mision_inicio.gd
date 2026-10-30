@@ -29,7 +29,7 @@ const MODULOS_INFO : Dictionary = {
 	1: {
 		"icono":  "🌿",
 		"nombre": "Entorno e Infraestructura",
-		"desc":   "GreenMetric evalúa los espacios verdes del campus, políticas ambientales institucionales y certificaciones ecológicas. Un campus sostenible requiere al menos 25% de área verde y políticas formales de gestión ambiental.",
+		"desc":   "GreenMetric evalúa los espacios verdes del campus, políticas ambientales institucionales y certificaciones ecológicas. No fija un mínimo: puntúa la proporción de área abierta y verde del campus, y a mayor proporción, mayor puntaje.",
 		"color":  Color(0.18, 0.49, 0.20),
 	},
 	2: {

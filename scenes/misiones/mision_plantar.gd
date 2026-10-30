@@ -26,7 +26,7 @@ const MISIONES : Array = [
 		"feedback": {
 			"araguaney":       "✅ ¡Excelente! El Araguaney es el Árbol Nacional de Venezuela. Su copa amplia proporciona sombra perfecta y sus raíces no dañan las aceras. ¡Elección ideal para corredores universitarios!",
 			"nim":             "❌ El nim es una especie introducida, originaria de la India. Aunque es común en Maracaibo, aquí se pide un árbol nativo.",
-			"cactus":          "❌ El cactus del desierto no es apto para el clima tropical de Maracaibo. No proporciona sombra y no se adapta a las condiciones de humedad del campus.",
+			"cactus":          "❌ El cactus no da sombra ni refresca el paso. Un corredor universitario necesita un árbol de copa amplia.",
 			"pino_canadiense": "❌ El pino canadiense es una especie de clima frío. No tolera las altas temperaturas de Maracaibo y no brinda la sombra adecuada para corredores universitarios.",
 		},
 	},

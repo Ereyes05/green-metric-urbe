@@ -80,7 +80,7 @@ const ESCENARIOS : Array = [
 	{
 		"modulo": 3, "icono": "♻", "color": Color(0.35, 0.70, 0.15),
 		"titulo": "Gestión de Residuos — Campus URBE",
-		"contexto": "URBE genera 500 kg de residuos diarios. Actualmente solo el 20% se clasifica correctamente. GreenMetric exige al menos un 60% de clasificación para una calificación aceptable en el módulo de Residuos.",
+		"contexto": "URBE genera 500 kg de residuos diarios. Actualmente solo el 20% se clasifica correctamente. GreenMetric no fija un mínimo: puntúa por tramos el porcentaje de residuos tratados, y el puntaje completo exige tratar más del 85%.",
 		"pregunta": "¿Qué estrategia implementarías para mejorar la clasificación de residuos?",
 		"opciones": [
 			{

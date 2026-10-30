@@ -182,7 +182,7 @@ var DATOS_NPCS : Array = [
 		"dialogos":  PackedStringArray([
 			"Hola! Soy la Ing. Ramirez, coordinadora de Entorno e Infraestructura.",
 			"El edificio de Estudios a Distancia es el mas grande del campus por el este.",
-			"GreenMetric exige que al menos el 25% del campus sea area verde con politica ambiental.",
+			"GreenMetric no exige un minimo: puntua la proporcion de area abierta y verde del campus. A mas area verde, mas puntaje.",
 			"Responde este cuestionario sobre el modulo de Entorno e Infraestructura."
 		])
 	},
