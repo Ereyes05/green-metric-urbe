@@ -99,6 +99,9 @@ size = Vector2(38, 58)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ibty8"]
 size = Vector2(27.25, 99)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ydnqi"]
+size = Vector2(40, 17)
+
 [sub_resource type="TileSet" id="TileSet_2pyuy"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_stwnj"]
@@ -623,6 +626,61 @@ polygon = PackedVector2Array(-394, 96, -364, 96, -360, 96, -360, 118, -393, 118)
 [node name="CollisionPolygon2D21" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1091899113]
 position = Vector2(443, 46)
 polygon = PackedVector2Array(-394, 96, -364, 96, -360, 96, -360, 118, -393, 118)
+
+[node name="CollisionPolygon2D22" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=565675020]
+polygon = PackedVector2Array(-261, 140, -271, 138, -280, 125, -272, 91, -261, 78, -250, 92, -238, 127, -249, 134, -252, 138)
+
+[node name="CollisionPolygon2D23" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=367529207]
+position = Vector2(526, 1)
+polygon = PackedVector2Array(-261, 140, -271, 138, -284, 124, -272, 91, -261, 78, -250, 92, -238, 127, -249, 134, -252, 138)
+
+[node name="CollisionPolygon2D24" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1245495121]
+position = Vector2(334, 141)
+polygon = PackedVector2Array(-261, 140, -271, 138, -282, 124, -272, 91, -261, 75, -250, 92, -240, 121, -249, 134, -252, 138)
+
+[node name="CollisionPolygon2D25" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1309810342]
+polygon = PackedVector2Array(-376, 181, -388, 162, -384, 150, -383, 142, -370, 124, -355, 121, -342, 125, -335, 132, -336, 136, -331, 144, -330, 154, -315, 153, -306, 173, -298, 178, -306, 213, -300, 218, -287, 217, -282, 223, -275, 218, -273, 205, -262, 205, -258, 216, -258, 239, -278, 239, -283, 230, -303, 231, -303, 221, -309, 214, -322, 218, -326, 210, -321, 186, -326, 182, -324, 169, -331, 168, -344, 184, -351, 184, -360, 190)
+
+[node name="CollisionPolygon2D26" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=929139259]
+polygon = PackedVector2Array(268, 198, 263, 213, 264, 231, 271, 240, 288, 242, 340, 242, 347, 236, 353, 228, 351, 210, 354, 161, 342, 147, 326, 145, 316, 153, 314, 165, 311, 178, 310, 190, 300, 194, 285, 194)
+
+[node name="CollisionPolygon2D27" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=980323977]
+polygon = PackedVector2Array(423, 104, 424, 284, 95, 284, 96, 257, 403, 259, 404, 101)
+
+[node name="CollisionShape2D44" type="CollisionShape2D" parent="Sprite2D/StaticBody2D" unique_id=45083552]
+position = Vector2(328, 104.5)
+shape = SubResource("RectangleShape2D_ydnqi")
+
+[node name="CollisionPolygon2D28" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=992895680]
+polygon = PackedVector2Array(292, 4, 292, 28, 327, 28, 327, 3)
+
+[node name="CollisionPolygon2D29" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=843359802]
+position = Vector2(69, 1)
+polygon = PackedVector2Array(292, 4, 292, 28, 327, 28, 327, 3)
+
+[node name="CollisionPolygon2D30" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1841350401]
+position = Vector2(-663, 0)
+polygon = PackedVector2Array(272, 4, 271, 26, 304, 26, 303, 4, 287, 4)
+
+[node name="CollisionPolygon2D31" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1042094239]
+position = Vector2(-729, 1)
+polygon = PackedVector2Array(292, 4, 292, 28, 327, 28, 327, 3)
+
+[node name="CollisionPolygon2D32" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1355577782]
+polygon = PackedVector2Array(-148, 43, -148, 87, -138, 87, -138, 41)
+
+[node name="CollisionPolygon2D33" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1167760188]
+polygon = PackedVector2Array(142, 42, 142, 82, 153, 82, 153, 42)
+
+[node name="CollisionPolygon2D34" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=488540315]
+polygon = PackedVector2Array(-202, -59, -171, -89, -163, -80, -190, -54)
+
+[node name="CollisionPolygon2D35" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1281351199]
+polygon = PackedVector2Array(-281, 22, -281, 13, -296, 2, -292, -17, -287, -32, -271, -42, -260, -34, -253, -25, -246, -17, -242, 1, -266, 16, -265, 22)
+
+[node name="CollisionPolygon2D36" type="CollisionPolygon2D" parent="Sprite2D/StaticBody2D" unique_id=1388978307]
+position = Vector2(540, -1)
+polygon = PackedVector2Array(-281, 22, -281, 13, -299, 2, -296, -20, -287, -32, -275, -42, -260, -34, -259, -23, -253, -12, -253, 3, -266, 16, -265, 22)
 
 [node name="MapaCampus" type="TileMapLayer" parent="." unique_id=1180690893]
 visible = false
