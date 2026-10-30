@@ -89,13 +89,12 @@ func _mostrar_score_final() -> void:
 	var score_100 : float = PuntajeManager.total
 	_score_lbl.text = "%.1f / 100" % score_100
 
-	var pos : int = 8
-	if score_100 >= 80.0:    pos = 1
-	elif score_100 >= 65.0:  pos = 3
-	elif score_100 >= 50.0:  pos = 5
-	elif score_100 >= 35.0:  pos = 7
-
-	_rank_lbl.text = "Posición estimada: #%d / 1.050 universidades" % pos
+	# Antes: "Posición estimada: #N / 1.050 universidades", con N sacado de
+	# una tabla fija por puntaje (>=80 → #1 … <35 → #8). No tenía base: el
+	# puntaje del juego (0-100) no es comparable con el del ranking real
+	# (hasta 10.000), y 1.050 era un dato viejo. Se deja el tamaño real del
+	# ranking (edición 2024, banco validado 2026-10-15) sin posición.
+	_rank_lbl.text = "UI GreenMetric 2024: 1.477 universidades de 95 países"
 
 	var tw := create_tween()
 	tw.tween_property(_score_lbl, "modulate:a", 1.0, 0.35).from(0.0)
