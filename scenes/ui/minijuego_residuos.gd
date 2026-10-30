@@ -20,15 +20,14 @@ enum Tipo { RECICLABLE, ORGANICO, NO_RECICLABLE }
 const RESIDUOS : Array = [
 	{"emoji": "🍌", "nombre": "Cáscara de banana",   "tipo": Tipo.ORGANICO,       "dato": "Los residuos orgánicos se compostan y generan abono natural."},
 	{"emoji": "🍾", "nombre": "Botella de vidrio",    "tipo": Tipo.RECICLABLE,     "dato": "El vidrio puede reciclarse infinitas veces sin perder calidad."},
-	{"emoji": "📄", "nombre": "Hoja de papel",        "tipo": Tipo.RECICLABLE,     "dato": "Reciclar 1 tonelada de papel salva 17 árboles."},
+	{"emoji": "📄", "nombre": "Hoja de papel",        "tipo": Tipo.RECICLABLE,     "dato": "Reciclar 1 tonelada de papel de imprenta salva entre 15 y 24 árboles."},
 	{"emoji": "🍕", "nombre": "Resto de comida",      "tipo": Tipo.ORGANICO,       "dato": "Los restos orgánicos representan el 50% de los residuos del campus."},
 	{"emoji": "🔋", "nombre": "Pila usada",           "tipo": Tipo.NO_RECICLABLE,  "dato": "Las pilas contienen metales pesados tóxicos. Van a puntos especiales."},
 	{"emoji": "🥤", "nombre": "Vaso plástico",        "tipo": Tipo.RECICLABLE,     "dato": "El plástico tarda 500 años en degradarse en la naturaleza."},
 	{"emoji": "🌿", "nombre": "Hojas secas",          "tipo": Tipo.ORGANICO,       "dato": "Las hojas secas son excelente material para compostaje."},
-	{"emoji": "💊", "nombre": "Medicamento vencido",  "tipo": Tipo.NO_RECICLABLE,  "dato": "Los medicamentos contaminan el agua. Devuélvelos a la farmacia."},
+	{"emoji": "💊", "nombre": "Medicamento vencido",  "tipo": Tipo.NO_RECICLABLE,  "dato": "Los medicamentos contaminan el agua. Deben llevarse a puntos especiales de recolección."},
 	{"emoji": "📦", "nombre": "Caja de cartón",       "tipo": Tipo.RECICLABLE,     "dato": "El cartón reciclado reduce la tala de bosques."},
 	{"emoji": "🖊️", "nombre": "Bolígrafo sin tinta", "tipo": Tipo.NO_RECICLABLE,  "dato": "Los bolígrafos tienen partes mixtas difíciles de separar para reciclar."},
-	{"emoji": "🍊", "nombre": "Cáscara de naranja",   "tipo": Tipo.ORGANICO,       "dato": "Las cáscaras cítricas enriquecen el compost con nutrientes."},
 	{"emoji": "🥫", "nombre": "Lata de aluminio",     "tipo": Tipo.RECICLABLE,     "dato": "Reciclar aluminio usa 95% menos energía que producirlo nuevo."},
 ]
 

@@ -257,17 +257,17 @@ const QUIZ_POR_MISION : Dictionary = {
 		{"pregunta": "¿Cuántos módulos evalúa el ranking UI GreenMetric?",
 		 "opciones": ["3 módulos", "6 módulos", "10 módulos"], "correcta": 1},
 		{"pregunta": "¿Qué evalúa principalmente el ranking UI GreenMetric?",
-		 "opciones": ["La calidad académica", "Los deportes universitarios", "La sostenibilidad universitaria"], "correcta": 2},
+		 "opciones": ["La calidad académica", "Los deportes universitarios", "La sostenibilidad en el campus universitario"], "correcta": 2},
 		{"pregunta": "¿Qué institución participa en GreenMetric en este juego?",
 		 "opciones": ["UCV", "URBE", "UCAB"], "correcta": 1}
 	],
 	"mision_educacion": [
 		{"pregunta": "¿Qué evalúa GreenMetric en el módulo de Educación?",
 		 "opciones": ["Deportes universitarios", "Idiomas impartidos", "Asignaturas de sostenibilidad e investigación"], "correcta": 2},
-		{"pregunta": "¿Cuántas asignaturas ambientales tiene URBE actualmente?",
+		{"pregunta": "¿La URBE tiene materias de ambiente?",
 		 "opciones": ["3 asignaturas", "10 asignaturas", "0 asignaturas"], "correcta": 0},
 		{"pregunta": "¿Qué necesita URBE para mejorar en el módulo de Educación?",
-		 "opciones": ["Más estacionamientos", "Nuevas canchas deportivas", "Más investigación publicada en revistas"], "correcta": 2}
+		 "opciones": ["Más estacionamientos", "Nuevas canchas deportivas", "Investigación y publicación de artículos científicos"], "correcta": 2}
 	],
 	# M2 - Energía (preguntas únicas por bloque)
 	"mision_bloque_a": [
@@ -284,10 +284,10 @@ const QUIZ_POR_MISION : Dictionary = {
 		{"pregunta": "¿Qué gas de efecto invernadero se reduce al usar energías renovables?",
 		 "opciones": ["Oxígeno", "CO₂", "Nitrógeno"], "correcta": 1},
 		{"pregunta": "¿Qué tipo de energía favorece GreenMetric para campus universitarios?",
-		 "opciones": ["Combustibles fósiles", "Energías renovables como solar y eólica", "Energía nuclear"], "correcta": 1}
+		 "opciones": ["Combustibles fósiles", "Energías renovables", "Energía nuclear"], "correcta": 1}
 	],
 	"mision_bloque_c": [
-		{"pregunta": "¿Cuántos bloques de aulas principales tiene el campus URBE?",
+		{"pregunta": "¿Cuántos bloques tiene el campus URBE?",
 		 "opciones": ["3 bloques", "5 bloques (A, B, C, D y E)", "7 bloques"], "correcta": 1},
 		{"pregunta": "¿Qué impacto tiene el aire acondicionado sin mantenimiento?",
 		 "opciones": ["Ahorra energía", "Aumenta el consumo hasta un 30% más", "No tiene impacto"], "correcta": 1},
@@ -300,10 +300,10 @@ const QUIZ_POR_MISION : Dictionary = {
 		{"pregunta": "¿Qué evalúa GreenMetric en el módulo de Energía y Cambio Climático?",
 		 "opciones": ["Consumo eléctrico, renovables y emisiones de CO₂", "Número de estudiantes", "Velocidad del internet"], "correcta": 0},
 		{"pregunta": "¿Cuánto puede reducir el consumo un edificio con energía solar?",
-		 "opciones": ["Nada", "Hasta un 40% del consumo total", "Exactamente un 100%"], "correcta": 1}
+		 "opciones": ["Nada", "Aproximadamente un 40% del consumo total", "Exactamente un 100%"], "correcta": 1}
 	],
 	"mision_bloque_e": [
-		{"pregunta": "¿Qué tipo de equipos tiene el Bloque E que aumentan el consumo?",
+		{"pregunta": "¿Qué tipo de equipos tiene el Bloque E que aumenta el consumo?",
 		 "opciones": ["Equipos de jardinería", "Laboratorios de cómputo", "Gimnasio universitario"], "correcta": 1},
 		{"pregunta": "¿Qué herramienta mide el consumo exacto de energía por equipo?",
 		 "opciones": ["Termómetro", "Vatímetro (medidor de vatios)", "Barómetro"], "correcta": 1},
@@ -313,32 +313,32 @@ const QUIZ_POR_MISION : Dictionary = {
 	# M1 - Entorno e Infraestructura
 	"mision_bloque_f": [
 		{"pregunta": "¿Qué evalúa GreenMetric en Entorno e Infraestructura?",
-		 "opciones": ["Espacios verdes y políticas ambientales", "Número de laboratorios", "Tamaño de las aulas"], "correcta": 0},
+		 "opciones": ["Espacios verdes", "Número de laboratorios", "Tamaño de las aulas"], "correcta": 0},
 		{"pregunta": "¿Cuál es el edificio principal al este del campus URBE?",
 		 "opciones": ["Biblioteca", "Bloque F", "Estacionamiento M5"], "correcta": 1},
 		{"pregunta": "¿Qué mejora la puntuación en infraestructura según GreenMetric?",
-		 "opciones": ["Más cafeterías", "Certificaciones ambientales", "Más plazas de parqueo"], "correcta": 1}
+		 "opciones": ["Más cafeterías", "Más área verde y vegetación en el campus", "Más plazas de parqueo"], "correcta": 1}
 	],
 	"mision_bloque_g": [
 		{"pregunta": "¿Qué beneficio ambiental aportan los jardines internos de un edificio?",
 		 "opciones": ["Aumentan la temperatura", "Reducen CO₂ y mejoran la biodiversidad", "Solo decoración"], "correcta": 1},
-		{"pregunta": "¿Cuánta área verde mínima requiere GreenMetric en un campus sostenible?",
-		 "opciones": ["Al menos el 5%", "Al menos el 25%", "Al menos el 60%"], "correcta": 1},
+		{"pregunta": "¿Cuánta área verde requiere GreenMetric en un campus sostenible?",
+		 "opciones": ["Al menos el 5%", "Lo que hace es puntuar la proporción de área abierta y verde", "Al menos el 60%"], "correcta": 1},
 		{"pregunta": "¿Qué certifica una política ambiental institucional?",
-		 "opciones": ["El número de edificios", "El compromiso formal con la sostenibilidad", "El tamaño del campus"], "correcta": 1}
+		 "opciones": ["El número de edificios", "La institución u organización se compromete a cumplir rigurosamente con sus leyes y reglamentos", "El tamaño del campus"], "correcta": 1}
 	],
 	"mision_fotocopiado": [
 		{"pregunta": "¿Cuántos árboles se necesitan para producir 1 tonelada de papel?",
-		 "opciones": ["2 árboles", "17 árboles", "50 árboles"], "correcta": 1},
+		 "opciones": ["2 árboles", "15-24 árboles", "50 árboles"], "correcta": 1},
 		{"pregunta": "¿Qué práctica reduce el impacto ambiental del papel en la universidad?",
 		 "opciones": ["Imprimir más en papel reciclado", "Usar documentos digitales y reducir impresiones", "Usar papel de mayor gramaje"], "correcta": 1},
 		{"pregunta": "¿Qué evalúa GreenMetric sobre el consumo de papel en el campus?",
-		 "opciones": ["Solo la cantidad de impresoras", "Las políticas de reducción y uso eficiente de recursos", "El precio del papel"], "correcta": 1}
+		 "opciones": ["Solo la cantidad de impresoras", "Existe una política de reducción y uso eficiente de recursos", "El precio del papel"], "correcta": 1}
 	],
 	# M4 - Agua
 	"mision_agua": [
 		{"pregunta": "¿Qué evalúa GreenMetric en el módulo de Agua?",
-		 "opciones": ["Tamaño de la piscina", "Programas de conservación hídrica y medidores", "Número de bebederos"], "correcta": 1},
+		 "opciones": ["Tamaño de la piscina", "Programas de conservación hídrica", "Número de bebederos"], "correcta": 1},
 		{"pregunta": "¿Qué instrumento mide el consumo de agua en un edificio?",
 		 "opciones": ["Termómetro", "Barómetro", "Hidrómetro"], "correcta": 2},
 		{"pregunta": "¿Cuál es el problema del agua en la Biblioteca?",
@@ -349,14 +349,14 @@ const QUIZ_POR_MISION : Dictionary = {
 		{"pregunta": "¿Qué porcentaje de estudiantes llega al campus en vehículo privado?",
 		 "opciones": ["50%", "78%", "30%"], "correcta": 1},
 		{"pregunta": "¿Qué tipo de transporte favorece GreenMetric?",
-		 "opciones": ["Solo automóviles privados", "Motocicletas particulares", "Transporte público y bicicleta"], "correcta": 2},
+		 "opciones": ["Solo automóviles privados", "Motocicletas particulares", "Transporte público, carros eléctricos y bicicleta"], "correcta": 2},
 		{"pregunta": "¿Qué propone Carlos para mejorar la movilidad sostenible?",
 		 "opciones": ["Ampliar el estacionamiento M5", "Crear ciclovías en el campus", "Prohibir el transporte público"], "correcta": 1}
 	],
 	# M3 - Residuos → usa minijuego, pero quiz se define por si acaso
 	"mision_residuos": [
 		{"pregunta": "¿Cuál de estos es un residuo reciclable?",
-		 "opciones": ["Cáscara de banana", "Botella de plástico PET", "Papel mojado con aceite"], "correcta": 1},
+		 "opciones": ["Cáscara de banana", "Botella de plástico PET y tapitas", "Papel mojado con aceite"], "correcta": 1},
 		{"pregunta": "¿Qué color de contenedor corresponde a residuos orgánicos?",
 		 "opciones": ["Azul", "Rojo", "Marrón/Verde"], "correcta": 2},
 		{"pregunta": "¿Qué porcentaje de residuos se clasifica correctamente en el campus?",

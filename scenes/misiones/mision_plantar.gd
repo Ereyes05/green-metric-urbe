@@ -19,13 +19,13 @@ const MISIONES : Array = [
 		"correcta": "araguaney",
 		"plantas":  [
 			{"id": "araguaney",      "nombre": "Araguaney",          "desc": "Árbol Nacional · Sombra amplia · Raíces no invasivas"},
-			{"id": "eucalipto",      "nombre": "Eucalipto",           "desc": "Especie introducida · Raíces invasivas"},
+			{"id": "nim",            "nombre": "Nim",                 "desc": "Especie introducida · Originaria de la India"},
 			{"id": "cactus",         "nombre": "Cactus del Desierto", "desc": "Especie desértica · Sin sombra"},
 			{"id": "pino_canadiense","nombre": "Pino Canadiense",     "desc": "Especie foránea · Clima frío"},
 		],
 		"feedback": {
 			"araguaney":       "✅ ¡Excelente! El Araguaney es el Árbol Nacional de Venezuela. Su copa amplia proporciona sombra perfecta y sus raíces no dañan las aceras. ¡Elección ideal para corredores universitarios!",
-			"eucalipto":       "❌ El eucalipto es una especie invasiva. Sus raíces profundas y agresivas dañan aceras e infraestructura. Además consume grandes cantidades de agua subterránea.",
+			"nim":             "❌ El nim es una especie introducida, originaria de la India. Aunque es común en Maracaibo, aquí se pide un árbol nativo.",
 			"cactus":          "❌ El cactus del desierto no es apto para el clima tropical de Maracaibo. No proporciona sombra y no se adapta a las condiciones de humedad del campus.",
 			"pino_canadiense": "❌ El pino canadiense es una especie de clima frío. No tolera las altas temperaturas de Maracaibo y no brinda la sombra adecuada para corredores universitarios.",
 		},

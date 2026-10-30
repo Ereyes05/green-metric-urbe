@@ -49,14 +49,12 @@ const ITEMS_POOL : Array = [
 	# Vidrio
 	{"emoji": "🍾", "nombre": "Botella de vidrio",    "cat": "vidrio"},
 	{"emoji": "🫙", "nombre": "Frasco de vidrio",     "cat": "vidrio"},
-	{"emoji": "🥃", "nombre": "Vaso de vidrio",       "cat": "vidrio"},
 	# Metal
 	{"emoji": "🥫", "nombre": "Lata de refresco",     "cat": "metal"},
 	{"emoji": "🪣", "nombre": "Lata de atún",         "cat": "metal"},
 	{"emoji": "🔩", "nombre": "Tornillos y grapas",   "cat": "metal"},
 	{"emoji": "📎", "nombre": "Clips de metal",       "cat": "metal"},
 	# Orgánico
-	{"emoji": "🍊", "nombre": "Cáscara de naranja",   "cat": "organico"},
 	{"emoji": "🍕", "nombre": "Restos de comida",     "cat": "organico"},
 	{"emoji": "🍂", "nombre": "Hojas secas",          "cat": "organico"},
 	{"emoji": "🍵", "nombre": "Bolsita de té",        "cat": "organico"},

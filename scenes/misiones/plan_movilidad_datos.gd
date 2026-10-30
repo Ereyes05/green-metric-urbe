@@ -90,7 +90,7 @@ const DECISIONES : Array = [
 			 "costo": 16, "puntos": 0.0, "contraproducente": true, "aceptacion": "", "sinergia": "",
 			 "explicacion": "Convierte un lote poco usado en estacionamiento formal: sube el área de estacionamiento en superficie (TR5), va contra el programa de reducción (TR6) y el asfalto calienta y sella el suelo."},
 			{"id": "ciclovia_arborizada", "corto": "Ciclovía con árboles",
-			 "texto": "Cerrarlo a los carros y convertirlo en un tramo de ciclovía y caminería con árboles nativos de sombra, conectado al portón",
+			 "texto": "Cerrarlo a los carros y convertirlo en un tramo de ciclovía y caminería con árboles autóctonos de sombra, conectado al portón",
 			 "costo": 22, "puntos": 0.60, "contraproducente": false, "aceptacion": "alta", "sinergia": "ciclovia_lote",
 			 "explicacion": "Quita área de estacionamiento (TR5), queda como programa de reducción con fecha y metros (TR6) y la sombra hace posible caminar o pedalear con el calor de Maracaibo. Los árboles suman también en Entorno."},
 			{"id": "plaza_de_eventos", "corto": "Explanada de eventos",
