@@ -206,6 +206,11 @@ class LogoNode extends Node2D:
 # READY
 # ════════════════════════════════════════════════════════════
 func _ready() -> void:
+	# Título de la pestaña del navegador. No se cambia config/name en
+	# project.godot porque de ese nombre sale la carpeta de datos locales
+	# (user://): cambiarlo borraría el tutorial visto y la posición guardada.
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("document.title = 'URBE Rangers: Eco-Quest'")
 	_re_email = RegEx.new()
 	_re_email.compile(EMAIL_REGEX)
 
@@ -321,7 +326,7 @@ func _aplicar_estilo_panel_tscn() -> void:
 		# todos modos ya sobra, el logo animado de arriba (LogoNode) es
 		# la misma hoja pero dibujada, así que el emoji del texto es
 		# redundante.
-		titulo.text = "GreenMetric URBE"
+		titulo.text = "URBE Rangers: Eco-Quest"
 		var fuente_pixel := _fuente_pixel()
 		if fuente_pixel:
 			titulo.add_theme_font_override("font", fuente_pixel)
