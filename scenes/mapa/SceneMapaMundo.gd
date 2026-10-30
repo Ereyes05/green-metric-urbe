@@ -74,6 +74,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Rector Morales",
 		"mision_id": "mision_rector",
 		"tipo":      "rector",
+		"sprite":    "res://assets/sprites/npcs/npc_rector_morales.png",
 		"pos":       Vector2(536, 269),   # Rectorado: frente a la puerta principal, junto a la bandera
 		"color":     Color(0.5, 0.1, 0.9),
 		"dialogos":  PackedStringArray([
@@ -87,6 +88,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Dra. Luna",
 		"mision_id": "mision_educacion",
 		"tipo":      "prof_m",
+		"sprite":    "res://assets/sprites/npcs/npc_dra_luna.png",
 		"pos":       Vector2(624, -72),   # Biblioteca: frente a la entrada principal
 		"color":     Color(0.35, 0.0, 0.65),
 		"dialogos":  PackedStringArray([
@@ -101,6 +103,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Prof. González",
 		"mision_id": "mision_bloque_a",
 		"tipo":      "prof_h",
+		"sprite":    "res://assets/sprites/npcs/npc_prof_gonzalez.png",
 		"pos":       Vector2(78, 63),   # Bloque A: camino peatonal al este del bloque
 		"color":     Color(0.9, 0.45, 0.0),
 		"dialogos":  PackedStringArray([
@@ -114,6 +117,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Dr. Pérez",
 		"mision_id": "mision_bloque_b",
 		"tipo":      "prof_h",
+		"sprite":    "res://assets/sprites/npcs/npc_dr_perez.png",
 		"pos":       Vector2(78, 277),   # Bloque B: camino peatonal al este del bloque
 		"color":     Color(0.85, 0.35, 0.0),
 		"dialogos":  PackedStringArray([
@@ -127,6 +131,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Ing. Herrera",
 		"mision_id": "mision_bloque_c",
 		"tipo":      "prof_m",
+		"sprite":    "res://assets/sprites/npcs/npc_ing_herrera.png",
 		"pos":       Vector2(78, 491),   # Bloque C: camino peatonal al este del bloque
 		"color":     Color(0.95, 0.55, 0.0),
 		"dialogos":  PackedStringArray([
@@ -140,6 +145,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Técn. Ruiz",
 		"mision_id": "mision_bloque_d",
 		"tipo":      "prof_h",
+		"sprite":    "res://assets/sprites/npcs/npc_tecn_ruiz.png",
 		"pos":       Vector2(1074, -112),   # Bloque D: camino peatonal al oeste del bloque
 		"color":     Color(0.80, 0.40, 0.0),
 		"dialogos":  PackedStringArray([
@@ -153,6 +159,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Coord. Salinas",
 		"mision_id": "mision_bloque_e",
 		"tipo":      "prof_m",
+		"sprite":    "res://assets/sprites/npcs/npc_coord_salinas.png",
 		"pos":       Vector2(1074, 79),   # Bloque E: camino peatonal al oeste del bloque
 		"color":     Color(0.90, 0.50, 0.05),
 		"dialogos":  PackedStringArray([
@@ -167,6 +174,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Ing. Ramírez",
 		"mision_id": "mision_bloque_f",
 		"tipo":      "prof_m",
+		"sprite":    "res://assets/sprites/npcs/npc_ing_ramirez.png",
 		"pos":       Vector2(1074, 338),   # Bloque F: camino peatonal al oeste del bloque
 		"color":     Color(0.2, 0.7, 0.2),
 		"dialogos":  PackedStringArray([
@@ -180,6 +188,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Sr. Blanco",
 		"mision_id": "mision_fotocopiado",
 		"tipo":      "prof_h",
+		"sprite":    "res://assets/sprites/npcs/npc_sr_blanco.png",
 		"pos":       Vector2(1074, 515),   # Bloque G: camino peatonal al oeste del bloque
 		"color":     Color(0.3, 0.65, 0.3),
 		"dialogos":  PackedStringArray([
@@ -194,6 +203,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Lic. Torres",
 		"mision_id": "mision_agua",
 		"tipo":      "prof_m",
+		"sprite":    "res://assets/sprites/npcs/npc_lic_torres.png",
 		"pos":       Vector2(1249, 704),   # Laguna: camino principal, al norte de la laguna
 		"color":     Color(0.0, 0.55, 0.75),
 		"dialogos":  PackedStringArray([
@@ -208,6 +218,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Carlos",
 		"mision_id": "mision_transporte",
 		"tipo":      "est_h",
+		"sprite":    "res://assets/sprites/npcs/npc_carlos.png",
 		"pos":       Vector2(136, -76),   # Estacionamiento norte: salida peatonal (lado este)
 		"color":     Color(0.1, 0.3, 0.8),
 		"dialogos":  PackedStringArray([
@@ -222,6 +233,7 @@ var DATOS_NPCS : Array = [
 		"nombre":    "Yulimar",
 		"mision_id": "mision_residuos",
 		"tipo":      "est_m",
+		"sprite":    "res://assets/sprites/npcs/npc_yulimar.png",
 		"pos":       Vector2(587, 780),   # Canchas: paseo entre las canchas de básquet
 		"color":     Color(0.85, 0.75, 0.0),
 		"dialogos":  PackedStringArray([
@@ -598,6 +610,8 @@ func _spawn_npcs() -> void:
 		npc.dialogos   = datos["dialogos"]
 		npc.color      = datos["color"]
 		npc.tipo_npc   = datos.get("tipo", "prof_h")
+		if datos.has("sprite"):
+			npc.textura = load(datos["sprite"])
 		npc.position   = datos["pos"]
 		npc.z_index    = 1
 		var vis_node = npc.get_node_or_null("Visual")
@@ -886,7 +900,8 @@ func _on_mision_aceptada(mision_id: String) -> void:
 	for datos in DATOS_NPCS:
 		if datos["mision_id"] == mision_id:
 			if _dialogo_ui:
-				_dialogo_ui.iniciar(datos["nombre"], datos["dialogos"], mision_id, datos["color"])
+				var retrato : Texture2D = load(datos["sprite"]) if datos.has("sprite") else null
+				_dialogo_ui.iniciar(datos["nombre"], datos["dialogos"], mision_id, datos["color"], retrato)
 			return
 
 func _on_mision_cancelada() -> void:

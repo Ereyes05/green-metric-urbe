@@ -664,7 +664,7 @@ script = ExtResource("2_mbwk1")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Jugador" unique_id=703972680]
 position = Vector2(-0.12499158, 0.49999055)
-scale = Vector2(0.7851565, 0.7343747)
+scale = Vector2(0.75, 0.75)
 sprite_frames = SubResource("SpriteFrames_vjhch")
 animation = &"idle_abajo"
 speed_scale = 1.1

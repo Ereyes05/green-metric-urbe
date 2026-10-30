@@ -10,6 +10,9 @@ extends Area2D
 @export var dialogos   : PackedStringArray = PackedStringArray(["Hola."])
 @export var color      : Color             = Color(0.5, 0.5, 0.5)
 @export var tipo_npc   : String            = "prof_h"
+# Sprite de frente (64x64, fondo transparente). Si es null se usa el dibujo
+# procedural de NpcChar según tipo_npc.
+@export var textura    : Texture2D         = null
 
 
 var _burbuja      : Control  = null
@@ -34,8 +37,14 @@ class GlowNpc extends Node2D:
 # Escala 1.0 → más pequeños que el avatar (1.5×).
 # ════════════════════════════════════════════════════════════
 class NpcChar extends Node2D:
+	# 64 px de imagen → 58 px en el mapa (10 px más que los 48 del Eco-Ranger).
+	const ESCALA_SPRITE : float = 58.0 / 64.0
 	var col     : Color  = Color(0.5, 0.5, 0.5)
 	var tipo    : String = "prof_h"
+	var textura : Texture2D = null
+	var _rect_sprite : Rect2 = Rect2()
+	# Borde superior de la cabeza (y local). La burbuja del nombre se apoya aquí.
+	var tope_cabeza : float = -37.5
 	var glow_on : bool   = false:
 		set(v):
 			glow_on = v
@@ -50,14 +59,24 @@ class NpcChar extends Node2D:
 	#
 	# Ahora el personaje se dibuja UNA vez y se animan cosas que no obligan a
 	# redibujar: la posición (balanceo) y la transparencia del brillo, que va
-	# en un nodo hijo aparte. Única diferencia visual: la sombra de los pies
-	# acompaña el balanceo de 0,6 px (imperceptible).
+	# en un nodo hijo aparte.
 	func _ready() -> void:
 		_glow = GlowNpc.new()
 		_glow.col = col
 		_glow.show_behind_parent = true   # detrás del cuerpo, como antes
 		_glow.visible = glow_on
 		add_child(_glow)
+		if textura:
+			texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			# Los pies (última fila con píxeles) quedan en y=+2, donde
+			# apoyaba el dibujo procedural: así el NPC sigue parado en el
+			# mismo punto.
+			var img : Image = textura.get_image()
+			var usado : Rect2i = img.get_used_rect() if img else Rect2i(0, 5, 64, 54)
+			var pies : float = float(usado.end.y)
+			var lado : Vector2 = Vector2(textura.get_size()) * ESCALA_SPRITE
+			_rect_sprite = Rect2(-lado.x * 0.5, 2.0 - pies * ESCALA_SPRITE, lado.x, lado.y)
+			tope_cabeza = _rect_sprite.position.y + float(usado.position.y) * ESCALA_SPRITE
 
 	func _process(delta: float) -> void:
 		_t += delta
@@ -68,7 +87,9 @@ class NpcChar extends Node2D:
 	func _draw() -> void:
 		var bob := 0.0   # el balanceo lo hace position.y en _process()
 
-		draw_arc(Vector2(0, 1.5), 7.0, 0.0, PI, 14, Color(0, 0, 0, 0.24), 5.0)
+		if textura:
+			draw_texture_rect(textura, _rect_sprite, false)
+			return
 
 		match tipo:
 			"rector" : _draw_rector(bob)
@@ -237,6 +258,7 @@ func _crear_char_visual() -> void:
 	_char_visual       = NpcChar.new()
 	_char_visual.col   = color
 	_char_visual.tipo  = tipo_npc
+	_char_visual.textura = textura
 	_char_visual.scale = Vector2(1.0, 1.0)
 	add_child(_char_visual)
 
@@ -284,8 +306,9 @@ func _crear_burbuja() -> void:
 	var ancho : float = max(nombre_lbl.size.x + 18.0, 60.0)
 	var alto  : float = 26.0
 
-	# NpcChar escala 1.0: cabeza en y=-30, radio=7.5, tope≈-37.5 → borde inferior a -44
-	fondo.position = Vector2(-ancho * 0.5, -alto - 44.0)
+	# Borde inferior 6.5 px sobre la cabeza (dibujo procedural: tope≈-37.5 → -44)
+	var tope : float = _char_visual.tope_cabeza if _char_visual else -37.5
+	fondo.position = Vector2(-ancho * 0.5, -alto + tope - 6.5)
 	fondo.size     = Vector2(ancho, alto)
 
 	# Punto indicador pulsante bajo la burbuja
@@ -356,4 +379,4 @@ func iniciar_dialogo() -> void:
 		_burbuja.visible = false
 	var ui = get_tree().get_first_node_in_group("ui_dialogo")
 	if ui:
-		ui.iniciar(nombre_npc, dialogos, mision_id, color)
+		ui.iniciar(nombre_npc, dialogos, mision_id, color, textura)
