@@ -6,7 +6,7 @@
 
 **Universidad Dr. Rafael Belloso Chacín (URBE)** · Maracaibo, Venezuela
 **Estado:** 🚧 **BORRADOR — no entregar en esta forma**
-**Versión:** 0.1 · **Fecha:** 2026-09-24
+**Versión:** 0.2 · **Fecha:** 2026-10-30
 **Dirigido a:** estudiantes usuarios del sistema y al personal docente o administrativo que lo supervise.
 
 ---
@@ -15,7 +15,7 @@
 >
 > **No es el manual terminado.** Es una base sobre la que trabajar, y le falta lo siguiente antes de que se pueda entregar:
 >
-> 1. **Las 20 capturas de pantalla.** Están marcadas `[CAPTURA 1]` … `[CAPTURA 20]`, y cada una dice qué debe mostrar. Se toman abriendo el juego publicado, con la herramienta **Recortes** de Windows.
+> 1. **Capturas: hechas (v0.2).** Están en `docs/manual/capturas/` y salen del juego real con `tests/capturas_manual/capturar.gd`. Los números del HUD y los nombres del ranking son **datos de ejemplo**. Faltan tres, que hay que sacar de una partida real: el informe final del Nivel 6, el resultado del Consejo de Movilidad y el correo de avance.
 > 2. **La revisión del equipo.** El texto lo redactó el asistente a partir del código fuente, no de haber jugado el juego como estudiante. Puede haber cosas que en la práctica se entiendan distinto.
 > 3. **El formato final** que pida la universidad: portada, numeración, tipografía, y pasarlo a Word o PDF.
 > 4. **Borrar este recuadro y el encabezado "BORRADOR"** cuando lo anterior esté hecho.
@@ -40,10 +40,11 @@
 10. [Recompensas: EcoCredits, rangos e insignias](#10-recompensas-ecocredits-rangos-e-insignias)
 11. [La Tienda del Conocimiento](#11-la-tienda-del-conocimiento)
 12. [El ranking](#12-el-ranking)
-13. [Guardado del progreso](#13-guardado-del-progreso)
-14. [Solución de problemas](#14-solución-de-problemas)
-15. [Para el docente o supervisor](#15-para-el-docente-o-supervisor)
-16. [Glosario](#16-glosario)
+13. [El correo con tu avance](#13-el-correo-con-tu-avance)
+14. [Guardado del progreso](#14-guardado-del-progreso)
+15. [Solución de problemas](#15-solución-de-problemas)
+16. [Para el docente o supervisor](#16-para-el-docente-o-supervisor)
+17. [Glosario](#17-glosario)
 
 ---
 
@@ -78,12 +79,13 @@ El juego **no se instala**. Se abre desde el navegador.
 | **Navegador** | Google Chrome, Microsoft Edge, Firefox u Opera, en una versión de los últimos dos años. |
 | **Conexión** | Permanente. El progreso se guarda en un servidor, no en la computadora. |
 | **Descarga inicial** | Aproximadamente 41 MB la primera vez. Después el navegador reutiliza casi todo: en los ingresos siguientes solo baja 1,4 MB. |
-| **Dispositivo** | Computadora de escritorio, portátil, tableta o teléfono. En pantalla táctil aparecen controles en pantalla automáticamente. |
-| **Correo electrónico** | Necesario para registrarse, pero **no hay que abrirlo**: no se envía ninguna confirmación. No hace falta correo institucional (ver 3.1). |
+| **Dispositivo** | Computadora de escritorio o portátil, con teclado y ratón. |
+| **Correo electrónico** | Necesario para registrarse. Al registrarse no se envía ninguna confirmación; a ese correo llega el **resumen de avance** al terminar cada nivel (ver sección 13). No hace falta correo institucional (ver 3.1). |
 
 > **Sobre la primera carga.** Al abrir la dirección aparece una barra de progreso. En una conexión lenta puede tardar uno o dos minutos. No es un bloqueo: es la descarga del juego.
 
-**[CAPTURA 1]** — La pantalla de carga con la barra de progreso, recién abierta la dirección.
+![Figura 1. Pantalla de carga, recién abierta la dirección del juego.](manual/capturas/carga_web.png)
+*Figura 1. Pantalla de carga, recién abierta la dirección del juego.*
 
 ---
 
@@ -91,7 +93,8 @@ El juego **no se instala**. Se abre desde el navegador.
 
 Al terminar la carga aparece la pantalla de acceso.
 
-**[CAPTURA 2]** — Pantalla de inicio de sesión completa, con los campos de correo y contraseña y los botones.
+![Figura 2. Pantalla de inicio de sesión.](manual/capturas/login.png)
+*Figura 2. Pantalla de inicio de sesión.*
 
 ### 3.1. Registrarse (solo la primera vez)
 
@@ -120,7 +123,8 @@ No hace falta tener un correo institucional. Se acepta cualquiera de estos domin
 
 > **Si el correo es rechazado**, el formulario lo avisa antes de enviarlo e indica cuáles dominios se aceptan. No es un error del sistema: es una restricción para que no se registren correos inventados. La lista se valida **dos veces**: en el formulario, para dar un mensaje claro, y otra vez en el servidor, para que no se pueda saltar.
 
-**[CAPTURA 3]** — El formulario de registro con todos los campos visibles.
+![Figura 3. Formulario de registro.](manual/capturas/registro.png)
+*Figura 3. Formulario de registro.*
 
 ### 3.2. Iniciar sesión
 
@@ -150,21 +154,25 @@ En el primer ingreso aparece una introducción de **cuatro pantallas**, que se l
 |---|---|
 | 1 🌿 | Quién es el Eco-Ranger y cuál es su misión en el campus. |
 | 2 📊 | Qué es UI GreenMetric y cuáles son sus seis módulos. |
-| 3 🕹️ | Cómo moverse e interactuar, en computadora y en teléfono. |
+| 3 🕹️ | Cómo moverse e interactuar. |
 | 4 🏛️ | La primera misión: ir al Rectorado y hablar con el Rector Morales. |
 
 El tutorial aparece **una sola vez por cuenta**. A partir del segundo ingreso, el juego arranca directamente en el campus.
 
 Después del tutorial, lo demás se enseña solo: cuando el estudiante se acerca por primera vez a algo nuevo, aparece un globo de ayuda explicando qué hacer.
 
-**[CAPTURA 4]** — El primer paso del tutorial.
-**[CAPTURA 5]** — El segundo paso, con la lista de los seis módulos GreenMetric.
+![Figura 4. Primer paso del tutorial.](manual/capturas/tutorial_1.png)
+*Figura 4. Primer paso del tutorial.*
+
+![Figura 5. Segundo paso del tutorial: los seis módulos de UI GreenMetric.](manual/capturas/tutorial_2.png)
+*Figura 5. Segundo paso del tutorial: los seis módulos de UI GreenMetric.*
 
 ---
 
 ## 5. La pantalla del juego
 
-**[CAPTURA 6]** — El campus con el HUD completo visible. Es la captura más importante del manual: conviene que se vean los cuatro elementos a la vez.
+![Figura 6. El campus con la interfaz completa: ficha del jugador (arriba a la izquierda), panel GreenMetric (arriba a la derecha) y barra de acciones (abajo).](manual/capturas/hud.png)
+*Figura 6. El campus con la interfaz completa: ficha del jugador (arriba a la izquierda), panel GreenMetric (arriba a la derecha) y barra de acciones (abajo).*
 
 La pantalla tiene cuatro zonas de información:
 
@@ -194,7 +202,6 @@ Al pasar el cursor sobre una fila aparece el desglose: cuánto hay en cada tramo
 
 > **Por qué importa este panel.** Es lo que convierte el juego en una herramienta de aprendizaje y no en un pasatiempo: el estudiante ve, en el mismo momento en que actúa, cómo su decisión mueve un indicador real del ranking mundial.
 
-**[CAPTURA 7]** — El panel GreenMetric, y si es posible, otra con el desglose abierto al pasar el cursor por una fila.
 
 ### 5.3. Barra de acciones (abajo)
 
@@ -202,13 +209,20 @@ Cinco botones. Cada uno tiene también un atajo de teclado:
 
 | Tecla | Botón | Para qué sirve |
 |---|---|---|
-| **1** | 🌡 Avance | Mapa de avance del campus |
+| **1** | 🌡 Avance | Ventana *Tu avance*: misiones hechas en cada nivel |
 | **2** | 📊 Reporte | Reporte GreenMetric detallado |
 | **3** | 🏆 Ranking | Tabla de clasificación de todos los jugadores |
 | **4** | 🔬 Simular | Simulador de decisiones |
 | **5** | 🛒 Tienda | Tienda del Conocimiento |
 
-### 5.4. Avisos
+### 5.4. Tu avance
+
+La ventana **Tu avance** (botón 🌡 o tecla **1**) muestra cuántas misiones lleva el estudiante en total y, nivel por nivel, cuántas hizo y si el nivel está completo, en curso o bloqueado.
+
+![Figura 7. Ventana Tu avance.](manual/capturas/avance.png)
+*Figura 7. Ventana Tu avance.*
+
+### 5.5. Avisos
 
 Cuando ocurre algo —se completa una misión, se gana una insignia, sube el rango— aparece un aviso temporal. No hay que hacer nada: desaparece solo.
 
@@ -228,20 +242,13 @@ Cuando ocurre algo —se completa una misión, se gana una insignia, sube el ran
 
 > **Sobre la tecla E.** Si hay dos cosas cerca, el juego elige siempre **la más cercana**. Si no pasa nada al pulsarla, hay que acercarse más.
 
-### En teléfono o tableta
-
-Los controles táctiles aparecen solos al detectar la pantalla táctil:
-
-- **Joystick (mitad izquierda):** se toca en cualquier punto y aparece ahí. Arrastrando se mueve el personaje.
-- **Botón E (abajo a la derecha):** hace lo mismo que la tecla E.
-
-**[CAPTURA 8]** — El juego en teléfono, con el joystick y el botón E visibles. (Se puede tomar desde el navegador de un teléfono, o con el modo de dispositivo móvil del navegador: **F12 → icono de teléfono**.)
+> **Sobre teléfonos y tabletas.** El juego está pensado para computadora. En una pantalla táctil aparecen un joystick y un botón E en pantalla, pero no es la forma de uso recomendada ni la que se evaluó.
 
 ---
 
 ## 7. Las actividades de aprendizaje
 
-El juego tiene cinco tipos de actividad. Todas suman al puntaje del campus, pero cada una enseña de una forma distinta.
+El juego tiene cinco tipos de actividad y, al terminar cada nivel, un test de cierre (7.6). Todas suman al puntaje del campus, pero cada una enseña de una forma distinta.
 
 ### 7.1. Diálogos con NPC
 
@@ -249,7 +256,8 @@ Los **NPC** (personajes no jugadores) son los coordinadores de cada área del ca
 
 Al acercarse y pulsar **E**, el NPC explica el módulo GreenMetric que le corresponde: qué mide, por qué importa, y qué se espera del estudiante. Es el contenido teórico del juego.
 
-**[CAPTURA 9]** — Un diálogo con un NPC abierto.
+![Figura 8. Diálogo con el Rector Morales, con su retrato.](manual/capturas/dialogo.png)
+*Figura 8. Diálogo con el Rector Morales, con su retrato.*
 
 ### 7.2. Cuestionarios (quiz)
 
@@ -265,8 +273,11 @@ Cómo funciona:
 
 > **Por qué solo cuenta el primer intento.** Si la repetición sumara, bastaría con reintentar hasta acertar por descarte y el tramo de comprensión dejaría de medir comprensión. Repetir sigue siendo útil para estudiar; lo que no hace es inflar el puntaje.
 
-**[CAPTURA 10]** — Un cuestionario, con las opciones de respuesta y la barra de tiempo.
-**[CAPTURA 11]** — La retroalimentación tras fallar una pregunta, mostrando la respuesta correcta.
+![Figura 9. Cuestionario de la Lic. Torres (Uso del Agua).](manual/capturas/quiz.png)
+*Figura 9. Cuestionario de la Lic. Torres (Uso del Agua).*
+
+![Figura 10. Retroalimentación al fallar: en rojo la opción elegida, en verde la correcta.](manual/capturas/quiz_fallo.png)
+*Figura 10. Retroalimentación al fallar: en rojo la opción elegida, en verde la correcta.*
 
 ### 7.3. Misiones de campo
 
@@ -276,7 +287,8 @@ Se activan acercándose al punto señalado y pulsando **E**. Cada una explica qu
 
 Algunas misiones **necesitan una herramienta comprada en la tienda** (ver sección 11). Si falta, el juego lo dice y ofrece abrir la tienda con la herramienta ya señalada.
 
-**[CAPTURA 12]** — Una misión de campo iniciándose.
+![Figura 11. Misión de plantación (Nivel 1): elegir la planta adecuada para la zona.](manual/capturas/mision_campo.png)
+*Figura 11. Misión de plantación (Nivel 1): elegir la planta adecuada para la zona.*
 
 ### 7.4. Decisiones
 
@@ -286,8 +298,10 @@ El caso más desarrollado es el **Nivel 5 (Plan de Movilidad)**: el estudiante r
 
 Las respuestas no se revelan de antemano: el estudiante decide con la información que los NPC le dieron, y ve las consecuencias después.
 
-**[CAPTURA 13]** — Un panel de decisión del Plan de Movilidad, con el presupuesto visible.
-**[CAPTURA 14]** — El resultado del Consejo de Movilidad.
+![Figura 12. Decisión del Plan de Movilidad, con el presupuesto disponible y el costo de cada opción.](manual/capturas/decision.png)
+*Figura 12. Decisión del Plan de Movilidad, con el presupuesto disponible y el costo de cada opción.*
+
+> *Figura pendiente: el resultado del Consejo de Movilidad, tomado de una partida real.*
 
 ### 7.5. Crisis ambientales
 
@@ -299,7 +313,27 @@ Durante la exploración pueden aparecer **crisis al azar**: un apagón, una fuga
 
 Sirven para comprobar si el estudiante puede **aplicar** lo aprendido bajo presión, no solo recordarlo.
 
-**[CAPTURA 15]** — Una crisis activa, con el contador de tiempo.
+![Figura 13. Crisis de campus (fuga de agua), con la barra de tiempo.](manual/capturas/crisis.png)
+*Figura 13. Crisis de campus (fuga de agua), con la barra de tiempo.*
+
+### 7.6. Test de cierre de nivel
+
+Al completar todas las misiones de un nivel, después de la celebración aparece un **test corto** sobre ese nivel. Sirve para que el estudiante compruebe qué le quedó de lo que vio.
+
+- Tiene **hasta cinco preguntas** del nivel, en orden al azar. Se responde igual que un cuestionario: 15 segundos por pregunta, y si se falla se muestra la respuesta correcta.
+- Las preguntas salen del **banco validado por la Dirección de Sostenibilidad de la URBE**.
+- **No da experiencia ni suma al puntaje GreenMetric.** Sirve para comprobar lo aprendido, no para competir.
+- Al terminar, un aviso muestra el resultado (por ejemplo, *Nivel 4: 3 de 3 correctas*) y llega un correo con el avance (sección 13).
+- **Solo se guarda el primer intento.**
+- Si el estudiante sale a mitad o cierra el juego, el test queda pendiente y se le ofrece al volver a entrar.
+
+Al completar los **seis** tests de nivel aparece el **test final**: doce preguntas, dos de cada nivel.
+
+![Figura 14. Test de cierre del Nivel 4.](manual/capturas/test.png)
+*Figura 14. Test de cierre del Nivel 4.*
+
+![Figura 15. Aviso con el resultado del test (arriba, al centro).](manual/capturas/test_resultado.png)
+*Figura 15. Aviso con el resultado del test (arriba, al centro).*
 
 ---
 
@@ -322,7 +356,7 @@ Se empieza en el **Nivel 1**. Cada nivel se abre al completar **todas** las misi
 
 La última misión, el **informe final**, recopila las decisiones que el estudiante fue tomando a lo largo de todo el juego y las cita textualmente. El estudiante ve, en un solo documento, el recorrido completo que hizo y qué defendió en cada punto.
 
-**[CAPTURA 16]** — El informe final del Nivel 6.
+> *Figura pendiente: el informe final del Nivel 6, tomado de una partida real con las decisiones del nivel hechas.*
 
 ---
 
@@ -344,7 +378,13 @@ El estudiante descubre estas relaciones al ver subir una barra que no estaba toc
 
 El botón **📊 Reporte** (tecla **2**) muestra el desglose completo: cuánto tiene cada módulo, en qué componente, y qué falta para completarlo.
 
-**[CAPTURA 17]** — El Reporte GreenMetric abierto.
+![Figura 16. Reporte GreenMetric.](manual/capturas/reporte.png)
+*Figura 16. Reporte GreenMetric.*
+
+El botón **🔬 Simular** (tecla **4**) abre un **modo práctica**: casos de decisión sobre el campus para ensayar, que no cuentan para el puntaje ni dan EcoCredits.
+
+![Figura 17. Simulador en modo práctica.](manual/capturas/simulador.png)
+*Figura 17. Simulador en modo práctica.*
 
 ---
 
@@ -397,7 +437,10 @@ Se otorgan automáticamente al cumplir la condición. **Las evalúa el servidor*
 
 > **Una decisión de diseño que conviene explicar.** La insignia *EcoLíder URBE* **ignora las dos insignias que se compran**. Si contara las compradas, un estudiante podría conseguir el máximo reconocimiento del juego gastando EcoCredits en cosméticos en vez de completar el contenido educativo. Eso vaciaría de sentido la insignia.
 
-**[CAPTURA 18]** — El panel de insignias, con algunas obtenidas y otras bloqueadas.
+Al ganar una insignia aparece un aviso en la parte inferior de la pantalla. La lista de todas las insignias obtenidas llega en el correo de avance (sección 13).
+
+![Figura 18. Aviso de insignia desbloqueada (abajo, al centro).](manual/capturas/insignia.png)
+*Figura 18. Aviso de insignia desbloqueada (abajo, al centro).*
 
 ---
 
@@ -405,7 +448,8 @@ Se otorgan automáticamente al cumplir la condición. **Las evalúa el servidor*
 
 Se abre con el botón **🛒 Tienda** o la tecla **5**.
 
-**[CAPTURA 19]** — La tienda abierta, con el saldo de EcoCredits y los artículos.
+![Figura 19. Tienda del Conocimiento, con el saldo arriba a la derecha.](manual/capturas/tienda.png)
+*Figura 19. Tienda del Conocimiento, con el saldo arriba a la derecha.*
 
 ### 11.1. Herramientas — necesarias para avanzar
 
@@ -449,11 +493,30 @@ Se abre con el botón **🏆 Ranking** o la tecla **3**. Muestra los **50 mejore
 
 > **Sobre la privacidad.** El ranking muestra **únicamente** el nombre, el rango y la experiencia. **La cédula y el correo electrónico nunca aparecen**, ni en el ranking ni en ninguna otra pantalla visible para otros estudiantes. Es una restricción aplicada en el servidor, no una decisión de la interfaz.
 
-**[CAPTURA 20]** — El ranking abierto.
+![Figura 20. Ranking. La fila con «(Tú)» es la del propio jugador. Nombres de ejemplo.](manual/capturas/ranking.png)
+*Figura 20. Ranking. La fila con «(Tú)» es la del propio jugador. Nombres de ejemplo.*
 
 ---
 
-## 13. Guardado del progreso
+## 13. El correo con tu avance
+
+Cada vez que el estudiante termina un test de cierre de nivel, o el test final, el sistema le envía un correo **a la dirección con la que se registró**. Trae:
+
+- El resultado del test que acaba de hacer
+- Una tabla con los seis niveles: misiones hechas, puntaje del módulo y resultado del test de cada uno
+- El puntaje GreenMetric del campus, el rango, la experiencia y los EcoCredits
+- El puesto en el ranking
+- Las insignias obtenidas
+
+Se envía **un solo correo por test**: si el estudiante repite el test, no le llega otro.
+
+> *Figura pendiente: el correo de avance recibido, tomado de una prueba real.*
+
+> **Si no llega**, revisar las carpetas de **spam** y **promociones**. El remitente es *URBE Rangers: Eco-Quest*.
+
+---
+
+## 14. Guardado del progreso
 
 **No hay botón de guardar.** El juego guarda solo, en cada acción relevante: al completar una misión, responder un cuestionario, comprar en la tienda o tomar una decisión.
 
@@ -463,9 +526,10 @@ Lo que se conserva entre sesiones:
 - El puntaje GreenMetric de cada módulo
 - Los EcoCredits y lo comprado
 - Las insignias obtenidas
+- Los resultados de los tests de cierre de nivel
 - **La posición del personaje en el campus** — al volver a entrar, el Eco-Ranger aparece donde se quedó
 
-El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar en el laboratorio y continuar en el teléfono, con el mismo correo. Misiones, puntaje, EcoCredits, compras e insignias viajan con la cuenta.
+El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar en el laboratorio y continuar en otra computadora, con el mismo correo. Misiones, puntaje, EcoCredits, compras e insignias viajan con la cuenta.
 
 > **Una excepción.** La **posición del personaje** se guarda en el propio navegador, no en el servidor. Al cambiar de dispositivo —o al borrar los datos de navegación— el progreso sigue intacto, pero el Eco-Ranger reaparece en el punto de partida del campus en lugar de donde se quedó.
 
@@ -473,7 +537,7 @@ El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar 
 
 ---
 
-## 14. Solución de problemas
+## 15. Solución de problemas
 
 | Síntoma | Causa probable | Qué hacer |
 |---|---|---|
@@ -484,17 +548,18 @@ El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar 
 | Una misión dice que falta una herramienta | No se ha comprado el kit correspondiente | Abrir la tienda (tecla **5**) y comprarlo. El juego señala cuál. |
 | No alcanzan los EcoCredits | Se gastaron en artículos opcionales | Completar más misiones de los niveles ya abiertos: cada una da EcoCredits. |
 | El juego se ve cortado o desalineado | Ventana muy pequeña, o zoom del navegador alterado | Poner el zoom en 100 % (**Ctrl + 0**) y maximizar la ventana. |
-| No aparece el joystick en el teléfono | El navegador no reportó la pantalla táctil | Recargar la página. |
+| No llegó el correo de avance | Cayó en spam, o el correo se escribió mal al registrarse | Revisar spam y promociones. Si no está ahí, avisarle al docente. |
+| El test de un nivel no apareció | Se cerró el juego antes de que apareciera | Volver a entrar: el test pendiente se ofrece al cargar el campus. |
 | Actualizaron el juego pero se ve igual | El navegador guardó la versión anterior | Recargar forzando: **Ctrl + Shift + R**. |
 | El progreso no aparece | Se entró con otra cuenta | Cerrar sesión y entrar con el correo con el que se registró. |
 
 ---
 
-## 15. Para el docente o supervisor
+## 16. Para el docente o supervisor
 
 Esta sección no es necesaria para jugar.
 
-### 15.1. Qué registra el sistema
+### 16.1. Qué registra el sistema
 
 Cada acción del estudiante queda guardada en el servidor, con fecha y hora:
 
@@ -504,15 +569,16 @@ Cada acción del estudiante queda guardada en el servidor, con fecha y hora:
 | Respuestas de cuestionario, con acierto o fallo | Identificar qué contenidos cuestan más |
 | Decisiones tomadas | Ver el criterio con que el estudiante resuelve |
 | Crisis resueltas | Ver si aplica lo aprendido bajo presión |
+| Resultado de cada test de cierre de nivel | Ver qué le quedó al estudiante de cada nivel |
 | Puntaje GreenMetric por módulo | Medir el resultado de aprendizaje |
 
 Con estos datos se puede responder, por ejemplo, **qué pregunta falla la mayoría** —lo que señala un contenido mal explicado, en el juego o en el aula.
 
-### 15.2. Cómo consultarlos
+### 16.2. Cómo consultarlos
 
 Las consultas están preparadas en la carpeta `sql/` del repositorio del proyecto y se ejecutan desde el panel de administración de la base de datos. Requieren credenciales de administrador, que **no** se entregan a los estudiantes.
 
-### 15.3. Sobre la privacidad de los estudiantes
+### 16.3. Sobre la privacidad de los estudiantes
 
 - La cédula y el correo se guardan, pero **nunca se muestran a otros usuarios**.
 - El ranking expone solo nombre, rango y experiencia.
@@ -520,7 +586,7 @@ Las consultas están preparadas en la carpeta `sql/` del repositorio del proyect
 
 ---
 
-## 16. Glosario
+## 17. Glosario
 
 | Término | Significado |
 |---|---|
@@ -535,6 +601,7 @@ Las consultas están preparadas en la carpeta `sql/` del repositorio del proyect
 | **HUD** | *Heads-Up Display*. La información permanente en pantalla: ficha, panel GreenMetric y barra de acciones. |
 | **Misión de campo** | Acción concreta que se ejecuta en un punto del campus. |
 | **Crisis** | Evento aleatorio con 10 segundos para responder. |
+| **Test de cierre** | Preguntas que aparecen al terminar un nivel para comprobar lo aprendido. No suma al puntaje. |
 
 ---
 
