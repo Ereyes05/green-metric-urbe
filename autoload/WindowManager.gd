@@ -10,8 +10,16 @@ extends Node
 const FUENTE_EMOJI : String = "res://assets/fonts/NotoColorEmoji-subset.ttf"
 
 
+# Rendimiento web: solo el jugador usa física, y se mueve con delta. A 60
+# pasos por segundo, con el navegador a ~20 FPS cada cuadro tenía que
+# ponerse al día con 3 pasos de física (y cuanto más pesado el cuadro, más
+# pasos). A 30 la velocidad es la misma y, a los FPS de la web, no se nota.
+const FISICA_WEB : int = 30
+
 func _ready() -> void:
 	set_process(false)   # solo corre mientras el contador de FPS esté visible
+	if OS.has_feature("web"):
+		Engine.physics_ticks_per_second = FISICA_WEB
 	_registrar_fuente_emoji()
 
 	# En el navegador la "ventana" es el canvas: maximizar no aporta nada y
@@ -111,7 +119,8 @@ func _process(_delta: float) -> void:
 	# para ver tirones, no para atribuir costos. La métrica confiable para
 	# comparar un cambio contra otro es FPS / frame promedio.
 	var fps : float = Engine.get_frames_per_second()
-	_fps_lbl.text = "%d FPS  (%s)\nframe promedio: %.1f ms\npeor frame (último seg): %.1f ms\ndraw calls: %d   primitivas: %d\nnodos: %d" % [
+	var lienzo := DisplayServer.window_get_size()
+	_fps_lbl.text = "%d FPS  (%s)\nframe promedio: %.1f ms\npeor frame (último seg): %.1f ms\ndraw calls: %d   primitivas: %d\nnodos: %d\ndibuja a %dx%d · física %d/s" % [
 		fps,
 		"web" if OS.has_feature("web") else "escritorio",
 		1000.0 / maxf(fps, 1.0),
@@ -119,6 +128,7 @@ func _process(_delta: float) -> void:
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 		Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
+		lienzo.x, lienzo.y, Engine.physics_ticks_per_second,
 	]
 
 
