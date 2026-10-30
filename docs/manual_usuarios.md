@@ -291,7 +291,8 @@ Cómo funciona:
 - Cada pregunta tiene **15 segundos** y una barra que muestra el tiempo restante. Si se agota, cuenta como fallo y el juego pasa a la siguiente.
 - Al responder, el juego avisa de inmediato si fue correcto y, **si se falló, muestra cuál era la respuesta correcta**. Después de un segundo y medio continúa solo.
 - Acertar varias seguidas activa una **racha**, que da experiencia extra.
-- **Cada cuestionario se responde una sola vez.** Al volver a hablar con el NPC, repite su explicación —sirve para repasar— y avisa que el cuestionario ya se hizo. Lo mismo pasa con el minijuego de clasificación de Yulimar.
+- **Cada cuestionario cuenta una sola vez.** Al volver a hablar con el NPC, repite su explicación y ofrece **practicar**: mismas preguntas y retroalimentación, pero sin puntos, experiencia ni EcoCredits.
+- El **minijuego de clasificación de Yulimar** se aprueba con **7 de 10**. Sin aprobar no da experiencia y se puede **reintentar** en el momento; una vez aprobado, solo se ofrece practicar.
 - Si el estudiante sale a mitad del cuestionario, no cuenta como hecho y puede volver a empezarlo.
 - Un cuestionario completo sin ningún fallo otorga la insignia **⭐ Puntaje Perfecto**.
 
@@ -332,8 +333,8 @@ Las respuestas no se revelan de antemano: el estudiante decide con la informaci�
 Durante la exploración pueden aparecer **crisis al azar**: un apagón, una fuga de agua o una acumulación de basura.
 
 - Hay **10 segundos** para elegir la respuesta correcta.
-- Responder bien mejora el módulo afectado y otorga la insignia **🚨 Héroe de Crisis**.
-- Responder mal o dejar pasar el tiempo no elimina progreso: solo se pierde la oportunidad.
+- Responder bien otorga experiencia y la insignia **🚨 Héroe de Crisis**.
+- Responder mal o dejar pasar el tiempo **resta 1 punto al módulo afectado** hasta resolver otra crisis de ese módulo. No se acumula ni baja de 0.
 
 Sirven para comprobar si el estudiante puede **aplicar** lo aprendido bajo presión, no solo recordarlo.
 
@@ -570,7 +571,8 @@ El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar 
 | Olvidé mi contraseña | — | Avisarle al docente, que la cambia en el momento. La pantalla de recuperación por correo todavía no está en servicio. |
 | Pulso **E** y no pasa nada | El personaje está demasiado lejos | Acercarse más al NPC o al punto de la misión. |
 | Un NPC se ve apagado y no habla | Atiende desde un nivel posterior | Completar el nivel en curso. El aviso indica desde qué nivel está disponible. |
-| El NPC ya no me hace el cuestionario | Ya se respondió | Es normal: cada cuestionario se hace una sola vez. |
+| El NPC ofrece practicar en vez del cuestionario | Ya se respondió | Es normal: cada cuestionario cuenta una sola vez; la práctica no suma puntos. |
+| Un módulo bajó 1 punto | Se falló una crisis de ese módulo | Resolver la próxima crisis de ese módulo lo devuelve. |
 | Una misión dice que falta una herramienta | No se ha comprado el kit correspondiente | Abrir la tienda (tecla **5**) y comprarlo. El juego señala cuál. |
 | No alcanzan los EcoCredits | Se gastaron en artículos opcionales | Completar más misiones de los niveles ya abiertos: cada una da EcoCredits. |
 | El juego se ve cortado o desalineado | Ventana muy pequeña, o zoom del navegador alterado | Poner el zoom en 100 % (**Ctrl + 0**) y maximizar la ventana. |
