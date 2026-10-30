@@ -45,6 +45,7 @@ func _ready() -> void:
 	if not DisplayServer.is_touchscreen_available():
 		hide()
 		set_process_input(false)
+		set_process(false)
 		return
 
 	_canvas = Control.new()

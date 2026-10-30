@@ -1497,7 +1497,64 @@ func _init_sistemas_eva() -> void:
 		_tutorial_ui.iniciar()
 
 
+# ── Animaciones fuera de pantalla ─────────────────────────────
+# Rendimiento web: ~63 indicadores del mapa (NPCs, puntos de misión, llaves,
+# papeleras…) se animaban en cada cuadro aunque la cámara no los viera; con
+# una cuenta con todo completo eran el costo más grande del cuadro. Cada
+# CULL_CADA segundos se pausa el _process de los que quedan fuera de la
+# cámara y se reanuda al volver. Solo se tocan los visuales (clases internas
+# de los scripts del mapa), nunca la lógica, y solo se reanudan los que se
+# pausaron acá: si un visual se apagó solo, sigue apagado.
+const CULL_CADA     : float = 0.25
+const CULL_RECOGER  : float = 3.0    # los puntos se crean al cargar el progreso
+const CULL_MARGEN   : float = 160.0
+var _cull_t         : float = 0.0
+var _cull_recoger_t : float = 0.0
+var _animados       : Array[Node2D] = []
+var _pausados       : Dictionary = {}   # Node2D -> true
+
+static func es_visual_animado(n: Node) -> bool:
+	if not (n is Node2D) or not n.is_processing():
+		return false
+	var sc = n.get_script()
+	# Clase interna = script sin archivo propio.
+	return sc != null and sc.resource_path == "" and n.get_parent() != null 		and n.get_parent().get_script() != null
+
+func _recoger_animados(n: Node) -> void:
+	for h in n.get_children():
+		if h is CanvasLayer:
+			continue   # la interfaz no se mueve con la cámara
+		if es_visual_animado(h) and not h in _animados:
+			_animados.append(h)
+		_recoger_animados(h)
+
+func _actualizar_animados() -> void:
+	var vista := get_viewport().get_visible_rect()
+	var mundo := get_viewport().get_canvas_transform().affine_inverse() * vista
+	mundo = mundo.grow(CULL_MARGEN)
+	for i in range(_animados.size() - 1, -1, -1):
+		var n : Node2D = _animados[i]
+		if not is_instance_valid(n):
+			_animados.remove_at(i)
+			continue
+		var en_vista := mundo.has_point(n.global_position)
+		if en_vista and _pausados.has(n):
+			_pausados.erase(n)
+			n.set_process(true)
+		elif not en_vista and n.is_processing():
+			_pausados[n] = true
+			n.set_process(false)
+
 func _process(delta: float) -> void:
+	_cull_recoger_t -= delta
+	if _cull_recoger_t <= 0.0:
+		_cull_recoger_t = CULL_RECOGER
+		_recoger_animados(self)
+	_cull_t -= delta
+	if _cull_t <= 0.0:
+		_cull_t = CULL_CADA
+		_actualizar_animados()
+
 	_pos_timer -= delta
 	if _pos_timer <= 0.0:
 		_pos_timer = POS_CADA
