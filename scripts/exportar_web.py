@@ -114,7 +114,7 @@ def verificar_secretos() -> None:
     print(f"Verificado: {len(rutas)} archivos empaquetados, ninguno sensible.")
 
 
-PESO_ESPERADO_MB = 2.0
+PESO_ESPERADO_MB = 3.0
 """Techo del .pck. Los estudiantes lo descargan por internet en cada
 partida, así que un salto de peso es un problema, no un detalle.
 
@@ -132,6 +132,12 @@ quedó en 0,30 MB, con una diferencia media de 1,3/255 a la resolución en
 que se ve: invisible. El techo bajó de 5,5 a 2,0 MB por eso — con 4,6 MB
 de techo, un descuido de este tamaño vuelve a pasar sin que nadie se
 entere.
+
+El 2026-10-30 el techo subió de 2,0 a 3,0 MB, y no por descuido: el mapa
+nuevo ya se usa (0,73 MB después de pasarlo a compress/mode=1; entraba sin
+pérdida con 5,3 MB, la cuarta vez del mismo problema) y la imagen de carga
+(carga_web.png, 0,43 MB) va cruda porque es la del arranque. Con eso el
+.pck queda en 2,8 MB.
 
 Si este chequeo salta: puede ser un archivo que sobra (se agrega a
 exclude_filter en export_presets.cfg) o una textura mal importada

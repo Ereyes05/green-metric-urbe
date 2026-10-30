@@ -16,6 +16,8 @@ config/name="GreenMetric_URBE"
 run/main_scene="uid://hhnye7lex5fp"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.0627451, 0.109804, 0.14902, 1)
+boot_splash/image="res://assets/sprites/carga_web.png"
 
 [autoload]
 
