@@ -87,8 +87,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	# Sombra elíptica bajo el personaje
-	draw_arc(Vector2(0, 10), 11.0, 0.0, PI, 14, Color(0, 0, 0, 0.22), 8.0)
+	# Sombra bajo el personaje, del tamaño que tenía la de los NPCs (radio 7,
+	# grosor 5). El borde inferior sigue en y=21, bajo los pies.
+	draw_arc(Vector2(0, 14), 7.0, 0.0, PI, 14, Color(0, 0, 0, 0.22), 5.0)
 
 	if _trail.is_empty(): return
 	var n : int = _trail.size()
