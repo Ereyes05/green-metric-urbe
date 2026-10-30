@@ -49,12 +49,12 @@ const PAGINAS : Array = [
 	["💬", "Los personajes", "Aprender de cada área", TEMA.VIOLETA, [
 		"Cada personaje explica un criterio de GreenMetric y después te hace un cuestionario: 15 segundos por pregunta.",
 		"Atienden desde su nivel. Los que se ven apagados todavía no: al pulsar E te dicen desde qué nivel están disponibles.",
-		"Cada cuestionario se responde una sola vez. Después puedes volver a escuchar la explicación para repasar.",
+		"Cada cuestionario cuenta una sola vez. Después puedes practicarlo de nuevo, sin puntos, para repasar.",
 	]],
 	["🔧", "Misiones", "Actuar en el campus", TEMA.NARANJA, [
 		"Las misiones de campo están en los puntos marcados del mapa: plantar, cambiar a LED, reciclar, cerrar llaves, montar bicicleteros.",
 		"Algunas necesitan una herramienta de la tienda. Si te falta, el juego te lo dice.",
-		"En las decisiones eliges entre opciones con costo distinto. En las crisis tienes 10 segundos para responder.",
+		"En las decisiones eliges entre opciones con costo distinto. En las crisis tienes 10 segundos: si fallas, el módulo pierde 1 punto hasta que resuelvas otra.",
 	]],
 	["📋", "Test de cierre y correo", "Al terminar cada nivel", TEMA.TEAL, [
 		"Cuando completas un nivel aparece un test corto, de hasta cinco preguntas, para que compruebes qué te quedó. No da puntos: solo se guarda tu primer intento.",

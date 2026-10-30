@@ -372,6 +372,13 @@ func registrar_quiz(mision_id: String, aciertos: int) -> void:
 		 {"tipo": "quiz", "mision_id": mision_id})
 
 
+# HU-008: una crisis fallada resta 1 punto al módulo hasta resolver otra
+# (sql/crisis_penalizacion.sql). La respuesta trae el puntaje nuevo.
+func registrar_crisis(categoria: int, resuelta: bool) -> void:
+	_rpc("calidad", "registrar_crisis", {"p_categoria": categoria, "p_resuelta": resuelta},
+		 {"tipo": "crisis", "categoria": categoria})
+
+
 func registrar_test(test_id: String, aciertos: int, total: int) -> void:
 	_rpc("test", "registrar_test",
 		 {"p_test_id": test_id, "p_aciertos": aciertos, "p_total": total},

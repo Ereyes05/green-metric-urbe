@@ -567,6 +567,7 @@ func _ready() -> void:
 	add_child(_quiz_ui)
 	_quiz_ui.quiz_completado.connect(_on_quiz_completado)
 	_quiz_ui.test_completado.connect(_on_test_completado)
+	_quiz_ui.practica_completada.connect(_on_practica_completada)
 
 	_minijuego_residuos = MINIJUEGO_RESIDUOS_ESCENA.new()
 	add_child(_minijuego_residuos)
@@ -986,17 +987,15 @@ func _on_mision_cancelada() -> void:
 func _on_dialogo_terminado(mision_id: String) -> void:
 	if mision_id == "":
 		return
-	# El quiz (o el minijuego de Yulimar) se responde una sola vez: después
-	# el NPC repite su explicación, que sirve para repasar, y avisa.
-	if PuntajeManager.quiz_hecho(quiz_de_npc(mision_id)):
-		if _hud_aviso:
-			var que := "la actividad" if mision_id == "mision_residuos" else "el cuestionario"
-			_hud_aviso.avisar("✅ Ya hiciste %s de este personaje" % que)
-		return
-
-	# M3 Residuos → minijuego de clasificación
+	# M3 Residuos → minijuego de clasificación. Hasta aprobarlo se juega de
+	# verdad (con reintento, HU-007); aprobado, solo se ofrece practicar.
 	if mision_id == "mision_residuos":
-		if _minijuego_residuos:
+		if not _minijuego_residuos:
+			return
+		if MINIJUEGO_RESIDUOS_ESCENA.aprobado_antes() and is_instance_valid(_quiz_ui):
+			_quiz_ui.ofrecer_practica("la actividad",
+				func(): _minijuego_residuos.iniciar(true))
+		else:
 			_minijuego_residuos.iniciar()
 		return
 
@@ -1012,14 +1011,26 @@ func _on_dialogo_terminado(mision_id: String) -> void:
 			break
 	# Se le pasa el nivel/misión para que el quiz pueda registrar telemetría
 	# atribuible a un indicador GreenMetric (ver eventos_aprendizaje).
-	_quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre,
-			modulo_de_mision(ZONA_A_MISION, mision_id, _modulo_activo), mision_id)
+	var nivel_quiz := modulo_de_mision(ZONA_A_MISION, mision_id, _modulo_activo)
+	# El cuestionario cuenta una sola vez; después el NPC repite su
+	# explicación y ofrece practicar sin puntos (HU-006).
+	if PuntajeManager.quiz_hecho(quiz_de_npc(mision_id)):
+		_quiz_ui.ofrecer_practica("el cuestionario",
+			func(): _quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre,
+				nivel_quiz, mision_id, false, true))
+		return
+	_quiz_ui.iniciar(QUIZ_POR_MISION[mision_id], nombre, nivel_quiz, mision_id)
 
 
 # ── Callbacks de completado ───────────────────────────────────
 func _on_quiz_completado(xp: int) -> void:
 	_aplicar_xp(xp, _mision_activa)
 	EconomiaManager.on_modulo_completado(_modulo_activo, xp, 30)
+
+func _on_practica_completada(aciertos: int, total: int) -> void:
+	if _hud_aviso:
+		_hud_aviso.avisar("📋 Práctica: %d de %d correctas" % [aciertos, total])
+
 
 func _on_minijuego_completado(xp: int) -> void:
 	# "mision_residuos_minijuego", NO "mision_residuos": ese id ya lo usa
@@ -1597,6 +1608,11 @@ func _on_tutorial_completado() -> void:
 
 
 func _on_crisis_resulta(modulo_id: int, exito: bool) -> void:
+	# HU-008: fallar resta 1 punto al módulo; resolver la próxima lo devuelve.
+	if not SupabaseManager.jwt_token.is_empty():
+		SupabaseManager.registrar_crisis(modulo_id, exito)
+	if not exito and _hud_aviso:
+		_hud_aviso.avisar("🚨 −1 punto en %s hasta que resuelvas otra crisis" % HUD_TEMA.CATEGORIAS[modulo_id]["nombre"])
 	if exito:
 		_aplicar_xp(25, "crisis_%d" % modulo_id)
 		# La insignia la decide el servidor: crisis_evento.gd ya registra el

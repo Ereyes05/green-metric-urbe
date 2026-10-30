@@ -12,7 +12,8 @@ const TOPES : Dictionary = {"avance": 80.0, "comprension": 10.0, "decisiones": 5
 
 
 static func _vacia() -> Dictionary:
-	return {"avance": 0.0, "comprension": 0.0, "decisiones": 0.0, "sinergias": 0.0, "total": 0.0}
+	return {"avance": 0.0, "comprension": 0.0, "decisiones": 0.0, "sinergias": 0.0,
+		"crisis": 0.0, "total": 0.0}
 
 
 # {"categorias": {"1": {...}}} (JSON del servidor) -> {1: {... floats}, ... 6}
@@ -24,6 +25,7 @@ static func normalizar(datos: Dictionary) -> Dictionary:
 		var fila := _vacia()
 		for k in TOPES.keys():
 			fila[k] = float(c.get(k, 0.0))
+		fila["crisis"] = float(c.get("crisis", 0.0))
 		fila["total"] = float(c.get("total", 0.0))
 		out[cat] = fila
 	return out
@@ -37,11 +39,14 @@ static func total_ponderado(categorias: Dictionary) -> float:
 
 
 # Copia de la categoría con el avance recalculado desde el % de misiones
-# local, con los mismos topes que el servidor.
+# local, con los mismos topes que el servidor. "crisis" (0 o 1) es la
+# penalización de una crisis sin resolver (HU-008): resta, sin bajar de 0.
 static func con_avance(categoria: Dictionary, pct_misiones: float) -> Dictionary:
 	var fila := _vacia()
 	for k in TOPES.keys():
 		fila[k] = clampf(float(categoria.get(k, 0.0)), 0.0, TOPES[k])
 	fila["avance"] = clampf(pct_misiones, 0.0, 1.0) * TOPES["avance"]
-	fila["total"] = fila["avance"] + fila["comprension"] + fila["decisiones"] + fila["sinergias"]
+	fila["crisis"] = clampf(float(categoria.get("crisis", 0.0)), 0.0, 1.0)
+	fila["total"] = maxf(0.0, fila["avance"] + fila["comprension"] + fila["decisiones"]
+		+ fila["sinergias"] - fila["crisis"])
 	return fila

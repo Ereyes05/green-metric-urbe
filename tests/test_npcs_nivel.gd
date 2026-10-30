@@ -58,16 +58,58 @@ func _ready() -> void:
 	_check(not _npc(mapa, "mision_bloque_a").bloqueado, "Nivel 1 completo: Prof. González libre")
 	_check(_npc(mapa, "mision_residuos").bloqueado, "Yulimar (Nivel 3) sigue bloqueada")
 
-	# Quiz de una sola vez.
+	# El quiz cuenta una sola vez; después solo se ofrece practicar (HU-006).
+	var quiz = mapa._quiz_ui
 	mapa._on_dialogo_terminado("mision_bloque_f")
-	_check(mapa._quiz_ui.visible, "primera vez: quiz")
-	mapa._quiz_ui.hide()
+	_check(quiz.visible and not quiz.esta_ofreciendo_practica(), "primera vez: quiz de verdad")
+	_check(quiz._titulo_lbl.text.begins_with("QUIZ"), "primera vez: título QUIZ")
+	quiz.hide()
 	PuntajeManager.registrar_quiz("mision_bloque_f", 3)
 	mapa._on_dialogo_terminado("mision_bloque_f")
-	_check(not mapa._quiz_ui.visible, "ya respondido: sin quiz")
+	_check(quiz.esta_ofreciendo_practica(), "ya respondido: ofrece practicar, no arranca solo")
+	quiz._cerrar_oferta_practica()
+	_check(not quiz.visible, "«Ahora no» cierra sin quiz")
+	mapa._on_dialogo_terminado("mision_bloque_f")
+	quiz._on_aceptar_practica()
+	_check(quiz.visible and quiz._es_practica, "«Practicar» abre la práctica")
+	_check(quiz._titulo_lbl.text.begins_with("PRÁCTICA"), "título PRÁCTICA")
+	_check(quiz._sin_puntos(), "la práctica no da XP")
+	var emitidos := []
+	quiz.quiz_completado.connect(func(xp): emitidos.append(xp))
+	quiz._finalizar()
+	await get_tree().create_timer(0.4).timeout
+	_check(emitidos.is_empty(), "la práctica no emite quiz_completado (sin XP ni EcoCredits)")
+
+	# Minijuego de Yulimar: hasta aprobarlo se juega de verdad (HU-007).
+	var mj = mapa._minijuego_residuos
 	PuntajeManager._quizzes_hechos.append("mision_residuos_minijuego")
+	NivelManager._detalles.erase(mj.CLAVE_DETALLE)
 	mapa._on_dialogo_terminado("mision_residuos")
-	_check(not mapa._minijuego_residuos.visible, "minijuego hecho: no se repite")
+	_check(mj.visible and not mj._practica, "sin aprobar: se juega de verdad aunque ya lo intentó")
+	var pagos := []
+	mj.minijuego_completado.connect(func(xp): pagos.append(xp))
+	mj._aciertos = mj.APROBACION - 1
+	mj._terminar()
+	_check(mj._res_botones.visible, "no aprueba: aparece Reintentar")
+	await get_tree().create_timer(3.6).timeout
+	_check(pagos.is_empty(), "no aprueba: sin XP")
+	mj._on_reintentar()
+	_check(mj.visible and mj._activo, "Reintentar vuelve a empezar")
+	mj._aciertos = mj.APROBACION
+	mj._xp_total = mj.APROBACION * mj.XP_POR_ACIERTO
+	mj._terminar()
+	_check(not mj._res_botones.visible, "aprueba: sin botones")
+	await get_tree().create_timer(3.6).timeout
+	_check(pagos == [mj.APROBACION * mj.XP_POR_ACIERTO], "aprueba: paga una vez")
+	_check(mj.aprobado_antes(), "queda guardado que aprobó")
+	mapa._on_dialogo_terminado("mision_residuos")
+	_check(quiz.esta_ofreciendo_practica() and not mj.visible, "ya aprobado: solo ofrece practicar")
+	quiz._on_aceptar_practica()
+	_check(mj.visible and mj._practica, "practicar el minijuego")
+	mj._aciertos = 10
+	mj._terminar()
+	await get_tree().create_timer(3.6).timeout
+	_check(pagos.size() == 1, "la práctica del minijuego no paga")
 
 	print("test_npcs_nivel: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

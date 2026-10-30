@@ -11,6 +11,7 @@ const CAPTURAS := [
 	"login", "registro", "tutorial_1", "tutorial_2", "hud", "dialogo", "quiz",
 	"quiz_fallo", "mision_campo", "decision", "crisis", "reporte", "simulador",
 	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado", "guia_1", "guia_4", "guia_7",
+	"practica_oferta", "practica", "minijuego_fallido",
 ]
 
 const RANKING_DEMO := [
@@ -128,6 +129,22 @@ func _preparar(id: String) -> void:
 			if id == "quiz_fallo":
 				_mapa._quiz_ui._responder(0)
 				await _esperar(0.3)
+		"practica_oferta":
+			_mapa._quiz_ui.ofrecer_practica("el cuestionario", func(): pass)
+			await _esperar(0.6)
+		"practica":
+			_mapa._quiz_ui.iniciar(_mapa.QUIZ_POR_MISION["mision_agua"], "Lic. Torres", 4,
+				"mision_agua", false, true)
+			await _esperar(1.2)
+			_mapa._quiz_ui._responder(1)
+			await _esperar(0.3)
+		"minijuego_fallido":
+			var mj = _mapa._minijuego_residuos
+			mj.iniciar()
+			await _esperar(0.5)
+			mj._aciertos = 5
+			mj._terminar()
+			await _esperar(0.8)
 		"mision_campo":
 			var zona = _hijo_con_script("res://scenes/misiones/zona_tierra.gd")
 			_mapa._plantar_ui.iniciar(0, zona, "click")

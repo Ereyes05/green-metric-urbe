@@ -1,8 +1,9 @@
 # ============================================================
 # minijuego_residuos.gd — URBE Rangers: Eco-Quest
 # Minijuego M3: Clasificar residuos en el contenedor correcto.
-# 10 residuos, 60 segundos, 5 XP por acierto.
-# Emite: minijuego_completado(xp_total)
+# 10 residuos, 60 segundos. Se aprueba con 7 aciertos (HU-007): solo
+# entonces da 5 XP por acierto. Si no aprueba, no hay XP y puede reintentar.
+# Emite: minijuego_completado(xp_total) solo al aprobar, y nunca en práctica.
 # ============================================================
 extends CanvasLayer
 
@@ -12,6 +13,10 @@ signal minijuego_completado(xp_total: int)
 const XP_POR_ACIERTO  : int   = 5
 const TOTAL_RESIDUOS  : int   = 10
 const TIEMPO_LIMITE   : float = 60.0
+const APROBACION      : int   = 7
+# Detalle en NivelManager (se sincroniza con el servidor): ya aprobó, así
+# que al volver con Yulimar solo se ofrece practicar.
+const CLAVE_DETALLE   : String = "minijuego_residuos"
 
 # ── Tipos de contenedor ───────────────────────────────────────
 enum Tipo { RECICLABLE, ORGANICO, NO_RECICLABLE }
@@ -47,6 +52,7 @@ var _res_overlay     : Panel     = null
 var _res_titulo_lbl  : Label     = null
 var _res_score_lbl   : Label     = null
 var _res_xp_lbl      : Label     = null
+var _res_botones     : HBoxContainer = null
 
 # ── Estado ────────────────────────────────────────────────────
 var _residuos_mezclados : Array  = []
@@ -56,6 +62,7 @@ var _aciertos           : int    = 0
 var _tiempo_restante    : float  = TIEMPO_LIMITE
 var _activo             : bool   = false
 var _bloqueado          : bool   = false
+var _practica           : bool   = false
 
 
 func _ready() -> void:
@@ -66,7 +73,11 @@ func _ready() -> void:
 
 
 # ── API pública ───────────────────────────────────────────────
-func iniciar() -> void:
+func iniciar(practica: bool = false) -> void:
+	_practica = practica
+	_titulo_lbl.text = ("♻  PRÁCTICA — no suma puntos" if practica
+		else "♻  CLASIFICACIÓN DE RESIDUOS — M3")
+	_res_overlay.visible = false
 	# mision_residuos_minijuego, no mision_residuos: son cosas distintas
 	# (ver el comentario de _on_minijuego_completado en SceneMapaMundo.gd).
 	SupabaseManager.registrar_evento(3, "mision_residuos_minijuego",
@@ -142,7 +153,7 @@ func _clasificar(tipo_elegido: int) -> void:
 		_xp_total += XP_POR_ACIERTO
 		_aciertos += 1
 		_feedback_lbl.add_theme_color_override("font_color", Color(0.25, 0.88, 0.25))
-		_feedback_lbl.text = "✓ ¡Correcto!  +%d XP" % XP_POR_ACIERTO
+		_feedback_lbl.text = "✓ ¡Correcto!"
 		_sfx("xp")
 	else:
 		_btn_rojo(btn_elegido)
@@ -163,15 +174,20 @@ func _clasificar(tipo_elegido: int) -> void:
 
 func _terminar() -> void:
 	_activo = false
+	var aprobo := _aciertos >= APROBACION
 	# Es la Comprensión de Residuos (catalogo_misiones: tipo quiz, 10 ítems).
-	PuntajeManager.registrar_quiz("mision_residuos_minijuego", _aciertos)
+	# Cuenta el primer intento, apruebe o no (PuntajeManager ignora los demás).
+	if not _practica:
+		PuntajeManager.registrar_quiz("mision_residuos_minijuego", _aciertos)
 	SupabaseManager.registrar_evento(3, "mision_residuos_minijuego",
-		"mision_completada",
+		"mision_completada" if aprobo and not _practica else "intento_minijuego",
 		{
 			"aciertos" : _aciertos,
 			"total"    : _residuos_mezclados.size(),
-			"xp_total" : _xp_total,
+			"xp_total" : _xp_total if aprobo and not _practica else 0,
 			"por_tiempo": _tiempo_restante <= 0,
+			"aprobado" : aprobo,
+			"practica" : _practica,
 		})
 	_mostrar_resultado()
 
@@ -180,19 +196,48 @@ func _mostrar_resultado() -> void:
 	var razon   : String = "⏱ Tiempo agotado" if _tiempo_restante <= 0 else "✓ ¡Ronda completa!"
 	var estrellas : String = "⭐⭐⭐" if _aciertos == _residuos_mezclados.size() \
 		else ("⭐⭐" if _aciertos >= _residuos_mezclados.size() * 0.7 else "⭐")
-	_res_titulo_lbl.text = razon + "  " + estrellas
+	var aprobo := _aciertos >= APROBACION
 	_res_score_lbl.text  = "%d / %d clasificados correctamente" % [_aciertos, _residuos_mezclados.size()]
-	_res_xp_lbl.text     = "+%d XP ganados" % _xp_total
 	_res_overlay.modulate.a = 0.0
 	_res_overlay.visible    = true
 	var tw := create_tween()
 	tw.tween_property(_res_overlay, "modulate:a", 1.0, 0.3)
+
+	if not aprobo:
+		# HU-007, clasificación fallida: sin XP y con reintento.
+		_res_titulo_lbl.text = "⏱ Tiempo agotado" if _tiempo_restante <= 0 else "Casi lo logras"
+		_res_xp_lbl.text     = "Necesitas %d de %d para aprobar.
+No se otorga experiencia: ¡inténtalo de nuevo!" % [APROBACION, _residuos_mezclados.size()]
+		_res_botones.visible = true
+		_sfx("error")
+		return
+
+	_res_titulo_lbl.text = "✓ ¡Aprobado!  " + estrellas
+	_res_xp_lbl.text     = "Práctica: no suma puntos ni experiencia" if _practica 		else "+%d XP ganados" % _xp_total
+	_res_botones.visible = false
+	if not _practica:
+		NivelManager.guardar_detalle(CLAVE_DETALLE, {"aprobado": true, "aciertos": _aciertos})
 	tw.tween_interval(3.0)
 	tw.tween_callback(func():
 		hide()
 		_res_overlay.visible = false
-		minijuego_completado.emit(_xp_total))
+		if not _practica:
+			minijuego_completado.emit(_xp_total))
 	_sfx("mision")
+
+
+static func aprobado_antes() -> bool:
+	return bool(NivelManager.obtener_detalle(CLAVE_DETALLE).get("aprobado", false))
+
+
+func _on_reintentar() -> void:
+	_res_overlay.visible = false
+	iniciar(_practica)
+
+
+func _on_salir_resultado() -> void:
+	_res_overlay.visible = false
+	hide()
 
 
 func _sfx(nombre: String) -> void:
@@ -420,7 +465,23 @@ func _crear_ui() -> void:
 	_res_xp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_res_xp_lbl.add_theme_font_size_override("font_size", 22)
 	_res_xp_lbl.add_theme_color_override("font_color", Color(1.00, 0.85, 0.18))
+	_res_xp_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	res_vbox.add_child(_res_xp_lbl)
+
+	# Solo al no aprobar: reintentar o salir.
+	_res_botones = HBoxContainer.new()
+	_res_botones.alignment = BoxContainer.ALIGNMENT_CENTER
+	_res_botones.add_theme_constant_override("separation", 18)
+	_res_botones.visible = false
+	res_vbox.add_child(_res_botones)
+	var b_re := _crear_boton("Reintentar", Color(0.06, 0.22, 0.08), Color(0.22, 0.78, 0.25))
+	b_re.custom_minimum_size = Vector2(170, 44)
+	b_re.pressed.connect(_on_reintentar)
+	_res_botones.add_child(b_re)
+	var b_sal := _crear_boton("Salir", Color(0.12, 0.12, 0.14), Color(0.45, 0.45, 0.50))
+	b_sal.custom_minimum_size = Vector2(120, 44)
+	b_sal.pressed.connect(_on_salir_resultado)
+	_res_botones.add_child(b_sal)
 
 
 func _crear_boton(texto: String, bg: Color, borde: Color) -> Button:

@@ -221,6 +221,11 @@ func mostrar_popover(cat: int) -> void:
 		h.add_child(n)
 		h.add_child(TEMA.label("%d/%d" % [roundi(float(d.get(comp["clave"], 0.0))), int(comp["tope"])], 10, TEMA.TEXTO, 400, false, true))
 		_pop_vb.add_child(h)
+	if float(d.get("crisis", 0.0)) > 0.0:
+		var cri := TEMA.label("🚨 −1 por una crisis sin resolver", 10, TEMA.ALERTA)
+		cri.autowrap_mode = TextServer.AUTOWRAP_WORD
+		cri.custom_minimum_size.x = 164
+		_pop_vb.add_child(cri)
 	var falta := TEMA.label(texto_falta(d), 10, TEMA.DORADO)
 	falta.autowrap_mode = TextServer.AUTOWRAP_WORD
 	falta.custom_minimum_size.x = 164

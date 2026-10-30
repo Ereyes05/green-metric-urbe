@@ -9,6 +9,9 @@ signal quiz_completado(xp_total: int)
 # Modo test (cierre de nivel): en vez de quiz_completado. Salir a mitad no
 # emite nada, así el test queda pendiente.
 signal test_completado(aciertos: int, total: int)
+# Repaso de un quiz ya respondido (HU-006): no da XP ni EcoCredits ni
+# cambia la Comprensión, así que no se emite quiz_completado.
+signal practica_completada(aciertos: int, total: int)
 
 const XP_POR_PREGUNTA    : int   = 10
 const XP_BONUS_VELOCIDAD : int   = 5
@@ -57,6 +60,8 @@ var _xp_offset         : int   = 0   # offset vertical para labels flotantes
 var _nivel     : int    = 0
 var _mision_id : String = ""
 var _es_test   : bool   = false
+var _es_practica : bool = false
+var _al_aceptar_practica : Callable
 
 
 func _ready() -> void:
@@ -254,8 +259,9 @@ func _crear_ui() -> void:
 	hint.add_theme_color_override("font_color", Color(0.40, 0.40, 0.40))
 	pie.add_child(hint)
 
-	# ── Diálogo de confirmación de salida (oculto por defecto) ─
+	# ── Diálogos de confirmación (ocultos por defecto) ─────────
 	_crear_dialogo_salida()
+	_crear_dialogo_practica()
 
 
 func _crear_dialogo_salida() -> void:
@@ -342,6 +348,112 @@ func _crear_dialogo_salida() -> void:
 	btn_row.add_child(btn_no)
 
 
+var _dlg_practica : ColorRect = null
+var _dlg_practica_msg : Label = null
+
+func _crear_dialogo_practica() -> void:
+	_dlg_practica = ColorRect.new()
+	_dlg_practica.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dlg_practica.color = Color(0.0, 0.0, 0.0, 0.55)
+	_dlg_practica.visible = false
+	_dlg_practica.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_dlg_practica)
+
+	var dlg := Panel.new()
+	dlg.set_anchors_preset(Control.PRESET_CENTER)
+	dlg.offset_left   = -220.0
+	dlg.offset_top    = -100.0
+	dlg.offset_right  =  220.0
+	dlg.offset_bottom =  100.0
+	var ds := StyleBoxFlat.new()
+	ds.bg_color     = Color(0.05, 0.09, 0.07, 0.98)
+	ds.border_color = Color(0.22, 0.78, 0.25)
+	ds.set_border_width_all(2)
+	ds.set_corner_radius_all(14)
+	dlg.add_theme_stylebox_override("panel", ds)
+	_dlg_practica.add_child(dlg)
+
+	var vmg := MarginContainer.new()
+	vmg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for m in ["margin_left","margin_right","margin_top","margin_bottom"]:
+		vmg.add_theme_constant_override(m, 24)
+	dlg.add_child(vmg)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 14)
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vmg.add_child(vb)
+
+	_dlg_practica_msg = Label.new()
+	_dlg_practica_msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dlg_practica_msg.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_dlg_practica_msg.add_theme_font_size_override("font_size", 14)
+	_dlg_practica_msg.add_theme_color_override("font_color", Color(0.88, 0.88, 0.88))
+	vb.add_child(_dlg_practica_msg)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 18)
+	vb.add_child(btn_row)
+
+	var btn_si := Button.new()
+	btn_si.text = "Practicar"
+	btn_si.custom_minimum_size = Vector2(130, 38)
+	btn_si.add_theme_font_size_override("font_size", 13)
+	var ss := StyleBoxFlat.new()
+	ss.bg_color     = Color(0.06, 0.22, 0.08)
+	ss.border_color = Color(0.22, 0.78, 0.25)
+	ss.set_border_width_all(2)
+	ss.set_corner_radius_all(10)
+	btn_si.add_theme_stylebox_override("normal", ss)
+	btn_si.add_theme_color_override("font_color", Color(0.40, 1.0, 0.48))
+	btn_si.pressed.connect(_on_aceptar_practica)
+	btn_row.add_child(btn_si)
+
+	var btn_no := Button.new()
+	btn_no.text = "Ahora no"
+	btn_no.custom_minimum_size = Vector2(130, 38)
+	btn_no.add_theme_font_size_override("font_size", 13)
+	var sn := StyleBoxFlat.new()
+	sn.bg_color     = Color(0.12, 0.12, 0.14)
+	sn.border_color = Color(0.45, 0.45, 0.50)
+	sn.set_border_width_all(2)
+	sn.set_corner_radius_all(10)
+	btn_no.add_theme_stylebox_override("normal", sn)
+	btn_no.add_theme_color_override("font_color", Color(0.85, 0.85, 0.88))
+	btn_no.pressed.connect(_cerrar_oferta_practica)
+	btn_row.add_child(btn_no)
+
+
+# Pregunta si quiere repasar una actividad ya hecha. al_aceptar arranca la
+# práctica (el quiz o el minijuego de residuos).
+func ofrecer_practica(que: String, al_aceptar: Callable) -> void:
+	_al_aceptar_practica = al_aceptar
+	_dlg_practica_msg.text = "Ya hiciste %s de este personaje.
+¿Quieres practicar de nuevo?
+La práctica no suma puntos ni experiencia." % que
+	_panel.visible = false
+	_dlg_overlay.visible = false
+	_dlg_practica.visible = true
+	show()
+
+
+func esta_ofreciendo_practica() -> bool:
+	return visible and _dlg_practica.visible
+
+
+func _on_aceptar_practica() -> void:
+	_cerrar_oferta_practica()
+	if _al_aceptar_practica.is_valid():
+		_al_aceptar_practica.call()
+
+
+func _cerrar_oferta_practica() -> void:
+	_dlg_practica.visible = false
+	_panel.visible = true
+	hide()
+
+
 func _on_btn_salir_pressed() -> void:
 	_cronometro_activo = false
 	_dlg_overlay.visible = true
@@ -365,8 +477,12 @@ func _on_cancelar_salida() -> void:
 # API PÚBLICA
 # ════════════════════════════════════════════════════════
 func iniciar(preguntas: Array, nombre_npc: String,
-			 nivel: int = 0, mision_id: String = "", es_test: bool = false) -> void:
+			 nivel: int = 0, mision_id: String = "", es_test: bool = false,
+			 es_practica: bool = false) -> void:
 	_es_test   = es_test
+	_es_practica = es_practica and not es_test
+	_panel.visible = true
+	_dlg_practica.visible = false
 	_preguntas = preguntas
 	_indice    = 0
 	_xp_total  = 0
@@ -378,8 +494,9 @@ func iniciar(preguntas: Array, nombre_npc: String,
 	_mision_id = mision_id if mision_id != "" else "quiz_%s" % nombre_npc.to_lower()
 	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_iniciada",
 		{"npc": nombre_npc, "preguntas": preguntas.size()})
-	_titulo_lbl.text = ("TEST  ─  " if es_test else "QUIZ  ─  ") + nombre_npc
-	_xp_lbl.text     = "XP ganada: 0"
+	var prefijo := "TEST  ─  " if es_test else ("PRÁCTICA  ─  " if _es_practica else "QUIZ  ─  ")
+	_titulo_lbl.text = prefijo + nombre_npc
+	_xp_lbl.text     = "Práctica: no suma puntos ni experiencia" if _es_practica else "XP ganada: 0"
 	_xp_lbl.visible  = not es_test
 	_racha_lbl.visible = false
 	_dlg_overlay.visible = false
@@ -494,8 +611,8 @@ func _responder(idx: int) -> void:
 			xp_ganado += XP_BONUS_RACHA
 	else:
 		_racha = 0
-	# El test no da XP: solo comprueba lo aprendido.
-	if _es_test:
+	# El test y la práctica no dan XP: solo comprueban lo aprendido.
+	if _sin_puntos():
 		xp_ganado = 0
 
 	# Colorear respuestas
@@ -525,9 +642,10 @@ func _responder(idx: int) -> void:
 	# Feedback visual
 	if acerto:
 		_xp_total += xp_ganado
-		_xp_lbl.text = "XP ganada: %d" % _xp_total
+		if not _es_practica:
+			_xp_lbl.text = "XP ganada: %d" % _xp_total
 		var msg := "✓  Correcto!  +%d XP" % xp_ganado
-		if _es_test:
+		if _sin_puntos():
 			msg = "✓  Correcto!"
 		elif _racha >= 3:
 			msg = "🔥 RACHA x%d!  +%d XP" % [_racha, xp_ganado]
@@ -541,7 +659,7 @@ func _responder(idx: int) -> void:
 			_racha_lbl.visible = false
 		_feedback_txt(_feedback_lbl, msg, Color(0.25, 0.95, 0.30))
 		_disparar_flash(Color(0.18, 0.82, 0.28, 0.14))
-		if not _es_test:
+		if not _sin_puntos():
 			_flotar_xp_panel("+%d XP" % xp_ganado, Color(0.28, 1.0, 0.42))
 	else:
 		_racha_lbl.visible = false
@@ -559,6 +677,10 @@ func _responder(idx: int) -> void:
 		_finalizar()
 	else:
 		_mostrar_pregunta()
+
+
+func _sin_puntos() -> bool:
+	return _es_test or _es_practica
 
 
 func _tiempo_se_acabo() -> void:
@@ -591,12 +713,12 @@ func _finalizar() -> void:
 	# El servidor guarda solo el primer intento (registrar_quiz); repetir el
 	# quiz se juega igual pero no cambia la Comprensión. El test no cuenta
 	# para la Comprensión: lo guarda quien escucha test_completado.
-	if not _es_test:
+	if not _sin_puntos():
 		PuntajeManager.registrar_quiz(_mision_id, _aciertos)
 	SupabaseManager.registrar_evento(_nivel, _mision_id, "mision_completada",
 		{"xp_total": _xp_total, "preguntas": _preguntas.size()})
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
-	if hb and not _es_test:
+	if hb and not _sin_puntos():
 		hb.push("primer_quiz_done",
 			"🏆 ¡Quiz completado! Busca más NPCs en el campus para seguir explorando.")
 	var tw := create_tween()
@@ -605,6 +727,8 @@ func _finalizar() -> void:
 		hide()
 		if _es_test:
 			test_completado.emit(_aciertos, _preguntas.size())
+		elif _es_practica:
+			practica_completada.emit(_aciertos, _preguntas.size())
 		else:
 			quiz_completado.emit(_xp_total))
 

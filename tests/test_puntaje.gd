@@ -41,5 +41,15 @@ func _ready() -> void:
 	var tope : Dictionary = F.con_avance({"avance": 0, "comprension": 12, "decisiones": 9, "sinergias": -1}, 1.5)
 	_check(is_equal_approx(tope["total"], 80.0 + 10.0 + 5.0 + 0.0), "con_avance respeta topes")
 
+	# HU-008: una crisis sin resolver resta 1, sin bajar de 0 (sql/crisis_penalizacion.sql).
+	var srv : Dictionary = F.normalizar({"categorias": {"2": {"avance": 40, "crisis": 1, "total": 39}}})
+	_check(is_equal_approx(srv[2]["crisis"], 1.0), "normalizar lee la penalización de crisis")
+	var pen : Dictionary = F.con_avance({"crisis": 1}, 0.5)
+	_check(is_equal_approx(pen["total"], 39.0), "crisis pendiente: resta 1 punto")
+	var cero : Dictionary = F.con_avance({"crisis": 1}, 0.0)
+	_check(is_equal_approx(cero["total"], 0.0), "crisis pendiente: nunca baja de 0")
+	var doble : Dictionary = F.con_avance({"crisis": 3}, 1.0)
+	_check(is_equal_approx(doble["total"], 79.0), "la penalización no se acumula: máximo 1")
+
 	print("test_puntaje: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)
