@@ -105,7 +105,13 @@ var _entrando      : bool        = false
 # Todos los valores de Dictionary se castean a float explícitamente
 # para evitar el error "Cannot infer type from Variant".
 # ════════════════════════════════════════════════════════════
+# Rendimiento web: con 50 partículas y la grilla, esta pantalla hacía 794
+# llamadas de dibujo por cuadro (37 ms en escritorio, ~2 FPS en el
+# navegador). Sobre la ilustración la grilla (4–6 % de opacidad) no se ve,
+# así que solo se dibuja sin ilustración, y las partículas bajan a 16.
 class BackgroundNode extends Node2D:
+	const PARTICULAS : int = 16
+	var con_grilla : bool = true
 	var _t    : float          = 0.0
 	var _orbs : Array          = []
 	var _hex  : Array[Vector2] = []   # tipado → p.x / p.y son float
@@ -115,8 +121,10 @@ class BackgroundNode extends Node2D:
 		var sz := get_viewport_rect().size
 		if sz == Vector2.ZERO:
 			sz = Vector2(1280.0, 720.0)
-		for _i in 50:
+		for _i in PARTICULAS:
 			_orbs.append(_rand_orb(sz, true))
+		if not con_grilla:
+			return
 		# Grid hexagonal con margen extra para no dejar bordes vacíos al escalar
 		var cols : int = int(sz.x / 48.0) + 3
 		var rows : int = int(sz.y / 40.0) + 3
@@ -231,6 +239,7 @@ func _ready() -> void:
 		move_child(fondo_tex, 1)   # justo encima del ColorRect
 
 	var bg := BackgroundNode.new()
+	bg.con_grilla = not (FONDO_ILUSTRADO_PATH != "" and ResourceLoader.exists(FONDO_ILUSTRADO_PATH))
 	add_child(bg)
 	move_child(bg, 2)   # entre el fondo ilustrado (si existe) y CenterContainer
 
