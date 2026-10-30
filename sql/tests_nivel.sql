@@ -59,7 +59,7 @@ begin
 end;
 $$;
 
--- Migración 2 (2026-10-30): tests_nivel_elegibles. ESTADO: PENDIENTE DE APLICAR.
+-- Migración 2 (2026-10-30): tests_nivel_elegibles. ESTADO: APLICADA en producción el 2026-10-30.
 -- El test es "al terminar el nivel": a quien ya había completado niveles
 -- antes de que existieran los tests no se le piden. "elegibles" son los
 -- niveles completos (catálogo ACTUAL, tipo 'mision', misma regla que
