@@ -6,7 +6,7 @@
 
 **Universidad Dr. Rafael Belloso Chacín (URBE)** · Maracaibo, Venezuela
 **Estado:** 🚧 **BORRADOR — no entregar en esta forma**
-**Versión:** 0.2 · **Fecha:** 2026-10-30
+**Versión:** 0.3 · **Fecha:** 2026-10-30
 **Dirigido a:** estudiantes usuarios del sistema y al personal docente o administrativo que lo supervise.
 
 ---
@@ -256,6 +256,21 @@ Los **NPC** (personajes no jugadores) son los coordinadores de cada área del ca
 
 Al acercarse y pulsar **E**, el NPC explica el módulo GreenMetric que le corresponde: qué mide, por qué importa, y qué se espera del estudiante. Es el contenido teórico del juego.
 
+**Cada NPC atiende desde su nivel.** Todos están en el campus desde el principio, pero solo se puede hablar con los del nivel en curso o anteriores. Así el estudiante aprende el contenido del nivel en el que está. Los que todavía no atienden se ven **apagados**; al pulsar **E** junto a ellos aparece desde qué nivel están disponibles.
+
+| Disponible desde | NPC |
+|---|---|
+| El inicio | Rector Morales (el tutorial manda a hablar con él primero) |
+| Nivel 1 | Ing. Ramírez, Sr. Blanco |
+| Nivel 2 | Prof. González, Dr. Pérez, Ing. Herrera, Técn. Ruiz, Coord. Salinas |
+| Nivel 3 | Yulimar |
+| Nivel 4 | Lic. Torres |
+| Nivel 5 | Carlos |
+| Nivel 6 | Dra. Luna |
+
+![Figura 8b. NPC que todavía no atiende: se ve apagado y el aviso indica desde qué nivel.](manual/capturas/npc_bloqueado.png)
+*Figura 8b. NPC que todavía no atiende: se ve apagado y el aviso indica desde qué nivel.*
+
 ![Figura 8. Diálogo con el Rector Morales, con su retrato.](manual/capturas/dialogo.png)
 *Figura 8. Diálogo con el Rector Morales, con su retrato.*
 
@@ -268,10 +283,11 @@ Cómo funciona:
 - Cada pregunta tiene **15 segundos** y una barra que muestra el tiempo restante. Si se agota, cuenta como fallo y el juego pasa a la siguiente.
 - Al responder, el juego avisa de inmediato si fue correcto y, **si se falló, muestra cuál era la respuesta correcta**. Después de un segundo y medio continúa solo.
 - Acertar varias seguidas activa una **racha**, que da experiencia extra.
-- **Solo el primer intento del cuestionario completo suma al tramo *Quiz*** del panel GreenMetric. Se puede volver a hacerlo para repasar, pero esa repetición ya no cambia el puntaje de comprensión.
+- **Cada cuestionario se responde una sola vez.** Al volver a hablar con el NPC, repite su explicación —sirve para repasar— y avisa que el cuestionario ya se hizo. Lo mismo pasa con el minijuego de clasificación de Yulimar.
+- Si el estudiante sale a mitad del cuestionario, no cuenta como hecho y puede volver a empezarlo.
 - Un cuestionario completo sin ningún fallo otorga la insignia **⭐ Puntaje Perfecto**.
 
-> **Por qué solo cuenta el primer intento.** Si la repetición sumara, bastaría con reintentar hasta acertar por descarte y el tramo de comprensión dejaría de medir comprensión. Repetir sigue siendo útil para estudiar; lo que no hace es inflar el puntaje.
+> **Por qué no se repite.** Si se pudiera repetir, bastaría con reintentar hasta acertar por descarte y el tramo *Quiz* dejaría de medir comprensión. Para repasar está la explicación del NPC, que sí se puede volver a escuchar, y el test de cierre de cada nivel.
 
 ![Figura 9. Cuestionario de la Lic. Torres (Uso del Agua).](manual/capturas/quiz.png)
 *Figura 9. Cuestionario de la Lic. Torres (Uso del Agua).*
@@ -545,6 +561,8 @@ El progreso está ligado a la **cuenta**, no a la computadora: se puede empezar 
 | "Correo no permitido" al registrarse | El dominio del correo no está en la lista autorizada | Usar un correo de un dominio permitido; el mensaje indica cuáles. |
 | Olvidé mi contraseña | — | Avisarle al docente, que la cambia en el momento. La pantalla de recuperación por correo todavía no está en servicio. |
 | Pulso **E** y no pasa nada | El personaje está demasiado lejos | Acercarse más al NPC o al punto de la misión. |
+| Un NPC se ve apagado y no habla | Atiende desde un nivel posterior | Completar el nivel en curso. El aviso indica desde qué nivel está disponible. |
+| El NPC ya no me hace el cuestionario | Ya se respondió | Es normal: cada cuestionario se hace una sola vez. |
 | Una misión dice que falta una herramienta | No se ha comprado el kit correspondiente | Abrir la tienda (tecla **5**) y comprarlo. El juego señala cuál. |
 | No alcanzan los EcoCredits | Se gastaron en artículos opcionales | Completar más misiones de los niveles ya abiertos: cada una da EcoCredits. |
 | El juego se ve cortado o desalineado | Ventana muy pequeña, o zoom del navegador alterado | Poner el zoom en 100 % (**Ctrl + 0**) y maximizar la ventana. |

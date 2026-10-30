@@ -10,7 +10,7 @@ const TESTS := preload("res://scenes/misiones/tests_nivel.gd")
 const CAPTURAS := [
 	"login", "registro", "tutorial_1", "tutorial_2", "hud", "dialogo", "quiz",
 	"quiz_fallo", "mision_campo", "decision", "crisis", "reporte", "simulador",
-	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "informe",
+	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado",
 ]
 
 const RANKING_DEMO := [
@@ -165,6 +165,27 @@ func _preparar(id: String) -> void:
 		"test_resultado":
 			_mapa._hud_aviso.avisar("📝 Nivel 4: 3 de 3 correctas")
 			await _esperar(0.8)
+		"quiz_largo":
+			# La pregunta con la opción más larga del banco (no va al manual).
+			var q : Dictionary = {}
+			for p in _mapa.QUIZ_POR_MISION["mision_bloque_g"]:
+				if str(p["pregunta"]).begins_with("¿Qué certifica"):
+					q = p
+			_mapa._quiz_ui.iniciar([q], "Nivel 1", 1, "test_nivel_1", true)
+			await _esperar(1.2)
+		"npc_bloqueado":
+			# Cuenta nueva: el Prof. González (Nivel 2) todavía no atiende.
+			NivelManager._misiones = {}
+			NivelManager.nivel_actual = 1
+			_mapa._actualizar_hud()
+			var npc : Node = null
+			for n in get_tree().get_nodes_in_group("npcs_mapa"):
+				if n.mision_id == "mision_bloque_a":
+					npc = n
+			_mapa.jugador.global_position = npc.global_position + Vector2(28, 6)
+			await _esperar(1.0)
+			npc.iniciar_dialogo()
+			await _esperar(0.6)
 		"informe":
 			_mapa._informe_ui.iniciar(null)
 			await _esperar(1.5)

@@ -66,6 +66,10 @@ func quiz_hecho(mision_id: String) -> bool:
 
 
 func registrar_quiz(mision_id: String, aciertos: int) -> void:
+	# Ya, sin esperar al servidor: si el estudiante vuelve a hablarle al NPC
+	# antes de que llegue la respuesta, el quiz no se le ofrece de nuevo.
+	if not mision_id in _quizzes_hechos:
+		_quizzes_hechos.append(mision_id)
 	if _hay_sesion():
 		SupabaseManager.registrar_quiz(mision_id, aciertos)
 

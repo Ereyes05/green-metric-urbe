@@ -263,6 +263,24 @@ var ZONA_A_MISION : Dictionary = {
 	"ZonaCafetin":         {"mision_id": "mision_residuos",    "modulo_id": 3, "npc": "Yulimar",        "progreso": 0.30, "nombre": "Cafetín"},
 }
 
+# ── Nivel desde el que atiende cada NPC ──────────────────────
+# 0 = desde el inicio (el tutorial manda primero al Rector). Los demás,
+# desde que se desbloquea su nivel: el estudiante aprende el contenido del
+# nivel en el que está.
+const NIVEL_NPC : Dictionary = {
+	"mision_rector": 0,
+	"mision_bloque_f": 1, "mision_fotocopiado": 1,
+	"mision_bloque_a": 2, "mision_bloque_b": 2, "mision_bloque_c": 2,
+	"mision_bloque_d": 2, "mision_bloque_e": 2,
+	"mision_residuos": 3, "mision_agua": 4, "mision_transporte": 5,
+	"mision_educacion": 6,
+}
+
+# Lo que registra el servidor al terminar con ese NPC. Yulimar no da quiz:
+# lanza el minijuego de residuos, que se registra con su propio id.
+static func quiz_de_npc(mision_id: String) -> String:
+	return "mision_residuos_minijuego" if mision_id == "mision_residuos" else mision_id
+
 # ── Quiz por misión ──────────────────────────────────────────
 const QUIZ_POR_MISION : Dictionary = {
 	# M6 - Educación
@@ -625,7 +643,39 @@ func _spawn_npcs() -> void:
 		if vis_node:
 			vis_node.modulate = datos["color"]
 		add_child(npc)
+		npc.add_to_group("npcs_mapa")
+		npc.bloqueo_tocado.connect(_on_npc_bloqueado)
+	_actualizar_bloqueo_npcs()
 	print("✅ %d NPCs instanciados" % DATOS_NPCS.size())
+
+
+func _npc_disponible(mision_id: String) -> bool:
+	var nivel : int = int(NIVEL_NPC.get(mision_id, 0))
+	var nm = _nivel_mgr()
+	return nivel == 0 or (nm != null and nm.nivel_desbloqueado(nivel))
+
+
+func _aviso_bloqueo(mision_id: String) -> String:
+	var nivel : int = int(NIVEL_NPC.get(mision_id, 0))
+	var nm = _nivel_mgr()
+	var nombre : String = nm.NOMBRES_NIVEL[nivel] if nm else ""
+	return "🔒 Disponible en el Nivel %d: %s" % [nivel, nombre]
+
+
+# Idempotente: se llama al crear los NPC y en cada _actualizar_hud(), así los
+# del nivel nuevo se encienden apenas se completa el anterior.
+func _actualizar_bloqueo_npcs() -> void:
+	for npc in get_tree().get_nodes_in_group("npcs_mapa"):
+		var id : String = npc.mision_id
+		var libre := _npc_disponible(id)
+		if npc.bloqueado == libre:
+			npc.bloqueado = not libre
+		npc.aviso_bloqueo = "" if libre else _aviso_bloqueo(id)
+
+
+func _on_npc_bloqueado(texto: String) -> void:
+	if _hud_aviso:
+		_hud_aviso.avisar(texto)
 
 
 # ── Supabase ─────────────────────────────────────────────────
@@ -892,6 +942,9 @@ static func mision_mas_cercana(nodos: Array, desde: Vector2) -> Node:
 func _on_hablar_npc_edificio() -> void:
 	if not ZONA_A_MISION.has(_zona_activa): return
 	var info : Dictionary = ZONA_A_MISION[_zona_activa]
+	if not _npc_disponible(info["mision_id"]):
+		_on_npc_bloqueado(_aviso_bloqueo(info["mision_id"]))
+		return
 	_mision_ui.mostrar(info["modulo_id"], _nombre_activo, info["npc"], info["mision_id"], info["progreso"])
 
 
@@ -918,6 +971,13 @@ func _on_mision_cancelada() -> void:
 # ── Diálogo → lanza quiz o minijuego según misión ────────────
 func _on_dialogo_terminado(mision_id: String) -> void:
 	if mision_id == "":
+		return
+	# El quiz (o el minijuego de Yulimar) se responde una sola vez: después
+	# el NPC repite su explicación, que sirve para repasar, y avisa.
+	if PuntajeManager.quiz_hecho(quiz_de_npc(mision_id)):
+		if _hud_aviso:
+			var que := "la actividad" if mision_id == "mision_residuos" else "el cuestionario"
+			_hud_aviso.avisar("✅ Ya hiciste %s de este personaje" % que)
 		return
 
 	# M3 Residuos → minijuego de clasificación
@@ -1070,6 +1130,7 @@ func _actualizar_hud() -> void:
 		hechos.append(nm.nivel_superado(n) if nm else false)
 	_hud_ficha.set_nivel_misiones(nm.nivel_actual if nm else 1, hechos)
 	_hud_ficha.set_rango(completos, RANGOS.fraccion_siguiente(nm) if nm else 0.0, _xp_total)
+	_actualizar_bloqueo_npcs()
 
 
 # Única vía para actualizar las barras de categoría y el mapa de avance.

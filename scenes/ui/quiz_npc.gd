@@ -14,6 +14,10 @@ const XP_POR_PREGUNTA    : int   = 10
 const XP_BONUS_VELOCIDAD : int   = 5
 const XP_BONUS_RACHA     : int   = 5
 const TIEMPO_PREGUNTA    : float = 15.0
+# El panel crece hacia abajo si una pregunta trae opciones largas
+# (_ajustar_alto): las opciones parten en varias líneas en vez de salirse.
+const PANEL_ANCHO        : float = 860.0
+const PANEL_ALTO_MIN     : float = 470.0
 
 # — Nodos ————————————————————————————————————————————————
 var _titulo_lbl   : Label          = null
@@ -30,6 +34,7 @@ var _flash        : ColorRect      = null
 var _panel        : Panel          = null
 var _btn_salir    : Button         = null
 var _dlg_overlay  : ColorRect      = null
+var _margen       : MarginContainer = null
 
 # — Estado ────────────────────────────────────────────────
 var _preguntas         : Array = []
@@ -92,11 +97,11 @@ func _crear_ui() -> void:
 	# Panel principal
 	_panel = Panel.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(700, 470)
-	_panel.offset_left   = -350.0
-	_panel.offset_top    = -235.0
-	_panel.offset_right  =  350.0
-	_panel.offset_bottom =  235.0
+	_panel.custom_minimum_size = Vector2(PANEL_ANCHO, PANEL_ALTO_MIN)
+	_panel.offset_left   = -PANEL_ANCHO / 2.0
+	_panel.offset_right  =  PANEL_ANCHO / 2.0
+	_panel.offset_top    = -PANEL_ALTO_MIN / 2.0
+	_panel.offset_bottom =  PANEL_ALTO_MIN / 2.0
 	var ps := StyleBoxFlat.new()
 	ps.bg_color     = Color(0.04, 0.07, 0.11, 0.98)
 	ps.border_color = Color(0.22, 0.72, 0.22)
@@ -110,20 +115,22 @@ func _crear_ui() -> void:
 	# Barra de tiempo (ENCIMA del panel, borde superior)
 	var timer_bg := ColorRect.new()
 	timer_bg.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	timer_bg.position = Vector2(-350, -235)
-	timer_bg.size     = Vector2(700, 8)
+	# Antes estaba en (-350, -235): fuera del panel, y no se veía.
+	timer_bg.position = Vector2(0, 0)
+	timer_bg.size     = Vector2(PANEL_ANCHO, 8)
 	timer_bg.color    = Color(0.08, 0.12, 0.18)
 	_panel.add_child(timer_bg)
 
 	_timer_fill = ColorRect.new()
 	_timer_fill.position = Vector2(0, 0)
-	_timer_fill.size     = Vector2(700, 8)
+	_timer_fill.size     = Vector2(PANEL_ANCHO, 8)
 	_timer_fill.color    = Color(0.18, 0.80, 0.28)
 	timer_bg.add_child(_timer_fill)
 
 	# Contenido del panel
 	var mg := MarginContainer.new()
 	mg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_margen = mg
 	mg.add_theme_constant_override("margin_left",   28)
 	mg.add_theme_constant_override("margin_right",  28)
 	mg.add_theme_constant_override("margin_top",    18)
@@ -208,7 +215,10 @@ func _crear_ui() -> void:
 	for i in range(3):
 		var btn := Button.new()
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.custom_minimum_size   = Vector2(0, 48)
+		# Ancho fijo (panel menos márgenes): con autowrap y ancho 0, Godot
+		# calcula el alto como si partiera cada letra en una línea.
+		btn.custom_minimum_size   = Vector2(PANEL_ANCHO - 56.0, 48)
+		btn.autowrap_mode         = TextServer.AUTOWRAP_WORD_SMART
 		btn.add_theme_font_size_override("font_size", 14)
 		btn.text = ""
 		var idx := i
@@ -431,6 +441,31 @@ func _mostrar_pregunta() -> void:
 
 	_actualizar_timer()
 	_actualizar_dots(-1)
+	_ajustar_alto.call_deferred()
+
+
+# Alto del panel según el contenido de esta pregunta, centrado en pantalla.
+func _ajustar_alto() -> void:
+	if not is_instance_valid(_margen):
+		return
+	var alto : float = maxf(PANEL_ALTO_MIN, _margen.get_combined_minimum_size().y)
+	_panel.offset_top    = -alto / 2.0
+	_panel.offset_bottom =  alto / 2.0
+
+
+# Para las pruebas: true si el contenido entra en el panel y ninguna opción
+# se sale de su botón.
+func contenido_cabe() -> bool:
+	if _margen.get_combined_minimum_size().y > _panel.size.y + 0.5:
+		return false
+	if not get_viewport().get_visible_rect().encloses(_panel.get_global_rect()):
+		return false
+	for btn : Button in _botones:
+		if btn.get_combined_minimum_size().x > btn.size.x + 0.5:
+			return false
+		if btn.get_global_rect().end.x > _panel.get_global_rect().end.x + 0.5:
+			return false
+	return true
 
 
 func _responder(idx: int) -> void:
@@ -579,7 +614,7 @@ func _finalizar() -> void:
 # ════════════════════════════════════════════════════════
 func _actualizar_timer() -> void:
 	var pct : float = clampf(_tiempo_restante / TIEMPO_PREGUNTA, 0.0, 1.0)
-	_timer_fill.size.x = 700.0 * pct
+	_timer_fill.size.x = PANEL_ANCHO * pct
 	_timer_lbl.text = "%d" % ceili(_tiempo_restante)
 	if pct > 0.55:
 		_timer_fill.color = Color(0.18, 0.80, 0.28)

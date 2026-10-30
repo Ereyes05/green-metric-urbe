@@ -19,6 +19,15 @@ var _burbuja      : Control  = null
 var _jugador_cerca: bool     = false
 var _tween_bounce : Tween    = null
 var _char_visual  : NpcChar  = null
+# Lo pone el mapa según el nivel (SceneMapaMundo._actualizar_bloqueo_npcs):
+# bloqueado, el NPC se ve en gris y la E solo avisa desde qué nivel atiende.
+var bloqueado     : bool     = false:
+	set(v):
+		bloqueado = v
+		modulate = Color(0.42, 0.42, 0.42, 0.6) if v else Color.WHITE
+var aviso_bloqueo : String   = ""
+
+signal bloqueo_tocado(texto: String)
 
 
 # Brillo que aparece cuando el jugador se acerca. Se dibuja una vez con la
@@ -375,6 +384,9 @@ func _al_salir(body: Node) -> void:
 
 
 func iniciar_dialogo() -> void:
+	if bloqueado:
+		bloqueo_tocado.emit(aviso_bloqueo)
+		return
 	if is_instance_valid(_burbuja):
 		_burbuja.visible = false
 	var ui = get_tree().get_first_node_in_group("ui_dialogo")
