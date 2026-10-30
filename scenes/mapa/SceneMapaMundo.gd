@@ -61,6 +61,7 @@ const HUD_ACCIONES   := preload("res://scenes/ui/hud_acciones.gd")
 const HUD_BANNER     := preload("res://scenes/ui/hud_banner_zona.gd")
 const HUD_AVISO      := preload("res://scenes/ui/hud_aviso.gd")
 const HUD_AVANCE     := preload("res://scenes/ui/hud_panel_avance.gd")
+const GUIA_LIBRO     := preload("res://scenes/ui/guia_libro.gd")
 
 # ── Datos de los NPCs (uno por zona) — mapa nuevo (urbe_removed (1).png) ─
 # "pos" es LOCAL al nodo raíz SceneMapaMundo (que en la escena está en
@@ -431,6 +432,7 @@ var _hud_acciones = null   # hud_acciones.gd
 var _hud_banner   = null   # hud_banner_zona.gd
 var _hud_aviso    = null   # hud_aviso.gd
 var _hud_avance   = null   # hud_panel_avance.gd (botón Avance)
+var _guia         = null   # guia_libro.gd (botón "?" y tecla H)
 
 # ── Panel de misión completada ────────────────────────────────
 var _complete_panel  : Panel  = null
@@ -613,6 +615,8 @@ func _construir_hud() -> void:
 	# 15, encima del HUD), igual que el ranking.
 	_hud_avance = HUD_AVANCE.new()
 	add_child(_hud_avance)
+	_guia = GUIA_LIBRO.new()
+	add_child(_guia)
 
 
 # Barra de acciones del HUD (botones o teclas 1–5).
@@ -802,6 +806,7 @@ func _hay_ui_modal_abierta() -> bool:
 	if _tienda_ui and _tienda_ui.visible: return true
 	if _leaderboard_ui and _leaderboard_ui.visible: return true
 	if _hud_avance and _hud_avance.visible: return true
+	if _guia and _guia.esta_abierta(): return true
 	if _sim_decision_ui and _sim_decision_ui.visible: return true
 	if _resultados_ui and _resultados_ui.visible: return true
 	if _tutorial_ui and _tutorial_ui.visible: return true
@@ -860,6 +865,11 @@ func _input(event: InputEvent) -> void:
 	# (tienda, leaderboard, simulador, resultados, tutorial, crisis, edificio,
 	# aviso de carga).
 	if _hud_acciones and not _hay_ui_modal_abierta() and _hud_acciones.tecla(event.keycode):
+		get_viewport().set_input_as_handled()
+		return
+	# H abre la guía (con la guía abierta, la H la cierra guia_libro.gd).
+	if event.keycode == KEY_H and _guia and not _hay_ui_modal_abierta():
+		_guia.abrir()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -2313,6 +2323,8 @@ func _ui_ocupada() -> bool:
 		return true
 	if (_mision_ui and _mision_ui.visible) or (_minijuego_residuos and _minijuego_residuos.visible):
 		return true
+	if _hay_ui_modal_abierta():
+		return true
 	var tutorial := get_tree().get_first_node_in_group("ui_tutorial")
 	return tutorial != null and tutorial.visible
 
@@ -2347,7 +2359,7 @@ func _ofrecer_test_pendiente(espera: float) -> void:
 		return
 	_test_activo = test_id
 	if _hud_aviso:
-		_hud_aviso.avisar("📝 %s: ¿qué te quedó? Responde %d preguntas"
+		_hud_aviso.avisar("📋 %s: ¿qué te quedó? Responde %d preguntas"
 			% [TESTS_NIVEL.titulo(test_id), preguntas.size()])
 	var nivel := 0 if test_id == TESTS_NIVEL.ID_FINAL else int(test_id.trim_prefix("nivel_"))
 	_quiz_ui.iniciar(preguntas, TESTS_NIVEL.titulo(test_id), nivel, "test_" + test_id, true)
@@ -2363,7 +2375,7 @@ func _on_test_completado(aciertos: int, total: int) -> void:
 		_tests_hechos[test_id] = {"aciertos": aciertos, "total": total}
 	SupabaseManager.registrar_test(test_id, aciertos, total)
 	if _hud_aviso:
-		_hud_aviso.avisar("📝 %s: %d de %d correctas" % [TESTS_NIVEL.titulo(test_id), aciertos, total])
+		_hud_aviso.avisar("📋 %s: %d de %d correctas" % [TESTS_NIVEL.titulo(test_id), aciertos, total])
 	# Tras el sexto test de nivel, el final.
 	_ofrecer_test_pendiente(3.0)
 
@@ -2376,4 +2388,4 @@ func _on_test_registrado(respuesta: Dictionary, test_id: String) -> void:
 
 func _on_resumen_enviado(ok: bool, _test_id: String) -> void:
 	if ok and _hud_aviso:
-		_hud_aviso.avisar("📧 Te enviamos tu avance a tu correo")
+		_hud_aviso.avisar("📄 Te enviamos tu avance a tu correo")

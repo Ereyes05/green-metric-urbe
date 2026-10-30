@@ -6,7 +6,7 @@
 
 **Universidad Dr. Rafael Belloso Chacín (URBE)** · Maracaibo, Venezuela
 **Estado:** 🚧 **BORRADOR — no entregar en esta forma**
-**Versión:** 0.3 · **Fecha:** 2026-10-30
+**Versión:** 0.4 · **Fecha:** 2026-10-30
 **Dirigido a:** estudiantes usuarios del sistema y al personal docente o administrativo que lo supervise.
 
 ---
@@ -226,6 +226,13 @@ La ventana **Tu avance** (botón 🌡 o tecla **1**) muestra cuántas misiones l
 
 Cuando ocurre algo —se completa una misión, se gana una insignia, sube el rango— aparece un aviso temporal. No hay que hacer nada: desaparece solo.
 
+### 5.6. Guía rápida dentro del juego
+
+El botón **?** de la esquina inferior derecha, o la tecla **H**, abre una **guía con forma de libro**: diez páginas con lo esencial de este manual (controles, personajes, misiones, test de cierre, puntaje, tienda, rangos y qué hacer si algo no funciona). Las páginas se pasan con los botones **‹ Anterior** y **Siguiente ›** o con las flechas del teclado, y la guía se cierra con **Esc**, con **H** o con **Cerrar**.
+
+![Figura 7b. Guía rápida dentro del juego, abierta en su primera página.](manual/capturas/guia_1.png)
+*Figura 7b. Guía rápida dentro del juego, abierta en su primera página.*
+
 ---
 
 ## 6. Controles
@@ -237,6 +244,7 @@ Cuando ocurre algo —se completa una misión, se gana una insignia, sube el ran
 | **W A S D** o **flechas** | Mover al Eco-Ranger |
 | **E** | Interactuar con lo que se tenga cerca: hablar con un NPC, entrar a un edificio, iniciar una misión |
 | **1 – 5** | Abrir los paneles de la barra de acciones |
+| **H** | Abrir y cerrar la guía rápida (también el botón **?**) |
 | **Esc** | Abrir y cerrar el menú de pausa |
 | **Clic** | Todos los botones y paneles se manejan con el ratón |
 

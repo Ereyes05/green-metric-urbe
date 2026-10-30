@@ -10,7 +10,7 @@ const TESTS := preload("res://scenes/misiones/tests_nivel.gd")
 const CAPTURAS := [
 	"login", "registro", "tutorial_1", "tutorial_2", "hud", "dialogo", "quiz",
 	"quiz_fallo", "mision_campo", "decision", "crisis", "reporte", "simulador",
-	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado",
+	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado", "guia_1", "guia_4", "guia_6",
 ]
 
 const RANKING_DEMO := [
@@ -84,6 +84,10 @@ func _puntaje_demo() -> Dictionary:
 
 func _abrir_mapa() -> void:
 	_estado_demo()
+	# Sin sesión el mapa guarda la posición del personaje en este archivo
+	# (solo pasa al desarrollar). Se borra para que todas las capturas
+	# arranquen en el punto de entrada del campus.
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://posicion_jugador.dat"))
 	_mapa = load("res://scenes/mapa/scene_mapa_mundo.tscn").instantiate()
 	add_child(_mapa)
 	await _esperar(3.0)
@@ -163,7 +167,7 @@ func _preparar(id: String) -> void:
 				"Nivel 4", 4, "test_nivel_4", true)
 			await _esperar(1.2)
 		"test_resultado":
-			_mapa._hud_aviso.avisar("📝 Nivel 4: 3 de 3 correctas")
+			_mapa._hud_aviso.avisar("📋 Nivel 4: 3 de 3 correctas")
 			await _esperar(0.8)
 		"quiz_largo":
 			# La pregunta con la opción más larga del banco (no va al manual).
@@ -186,6 +190,10 @@ func _preparar(id: String) -> void:
 			await _esperar(1.0)
 			npc.iniciar_dialogo()
 			await _esperar(0.6)
+		"guia_1", "guia_4", "guia_6":
+			_mapa._guia.abrir()
+			_mapa._guia._mostrar_pagina(int(id.trim_prefix("guia_")) - 1, 0)
+			await _esperar(0.8)
 		"informe":
 			_mapa._informe_ui.iniciar(null)
 			await _esperar(1.5)
