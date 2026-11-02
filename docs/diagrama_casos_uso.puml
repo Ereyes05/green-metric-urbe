@@ -1,10 +1,12 @@
 ' Diagrama de casos de uso de URBE Rangers: Eco-Quest (Figura 2 del Cap. 4)
-' Un caso por historia de usuario (HU-001 a HU-014), más lo que hace el sistema.
+' Cada caso del estudiante es una historia de usuario (HU-001 a HU-014), con
+' el mismo nombre que su tabla en el Cap. 4. Lo que hace el sistema por su
+' cuenta no es un actor aparte: va como <<include>> de la historia que lo
+' dispara.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
-' Ancho: los casos del estudiante van en dos columnas y los del sistema en una
-' tercera. El largo de la línea fija la columna (-- primera, --- segunda,
-' ---- tercera); las asociaciones van sin punta, como pide UML.
+' Ancho: el largo de la línea fija la columna (-- primera, --- segunda);
+' las asociaciones van sin punta, como pide UML.
 @startuml
 left to right direction
 skinparam usecase {
@@ -13,28 +15,26 @@ skinparam usecase {
 }
 
 actor Estudiante
-actor Sistema
 
 rectangle "URBE Rangers: Eco-Quest" {
-  usecase "Registrarse" as HU1
-  usecase "Iniciar sesión" as HU2
-  usecase "Explorar el campus" as HU3
-  usecase "Dialogar con NPC" as HU4
-  usecase "Consultar indicador\nGreenMetric" as HU5
-  usecase "Completar misión" as HU6
-  usecase "Clasificar residuos\n(minijuego)" as HU7
+  usecase "HU-001\nRegistrarse" as HU1
+  usecase "HU-002\nIniciar sesión" as HU2
+  usecase "HU-003\nExplorar la universidad" as HU3
+  usecase "HU-004\nDialogar con NPC" as HU4
+  usecase "HU-005\nConsultar indicador\nGreenMetric" as HU5
+  usecase "HU-006\nCompletar misión" as HU6
+  usecase "HU-007\nClasificar residuos" as HU7
 
-  usecase "Responder a\ncrisis ambiental" as HU8
-  usecase "Consultar mapa\ny zonas" as HU10
-  usecase "Consultar progreso\ny ranking" as HU11
-  usecase "Comprar en la Tienda\ncon EcoCredits" as HU12
-  usecase "Responder test de\ncierre de nivel" as HU13
-  usecase "Consultar la\nBitácora" as HU14
+  usecase "HU-008\nResponder a\ncrisis ambiental" as HU8
+  usecase "HU-009\nSubir de nivel" as HU9
+  usecase "HU-010\nConsultar avance\npor nivel" as HU10
+  usecase "HU-011\nConsultar progreso\ny ranking" as HU11
+  usecase "HU-012\nGestionar EcoCredits\nen la tienda" as HU12
+  usecase "HU-013\nResponder test de\ncierre de nivel" as HU13
+  usecase "HU-014\nConsultar la Bitácora\ndel Eco-Ranger" as HU14
 
-  usecase "Subir de nivel\ny de rango" as HU9
   usecase "Calcular puntaje\nGreenMetric" as S1
   usecase "Otorgar XP, EcoCredits\ne insignias" as S2
-  usecase "Guardar progreso" as S4
   usecase "Enviar correo\ncon el avance" as S5
 }
 
@@ -49,19 +49,17 @@ Estudiante -- HU7
 
 ' Segunda columna
 Estudiante --- HU8
+Estudiante --- HU9
 Estudiante --- HU10
 Estudiante --- HU11
 Estudiante --- HU12
 Estudiante --- HU13
 Estudiante --- HU14
 
-' Tercera columna (sistema), con el actor a la derecha
-Estudiante -[hidden]---- HU9
-HU9 -- Sistema
-S1 -- Sistema
-S2 -- Sistema
-S4 -- Sistema
-S5 -- Sistema
-
+' Lo que hace el sistema dentro de cada historia
+HU6 ..> S1 : <<include>>
+HU6 ..> S2 : <<include>>
+HU8 ..> S1 : <<include>>
+HU13 ..> S5 : <<include>>
 HU13 ..> HU9 : <<extend>>
 @enduml
