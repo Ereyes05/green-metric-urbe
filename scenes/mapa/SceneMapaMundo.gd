@@ -321,7 +321,7 @@ const QUIZ_POR_MISION : Dictionary = {
 	],
 	"mision_bloque_c": [
 		{"pregunta": "¿Cuántos bloques tiene el campus URBE?",
-		 "opciones": ["3 bloques", "5 bloques (A, B, C, D y E)", "7 bloques"], "correcta": 1},
+		 "opciones": ["3 bloques", "5 bloques", "7 bloques (A, B, C, D, E, F y G)"], "correcta": 2},
 		{"pregunta": "¿Qué impacto tiene el aire acondicionado sin mantenimiento?",
 		 "opciones": ["Ahorra energía", "Aumenta el consumo hasta un 30% más", "No tiene impacto"], "correcta": 1},
 		{"pregunta": "¿Qué sensor reduce el consumo de iluminación en pasillos vacíos?",
