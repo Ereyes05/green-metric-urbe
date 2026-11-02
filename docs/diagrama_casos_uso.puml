@@ -1,15 +1,13 @@
 ' Diagrama de casos de uso de URBE Rangers: Eco-Quest (Figura 2 del Cap. 4)
-' Cada caso del estudiante es una historia de usuario (HU-001 a HU-014), con
-' el mismo nombre que su tabla en el Cap. 4. Lo que hace el sistema por su
-' cuenta no es un actor aparte: va como <<include>> de la historia que lo
-' dispara.
+' Mismo formato que la figura original: el Estudiante a la izquierda con sus
+' casos, y a la derecha las tareas que el juego hace por su cuenta, unidas al
+' actor Sistema. Cada caso del Estudiante es una historia de usuario
+' (HU-001 a HU-014), con el mismo nombre que su tabla en el Cap. 4.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
-' El estudiante a la izquierda, como manda la norma; los casos en dos
-' columnas de 7 y los «include» en una tercera, para que quede ancho. Las
-' columnas las fijan los enlaces invisibles (-[hidden]->): el largo de las
-' líneas (-- / ---) no alcanza, el programa lo ignora. Las asociaciones van
-' sin punta, como pide UML.
+' Las tareas del sistema quedan en una columna aparte gracias a los enlaces
+' invisibles (-[hidden]->); sin ellos el programa las apila debajo de las
+' del estudiante. Las asociaciones van sin punta, como en la original.
 @startuml
 left to right direction
 skinparam usecase {
@@ -18,30 +16,31 @@ skinparam usecase {
 }
 
 actor Estudiante
+actor Sistema
 
-rectangle "URBE Rangers: Eco-Quest" {
-  usecase "HU-001\nRegistrarse" as HU1
-  usecase "HU-002\nIniciar sesión" as HU2
-  usecase "HU-003\nExplorar la universidad" as HU3
-  usecase "HU-004\nDialogar con NPC" as HU4
-  usecase "HU-005\nConsultar indicador\nGreenMetric" as HU5
-  usecase "HU-006\nCompletar misión" as HU6
-  usecase "HU-007\nClasificar residuos" as HU7
+rectangle "Diagrama de casos de uso" {
+  usecase "HU-001 Registrarse" as HU1
+  usecase "HU-002 Iniciar sesión" as HU2
+  usecase "HU-003 Explorar la universidad" as HU3
+  usecase "HU-004 Dialogar con NPC" as HU4
+  usecase "HU-005 Consultar indicador GreenMetric" as HU5
+  usecase "HU-006 Completar misión" as HU6
+  usecase "HU-007 Clasificar residuos" as HU7
+  usecase "HU-008 Responder a crisis ambiental" as HU8
+  usecase "HU-009 Subir de nivel" as HU9
+  usecase "HU-010 Consultar avance por nivel" as HU10
+  usecase "HU-011 Consultar progreso y ranking" as HU11
+  usecase "HU-012 Gestionar EcoCredits en la tienda" as HU12
+  usecase "HU-013 Responder test de cierre de nivel" as HU13
+  usecase "HU-014 Consultar la Bitácora del Eco-Ranger" as HU14
 
-  usecase "HU-008\nResponder a\ncrisis ambiental" as HU8
-  usecase "HU-009\nSubir de nivel" as HU9
-  usecase "HU-010\nConsultar avance\npor nivel" as HU10
-  usecase "HU-011\nConsultar progreso\ny ranking" as HU11
-  usecase "HU-012\nGestionar EcoCredits\nen la tienda" as HU12
-  usecase "HU-013\nResponder test de\ncierre de nivel" as HU13
-  usecase "HU-014\nConsultar la Bitácora\ndel Eco-Ranger" as HU14
-
-  usecase "Calcular puntaje\nGreenMetric" as S1
-  usecase "Otorgar XP, EcoCredits\ne insignias" as S2
-  usecase "Enviar correo\ncon el avance" as S5
+  usecase "Guardar información del estudiante" as S1
+  usecase "Calcular puntaje GreenMetric" as S2
+  usecase "Otorgar XP, EcoCredits e insignias" as S3
+  usecase "Gestionar niveles y rangos" as S4
+  usecase "Enviar correo con el avance" as S5
 }
 
-' Primera columna
 Estudiante -- HU1
 Estudiante -- HU2
 Estudiante -- HU3
@@ -49,8 +48,6 @@ Estudiante -- HU4
 Estudiante -- HU5
 Estudiante -- HU6
 Estudiante -- HU7
-
-' Segunda columna: cada caso queda, invisible, a la derecha de uno de la primera
 Estudiante -- HU8
 Estudiante -- HU9
 Estudiante -- HU10
@@ -58,19 +55,17 @@ Estudiante -- HU11
 Estudiante -- HU12
 Estudiante -- HU13
 Estudiante -- HU14
-HU1 -[hidden]-> HU8
-HU2 -[hidden]-> HU9
-HU3 -[hidden]-> HU10
-HU4 -[hidden]-> HU11
-HU5 -[hidden]-> HU12
-HU6 -[hidden]-> HU13
-HU7 -[hidden]-> HU14
 
-' Tercera columna: lo que hace el sistema dentro de cada historia
-HU10 -[hidden]-> S2
-HU6 ..> S1 : <<include>>
-HU6 ..> S2 : <<include>>
-HU8 ..> S1 : <<include>>
-HU13 ..> S5 : <<include>>
-HU13 .> HU9 : <<extend>>
+' Columna del sistema, repartida a lo alto junto a los casos que la usan
+HU2 -[hidden]-> S1
+HU6 -[hidden]-> S2
+HU7 -[hidden]-> S3
+HU9 -[hidden]-> S4
+HU13 -[hidden]-> S5
+
+S1 -- Sistema
+S2 -- Sistema
+S3 -- Sistema
+S4 -- Sistema
+S5 -- Sistema
 @enduml
