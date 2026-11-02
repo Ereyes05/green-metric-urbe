@@ -79,6 +79,7 @@ func _contenedor(c: Control) -> Control:
 
 func revisar(raiz: Node, que: String) -> void:
 	_revisados += 1
+	var fallos_antes := _fallos
 	var pantalla := Rect2(Vector2.ZERO, Vector2(1280, 720)).grow(TOLERANCIA)
 	# Scroll solo como último recurso: si el texto no cabe, el cuadro tiene
 	# que haber crecido antes hasta casi el alto de la pantalla.
@@ -129,6 +130,8 @@ func revisar(raiz: Node, que: String) -> void:
 	if vistos.is_empty():
 		_fallos += 1
 		printerr("  FALLA %s: no se ve ningún texto (¿se abrió la pantalla?)" % que)
+	if _fallos == fallos_antes:
+		print("  ok    ", que)
 
 # Lo que de verdad ocupa el texto de un Label de una línea (la caja suele
 # ser más ancha que el texto); el resto, su caja.
