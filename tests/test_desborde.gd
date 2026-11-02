@@ -341,6 +341,14 @@ func _tienda() -> void:
 	ui.abrir()
 	await _esperar()
 	revisar(ui, "tienda")
+	# Llegando desde una misión bloqueada: explica qué falta.
+	var antes : Array = EconomiaManager.catalogo
+	EconomiaManager.catalogo = [{"item_id": "prueba", "tipo": "herramienta", "precio": 120,
+		"nombre": "Medidor inteligente de consumo eléctrico con registro"}]
+	ui.abrir("prueba")
+	await _esperar()
+	revisar(ui, "tienda desde misión bloqueada")
+	EconomiaManager.catalogo = antes
 	ui.free()
 
 

@@ -209,7 +209,7 @@ func herramienta_para(tipo_mision: String) -> Dictionary:
 # valida el servidor.
 func comprar(item_id: String) -> void:
 	if not _hay_sesion():
-		compra_terminada.emit(false, item_id, "Necesitás iniciar sesión para comprar.")
+		compra_terminada.emit(false, item_id, "Necesitas iniciar sesión para comprar.")
 		return
 	if tiene_item(item_id):
 		compra_terminada.emit(false, item_id, "Ya tenés este ítem.")

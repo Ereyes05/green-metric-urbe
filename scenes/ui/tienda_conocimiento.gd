@@ -48,6 +48,11 @@ func abrir(item_resaltado: String = "") -> void:
 	_resaltado   = item_resaltado
 	_confirmando = ""
 	_mensaje("", Color.WHITE)
+	# Llegó desde una misión bloqueada: la tienda tapa el aviso del HUD, así
+	# que el motivo se dice acá mismo.
+	for it in EconomiaManager.catalogo:
+		if item_resaltado != "" and str(it.get("item_id", "")) == item_resaltado:
+			_mensaje("🔒 Para esta misión necesitas el %s (%d EC). Cómpralo aquí y vuelve a presionar [E] en la misión." 				% [it.get("nombre", "equipo"), int(it.get("precio", 0))], COLOR_AVISO)
 	if EconomiaManager.catalogo.is_empty() and not SupabaseManager.jwt_token.is_empty():
 		SupabaseManager.cargar_catalogo()
 	_reconstruir()
@@ -155,7 +160,7 @@ func _reconstruir() -> void:
 		h.queue_free()
 
 	if SupabaseManager.jwt_token.is_empty():
-		_agregar_texto("Iniciá sesión para usar la tienda.", Color(0.8, 0.8, 0.8))
+		_agregar_texto("Inicia sesión para usar la tienda.", Color(0.8, 0.8, 0.8))
 		return
 	if EconomiaManager.catalogo.is_empty():
 		_agregar_texto("Cargando catálogo...", Color(0.8, 0.8, 0.8))
@@ -292,7 +297,7 @@ func _on_comprar(item_id: String) -> void:
 		var pendiente := _herramienta_pendiente()
 		if not pendiente.is_empty() and EconomiaManager.ecocredits - precio < int(pendiente.get("precio", 0)):
 			_confirmando = item_id
-			_mensaje("Ojo: te quedarías sin EcoCredits para el %s (%d EC), que vas a necesitar. Tocá \"Comprar igual\" si querés seguir." \
+			_mensaje("Ojo: te quedarías sin EcoCredits para el %s (%d EC), que vas a necesitar. Toca \"Comprar igual\" si quieres seguir." \
 				% [pendiente.get("nombre", ""), int(pendiente.get("precio", 0))], COLOR_AVISO)
 			_reconstruir()
 			return

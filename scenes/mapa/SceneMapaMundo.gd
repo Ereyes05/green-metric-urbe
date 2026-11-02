@@ -52,6 +52,7 @@ const MISION_SEMANA_VERDE_ESCENA:= preload("res://scenes/misiones/mision_semana_
 const PUNTO_INFORME_ESCENA      := preload("res://scenes/misiones/punto_informe_final.gd")
 const MISION_INFORME_ESCENA     := preload("res://scenes/misiones/mision_informe_final.gd")
 const TESTS_NIVEL               := preload("res://scenes/misiones/tests_nivel.gd")
+const INDICADOR_MISIONES        := preload("res://scenes/mapa/indicador_misiones.gd")
 
 const RANGOS         := preload("res://autoload/rangos.gd")
 const HUD_TEMA       := preload("res://scenes/ui/hud_tema.gd")
@@ -1885,6 +1886,7 @@ func _init_misiones_nivel() -> void:
 	_spawn_punto_comite()
 	_spawn_punto_semana_verde()
 	_spawn_punto_informe()
+	add_child(INDICADOR_MISIONES.new())
 
 	# ── Señales de NivelManager ──────────────────────────────
 	var nm = _nivel_mgr()
@@ -2152,7 +2154,7 @@ func _verificar_herramienta(tipo_mision: String, punto: Node) -> bool:
 	if nm and mid != null and nm.mision_completada_q(int(herramienta.get("modulo_id", 0)), str(mid)):
 		return true
 	if _hud_aviso:
-		_hud_aviso.avisar("🔒  Necesitás el %s (%d EC)" % [
+		_hud_aviso.avisar("🔒  Necesitas el %s (%d EC)" % [
 			herramienta.get("nombre", "equipo"), int(herramienta.get("precio", 0))], true)
 	_abrir_tienda(item_id)
 	return false
