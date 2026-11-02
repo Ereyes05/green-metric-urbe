@@ -59,14 +59,19 @@ Estudiante -- HU14
 
 ' Columna del sistema, repartida a lo alto junto a los casos que la usan
 HU2 -[hidden]-> S1
-HU6 -[hidden]-> S2
-HU7 -[hidden]-> S3
 HU9 -[hidden]-> S4
-HU13 -[hidden]-> S5
 
 S1 -- Sistema
 S2 -- Sistema
 S3 -- Sistema
 S4 -- Sistema
 S5 -- Sistema
+
+' Relaciones entre casos: «include» = siempre lo ejecuta; «extend» = lo agrega
+' solo en ciertos casos (la flecha sale del caso que extiende).
+HU6 ..> S2 : <<include>>
+HU6 ..> S3 : <<include>>
+HU13 ..> S5 : <<include>>
+HU7 .> HU6 : <<extend>>
+HU13 .> HU9 : <<extend>>
 @enduml
