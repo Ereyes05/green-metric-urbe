@@ -6,9 +6,7 @@
 ' Cap. 4; el código no se escribe en el óvalo, igual que en la original.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
-' Las tareas del sistema quedan en una columna aparte porque cada una cuelga
-' de un caso del Estudiante con un «include». Las asociaciones van sin
-' punta, como en la original.
+' Las asociaciones van sin punta, como en la original.
 @startuml
 left to right direction
 skinparam usecase {
@@ -57,18 +55,40 @@ Estudiante -- HU12
 Estudiante -- HU13
 Estudiante -- HU14
 
-' Sistema: cada tarea va a la altura del caso del Estudiante que la
-' dispara, en el orden en que pasa en el juego (registro, misiones, nivel,
-' test). Las une un «include» (siempre la ejecuta); eso es lo que fija la
-' altura. «extend» = lo agrega solo en ciertos casos (la flecha sale del caso
-' que extiende).
-HU1 ..> S1 : <<include>>
+' Orden de arriba abajo: el del juego (HU-001 a HU-014) para el Estudiante y
+' el del flujo para el Sistema. Lo fijan las cadenas invisibles de un solo
+' guion (-[hidden]-): ponen los casos en la misma columna y en ese orden.
+HU1 -[hidden]- HU2
+HU2 -[hidden]- HU3
+HU3 -[hidden]- HU4
+HU4 -[hidden]- HU5
+HU5 -[hidden]- HU6
+HU6 -[hidden]- HU7
+HU7 -[hidden]- HU8
+HU8 -[hidden]- HU9
+HU9 -[hidden]- HU10
+HU10 -[hidden]- HU11
+HU11 -[hidden]- HU12
+HU12 -[hidden]- HU13
+HU13 -[hidden]- HU14
+
+S1 -[hidden]- S2
+S2 -[hidden]- S3
+S3 -[hidden]- S4
+S4 -[hidden]- S5
+
+' Columna del Sistema
+HU1 -[hidden]-> S1
+HU9 -[hidden]-> S4
+
+' «include» = siempre la ejecuta. «extend» = lo agrega solo en ciertos casos;
+' se escribe al revés (<.) para no romper el orden, pero la flecha sigue
+' saliendo del caso que extiende.
 HU6 ..> S2 : <<include>>
 HU6 ..> S3 : <<include>>
-HU9 ..> S4 : <<include>>
 HU13 ..> S5 : <<include>>
-HU7 .> HU6 : <<extend>>
-HU13 .> HU9 : <<extend>>
+HU6 <. HU7 : <<extend>>
+HU9 <. HU13 : <<extend>>
 
 S1 -- Sistema
 S2 -- Sistema
