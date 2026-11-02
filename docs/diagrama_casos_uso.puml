@@ -2,7 +2,8 @@
 ' Mismo formato que la figura original: el Estudiante a la izquierda con sus
 ' casos, y a la derecha las tareas que el juego hace por su cuenta, unidas al
 ' actor Sistema. Cada caso del Estudiante es una historia de usuario
-' (HU-001 a HU-014), con el mismo nombre que su tabla en el Cap. 4.
+' (HU-001 a HU-014, en ese orden), con el mismo nombre que su tabla en el
+' Cap. 4; el código no se escribe en el óvalo, igual que en la original.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
 ' Las tareas del sistema quedan en una columna aparte gracias a los enlaces
@@ -19,20 +20,20 @@ actor Estudiante
 actor Sistema
 
 rectangle "Diagrama de casos de uso" {
-  usecase "HU-001 Registrarse" as HU1
-  usecase "HU-002 Iniciar sesión" as HU2
-  usecase "HU-003 Explorar la universidad" as HU3
-  usecase "HU-004 Dialogar con NPC" as HU4
-  usecase "HU-005 Consultar indicador GreenMetric" as HU5
-  usecase "HU-006 Completar misión" as HU6
-  usecase "HU-007 Clasificar residuos" as HU7
-  usecase "HU-008 Responder a crisis ambiental" as HU8
-  usecase "HU-009 Subir de nivel" as HU9
-  usecase "HU-010 Consultar avance por nivel" as HU10
-  usecase "HU-011 Consultar progreso y ranking" as HU11
-  usecase "HU-012 Gestionar EcoCredits en la tienda" as HU12
-  usecase "HU-013 Responder test de cierre de nivel" as HU13
-  usecase "HU-014 Consultar la Bitácora del Eco-Ranger" as HU14
+  usecase "Registrarse" as HU1
+  usecase "Iniciar sesión" as HU2
+  usecase "Explorar la universidad" as HU3
+  usecase "Dialogar con NPC" as HU4
+  usecase "Consultar indicador GreenMetric" as HU5
+  usecase "Completar misión" as HU6
+  usecase "Clasificar residuos" as HU7
+  usecase "Responder a crisis ambiental" as HU8
+  usecase "Subir de nivel" as HU9
+  usecase "Consultar avance por nivel" as HU10
+  usecase "Consultar progreso y ranking" as HU11
+  usecase "Gestionar EcoCredits en la tienda" as HU12
+  usecase "Responder test de cierre de nivel" as HU13
+  usecase "Consultar la Bitácora del Eco-Ranger" as HU14
 
   usecase "Guardar información del estudiante" as S1
   usecase "Calcular puntaje GreenMetric" as S2
