@@ -5,11 +5,13 @@
 ' dispara.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
-' Apaisado: el estudiante arriba y los casos en dos filas de 7, con los
-' «include» en una tercera. Las filas las fijan los enlaces invisibles
-' (-[hidden]->): el largo de las líneas (-- / ---) no alcanza, el programa
-' lo ignora. Las asociaciones van sin punta, como pide UML.
+' El estudiante a la izquierda, como manda la norma; los casos en dos
+' columnas de 7 y los «include» en una tercera, para que quede ancho. Las
+' columnas las fijan los enlaces invisibles (-[hidden]->): el largo de las
+' líneas (-- / ---) no alcanza, el programa lo ignora. Las asociaciones van
+' sin punta, como pide UML.
 @startuml
+left to right direction
 skinparam usecase {
   BackgroundColor #F2F2F2
   BorderColor #555555
@@ -39,7 +41,7 @@ rectangle "URBE Rangers: Eco-Quest" {
   usecase "Enviar correo\ncon el avance" as S5
 }
 
-' Primera fila
+' Primera columna
 Estudiante -- HU1
 Estudiante -- HU2
 Estudiante -- HU3
@@ -48,7 +50,7 @@ Estudiante -- HU5
 Estudiante -- HU6
 Estudiante -- HU7
 
-' Segunda fila: cada caso cuelga, invisible, del de arriba
+' Segunda columna: cada caso queda, invisible, a la derecha de uno de la primera
 Estudiante -- HU8
 Estudiante -- HU9
 Estudiante -- HU10
@@ -64,7 +66,7 @@ HU5 -[hidden]-> HU12
 HU6 -[hidden]-> HU13
 HU7 -[hidden]-> HU14
 
-' Tercera fila: lo que hace el sistema dentro de cada historia
+' Tercera columna: lo que hace el sistema dentro de cada historia
 HU10 -[hidden]-> S2
 HU6 ..> S1 : <<include>>
 HU6 ..> S2 : <<include>>
