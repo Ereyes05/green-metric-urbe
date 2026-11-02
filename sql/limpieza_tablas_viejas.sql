@@ -13,8 +13,9 @@
 -- Comprobado antes de borrar (2026-11-02): las 4 con 0 filas, sin vistas ni
 -- FK de otras tablas que dependan de ellas.
 --
--- ESTADO: NO APLICADA. El 2026-11-02 Ramon dio el OK en el chat, pero el
--- permiso de la migración se rechazó al aplicarla.
+-- REGISTRO, NO SCRIPT: copia de la migración aplicada. ESTADO: APLICADA en
+-- producción el 2026-11-02 por Ramon desde el SQL Editor; verificado después:
+-- quedan 18 tablas en public, las mismas de docs/diagrama_er.dbml.
 -- ============================================================
 
 drop function if exists public.responder_pregunta(integer, character);
