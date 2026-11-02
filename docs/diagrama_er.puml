@@ -4,18 +4,23 @@
 ' https://www.planttext.com y descargar el PNG.
 ' PK = clave primaria, FK = clave foránea. La línea punteada es una relación
 ' lógica que la base no declara como FK (la valida el servidor).
+'
+' Forma: estudiantes al centro; arriba lo que alimenta el avance y el puntaje,
+' abajo la economía y la evaluación; los catálogos en los bordes. Que una
+' tabla quede arriba o abajo lo decide el sentido de la relación (}o--|| la
+' pone encima). Los user_id de la base apuntan a auth.users.id, que es el
+' mismo id de estudiantes (1 a 1): por eso se dibujan contra estudiantes.
 @startuml
 hide circle
 hide empty members
 skinparam linetype ortho
-skinparam nodesep 40
-skinparam ranksep 60
+skinparam nodesep 30
+skinparam ranksep 50
 skinparam class {
   BackgroundColor #FFFFFF
   BorderColor #555555
   HeaderBackgroundColor #E3F2E7
 }
-skinparam packageStyle rectangle
 
 entity "auth.users" as users {
   * id : uuid <<PK>>
@@ -23,198 +28,220 @@ entity "auth.users" as users {
   email : text
 }
 
-package "Estudiante y avance" {
-  entity estudiantes {
-    * id : uuid <<PK, FK>>
-    --
-    * nombre : text
-    cedula : text <<unique>>
-    facultad : text
-    carrera : text
-    trimestre : int4
-    avatar_url : text
-    * xp_total : int4
-    * nivel : int4
-    * created_at : timestamptz
-    * updated_at : timestamptz
-  }
-  entity modulos_greenmetric {
-    * id : int4 <<PK>>
-    --
-    * nombre : text <<unique>>
-    * categoria : text
-    descripcion : text
-    icono_url : text
-    * puntos_max : int4
-    * orden_desbloqueo : int4
-    * activo : bool
-  }
-  entity progreso_estudiante {
-    * id : int4 <<PK>>
-    --
-    * user_id : uuid <<FK>>
-    * modulo_id : int4 <<FK>>
-    * puntaje_obtenido : int4
-    * intentos : int4
-    * completado : bool
-    * xp_ganada : int4
-    fecha_inicio : timestamptz
-    fecha_completado : timestamptz
-  }
-  entity catalogo_misiones {
-    * mision_id : text <<PK>>
-    --
-    * categoria : int4
-    * tipo : text
-    * preguntas : int4
-  }
-  entity misiones_estudiante {
-    * user_id : uuid <<PK, FK>>
-    * mision_id : text <<PK>>
-    --
-    * modulo_id : int4
-    * xp_otorgada : int4
-    * completada_at : timestamptz
-  }
-  entity detalles_estudiante {
-    * user_id : uuid <<PK, FK>>
-    * clave : text <<PK>>
-    --
-    * detalle : jsonb
-    * actualizado_en : timestamptz
-  }
+entity estudiantes {
+  * id : uuid <<PK, FK>>
+  --
+  * nombre : text
+  cedula : text <<unique>>
+  facultad : text
+  carrera : text
+  trimestre : int4
+  avatar_url : text
+  * xp_total : int4
+  * nivel : int4
+  * created_at : timestamptz
+  * updated_at : timestamptz
 }
 
-package "Puntaje GreenMetric" {
-  entity catalogo_decisiones {
-    * decision_id : text <<PK>>
-    * opcion_id : text <<PK>>
-    --
-    * categoria : int4
-    * puntos : numeric
-    * contraproducente : bool
-    * costo : int4
-  }
-  entity catalogo_sinergias {
-    * accion_id : text <<PK>>
-    * categoria : int4 <<PK>>
-    --
-    * puntos : int4
-    requisito_mision : text
-  }
-  entity puntos_calidad {
-    * id : int8 <<PK>>
-    --
-    * user_id : uuid <<FK>>
-    * categoria : int4
-    * componente : text
-    * puntos : numeric
-    * ref : text
-    * creado_en : timestamptz
-  }
-  entity crisis_pendientes {
-    * user_id : uuid <<PK, FK>>
-    * categoria : int4 <<PK>>
-    --
-    * creado_en : timestamptz
-  }
+entity modulos_greenmetric {
+  * id : int4 <<PK>>
+  --
+  * nombre : text <<unique>>
+  * categoria : text
+  descripcion : text
+  icono_url : text
+  * puntos_max : int4
+  * orden_desbloqueo : int4
+  * activo : bool
 }
 
-package "Economía e insignias" {
-  entity movimientos_ecocredits {
-    * id : int8 <<PK>>
-    --
-    * user_id : uuid <<FK>>
-    * delta : int4
-    * motivo : text
-    * ref : text
-    * creado_en : timestamptz
-  }
-  entity catalogo_tienda {
-    * item_id : text <<PK>>
-    --
-    * nombre : text
-    * descripcion : text
-    * icono : text
-    * tipo : text
-    modulo_id : int4
-    * precio : int4
-    requerido_para : text
-    * orden : int4
-    * activo : bool
-  }
-  entity inventario_estudiante {
-    * user_id : uuid <<PK, FK>>
-    * item_id : text <<PK, FK>>
-    --
-    * comprado_en : timestamptz
-  }
-  entity catalogo_insignias {
-    * insignia_id : text <<PK>>
-    --
-    * nombre : text
-    * icono : text
-    * descripcion : text
-    * orden : int4
-    * por_compra : bool
-  }
-  entity insignias_obtenidas {
-    * user_id : uuid <<PK, FK>>
-    * insignia_id : text <<PK, FK>>
-    --
-    * obtenida_en : timestamptz
-  }
+entity progreso_estudiante {
+  * id : int4 <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * modulo_id : int4 <<FK>>
+  * puntaje_obtenido : int4
+  * intentos : int4
+  * completado : bool
+  * xp_ganada : int4
+  fecha_inicio : timestamptz
+  fecha_completado : timestamptz
 }
 
-package "Evaluación y medición" {
-  entity resultados_test {
-    * user_id : uuid <<PK, FK>>
-    * test_id : text <<PK>>
-    --
-    * aciertos : int4
-    * total : int4
-    * respondido_at : timestamptz
-    correo_enviado_at : timestamptz
-  }
-  entity eventos_aprendizaje {
-    * id : int8 <<PK>>
-    --
-    user_id : uuid <<FK>>
-    * session_id : text
-    * nivel : int4
-    * mision_id : text
-    * tipo_evento : text
-    correcto : bool
-    intento_num : int4
-    detalle : jsonb
-    * creado_en : timestamptz
-  }
-  entity solicitudes_qr {
-    * token : text <<PK>>
-    --
-    * user_id : uuid <<FK>>
-    * mision_id : text
-    * escaneado : bool
-    * creado_en : timestamptz
-    escaneado_en : timestamptz
-  }
+entity catalogo_misiones {
+  * mision_id : text <<PK>>
+  --
+  * categoria : int4
+  * tipo : text
+  * preguntas : int4
 }
 
-' Relaciones (|| = uno, o{ = cero o muchos)
-users ||--|| estudiantes
-estudiantes ||--o{ progreso_estudiante
+entity misiones_estudiante {
+  * user_id : uuid <<PK, FK>>
+  * mision_id : text <<PK>>
+  --
+  * modulo_id : int4
+  * xp_otorgada : int4
+  * completada_at : timestamptz
+}
+
+entity detalles_estudiante {
+  * user_id : uuid <<PK, FK>>
+  * clave : text <<PK>>
+  --
+  * detalle : jsonb
+  * actualizado_en : timestamptz
+}
+
+entity catalogo_decisiones {
+  * decision_id : text <<PK>>
+  * opcion_id : text <<PK>>
+  --
+  * categoria : int4
+  * puntos : numeric
+  * contraproducente : bool
+  * costo : int4
+}
+
+entity catalogo_sinergias {
+  * accion_id : text <<PK>>
+  * categoria : int4 <<PK>>
+  --
+  * puntos : int4
+  requisito_mision : text
+}
+
+entity puntos_calidad {
+  * id : int8 <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * categoria : int4
+  * componente : text
+  * puntos : numeric
+  * ref : text
+  * creado_en : timestamptz
+}
+
+entity crisis_pendientes {
+  * user_id : uuid <<PK, FK>>
+  * categoria : int4 <<PK>>
+  --
+  * creado_en : timestamptz
+}
+
+entity movimientos_ecocredits {
+  * id : int8 <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * delta : int4
+  * motivo : text
+  * ref : text
+  * creado_en : timestamptz
+}
+
+entity catalogo_tienda {
+  * item_id : text <<PK>>
+  --
+  * nombre : text
+  * descripcion : text
+  * icono : text
+  * tipo : text
+  modulo_id : int4
+  * precio : int4
+  requerido_para : text
+  * orden : int4
+  * activo : bool
+}
+
+entity inventario_estudiante {
+  * user_id : uuid <<PK, FK>>
+  * item_id : text <<PK, FK>>
+  --
+  * comprado_en : timestamptz
+}
+
+entity catalogo_insignias {
+  * insignia_id : text <<PK>>
+  --
+  * nombre : text
+  * icono : text
+  * descripcion : text
+  * orden : int4
+  * por_compra : bool
+}
+
+entity insignias_obtenidas {
+  * user_id : uuid <<PK, FK>>
+  * insignia_id : text <<PK, FK>>
+  --
+  * obtenida_en : timestamptz
+}
+
+entity resultados_test {
+  * user_id : uuid <<PK, FK>>
+  * test_id : text <<PK>>
+  --
+  * aciertos : int4
+  * total : int4
+  * respondido_at : timestamptz
+  correo_enviado_at : timestamptz
+}
+
+entity eventos_aprendizaje {
+  * id : int8 <<PK>>
+  --
+  user_id : uuid <<FK>>
+  * session_id : text
+  * nivel : int4
+  * mision_id : text
+  * tipo_evento : text
+  correcto : bool
+  intento_num : int4
+  detalle : jsonb
+  * creado_en : timestamptz
+}
+
+entity solicitudes_qr {
+  * token : text <<PK>>
+  --
+  * user_id : uuid <<FK>>
+  * mision_id : text
+  * escaneado : bool
+  * creado_en : timestamptz
+  escaneado_en : timestamptz
+}
+
+' Fila de arriba: catálogos del avance y del puntaje
 modulos_greenmetric ||--o{ progreso_estudiante
-estudiantes ||--o{ misiones_estudiante
 catalogo_misiones ||..o{ misiones_estudiante
-users ||--o{ detalles_estudiante
-users ||--o{ puntos_calidad
-users ||--o{ crisis_pendientes
-users ||--o{ movimientos_ecocredits
-users ||--o{ inventario_estudiante
-catalogo_tienda ||--o{ inventario_estudiante
-users ||--o{ insignias_obtenidas
-catalogo_insignias ||--o{ insignias_obtenidas
-users ||--o{ resultados_test
-users |o--o{ eventos_aprendizaje
-users ||--o{ solicitudes_qr
+catalogo_decisiones -[hidden]- puntos_calidad
+catalogo_sinergias -[hidden]- crisis_pendientes
+
+' Encima de estudiantes
+progreso_estudiante }o--|| estudiantes
+misiones_estudiante }o--|| estudiantes
+puntos_calidad }o--|| estudiantes
+crisis_pendientes }o--|| estudiantes
+detalles_estudiante }o--|| estudiantes
+
+' Al lado: la cuenta de acceso (mismo id, 1 a 1)
+users ||-|| estudiantes
+
+' Debajo de estudiantes
+estudiantes ||--o{ movimientos_ecocredits
+estudiantes ||--o{ inventario_estudiante
+estudiantes ||--o{ insignias_obtenidas
+estudiantes ||--o{ resultados_test
+estudiantes |o--o{ eventos_aprendizaje
+estudiantes ||--o{ solicitudes_qr
+
+' Fila de abajo: catálogos de la economía
+inventario_estudiante }o--|| catalogo_tienda
+insignias_obtenidas }o--|| catalogo_insignias
+
+note bottom of users
+  Cuenta de Supabase Auth.
+  Todos los user_id apuntan a
+  auth.users.id = estudiantes.id
+end note
 @enduml
