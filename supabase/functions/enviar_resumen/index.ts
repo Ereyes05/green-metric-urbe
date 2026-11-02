@@ -152,19 +152,25 @@ Deno.serve(async (req: Request) => {
   } catch { /* cuerpo inválido: cae en el chequeo de abajo */ }
   if (!/^(nivel_[1-6]|final)$/.test(testId)) return json({ ok: false, error: "test_inexistente" }, 400);
 
-  const { data: fila, error: errFila } = await supabase
+  // Tests cuyo correo no salió (p. ej. porque Gmail falló). El juego llama
+  // también al entrar, así que un correo que falló sale en la sesión
+  // siguiente. Como el resumen trae todos los tests, un solo correo cubre
+  // todos los pendientes.
+  const { data: filas, error: errFilas } = await supabase
     .from("resultados_test")
-    .select("correo_enviado_at")
+    .select("test_id, respondido_at")
     .eq("user_id", user.id)
-    .eq("test_id", testId)
-    .maybeSingle();
-  if (errFila) {
-    console.error("enviar_resumen:", errFila);
+    .is("correo_enviado_at", null)
+    .order("respondido_at", { ascending: false });
+  if (errFilas) {
+    console.error("enviar_resumen:", errFilas);
     return json({ ok: false, error: "servidor" }, 500);
   }
-  if (!fila) return json({ ok: false, error: "test_no_registrado" }, 404);
   // Un correo por test: repetir la llamada no vuelve a mandarlo.
-  if (fila.correo_enviado_at) return json({ ok: true, ya_enviado: true });
+  if (!filas?.length) return json({ ok: true, ya_enviado: true });
+  const pendientes = filas.map((f) => f.test_id as string);
+  // El asunto habla del test pedido si está pendiente; si no, del último.
+  if (!pendientes.includes(testId)) testId = pendientes[0];
 
   const { data: resumen, error: errResumen } = await supabase
     .rpc("resumen_estudiante", { p_user: user.id });
@@ -194,14 +200,16 @@ Deno.serve(async (req: Request) => {
     console.error("enviar_resumen: falló el envío:", e);
     return json({ ok: false, error: "smtp" }, 502);
   } finally {
-    await smtp.close().catch(() => {});
+    // close() de denomailer no siempre devuelve una promesa: un .catch()
+    // encadenado tiraba TypeError y el 502 de arriba salía como 500.
+    try { await smtp.close(); } catch { /* la conexión ya estaba cerrada */ }
   }
 
   await supabase
     .from("resultados_test")
     .update({ correo_enviado_at: new Date().toISOString() })
     .eq("user_id", user.id)
-    .eq("test_id", testId);
+    .in("test_id", pendientes);
 
   return json({ ok: true });
 });

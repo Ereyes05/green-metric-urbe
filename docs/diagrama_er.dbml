@@ -1,0 +1,193 @@
+// Diagrama entidad-relación de URBE Rangers: Eco-Quest
+// Sacado de la base de producción (Supabase, esquema public) el 2026-11-01.
+// Para verlo: pegar este archivo en https://dbdiagram.io/d y exportar a PNG.
+//
+// Fuera del diagrama, a propósito: preguntas_quiz, respuestas_estudiante,
+// insignias e insignias_estudiante. Son del diseño inicial, están vacías y el
+// juego ya no las usa (las preguntas viven en el juego; las insignias, en
+// catalogo_insignias + insignias_obtenidas).
+
+Table auth.users {
+  id uuid [pk]
+  email text
+  Note: 'Cuentas de Supabase Auth (correo y contraseña)'
+}
+
+// ── Estudiante y avance ─────────────────────────────────────
+
+Table estudiantes {
+  id uuid [pk, ref: - auth.users.id]
+  nombre text [not null]
+  cedula text [unique]
+  facultad text
+  carrera text
+  trimestre int4
+  avatar_url text
+  xp_total int4 [not null]
+  nivel int4 [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table modulos_greenmetric {
+  id int4 [pk]
+  nombre text [not null, unique]
+  categoria text [not null]
+  descripcion text
+  icono_url text
+  puntos_max int4 [not null]
+  orden_desbloqueo int4 [not null]
+  activo bool [not null]
+  Note: 'Los 6 indicadores / niveles'
+}
+
+Table progreso_estudiante {
+  id int4 [pk]
+  user_id uuid [not null, ref: > estudiantes.id]
+  modulo_id int4 [not null, ref: > modulos_greenmetric.id]
+  puntaje_obtenido int4 [not null]
+  intentos int4 [not null]
+  completado bool [not null]
+  xp_ganada int4 [not null]
+  fecha_inicio timestamptz
+  fecha_completado timestamptz
+  indexes { (user_id, modulo_id) [unique] }
+}
+
+Table catalogo_misiones {
+  mision_id text [pk]
+  categoria int4 [not null, note: 'nivel 1-6']
+  tipo text [not null]
+  preguntas int4 [not null]
+}
+
+Table misiones_estudiante {
+  user_id uuid [pk, ref: > estudiantes.id]
+  mision_id text [pk, ref: > catalogo_misiones.mision_id]
+  modulo_id int4 [not null]
+  xp_otorgada int4 [not null]
+  completada_at timestamptz [not null]
+  Note: 'mision_id -> catalogo_misiones: relación lógica, sin FK en la base'
+}
+
+Table detalles_estudiante {
+  user_id uuid [pk, ref: > auth.users.id]
+  clave text [pk]
+  detalle jsonb [not null]
+  actualizado_en timestamptz [not null]
+}
+
+// ── Puntaje GreenMetric ─────────────────────────────────────
+
+Table catalogo_decisiones {
+  decision_id text [pk]
+  opcion_id text [pk]
+  categoria int4 [not null]
+  puntos numeric [not null]
+  contraproducente bool [not null]
+  costo int4 [not null]
+}
+
+Table catalogo_sinergias {
+  accion_id text [pk]
+  categoria int4 [pk]
+  puntos int4 [not null]
+  requisito_mision text
+}
+
+Table puntos_calidad {
+  id int8 [pk]
+  user_id uuid [not null, ref: > auth.users.id]
+  categoria int4 [not null]
+  componente text [not null, note: 'quiz | decision | sinergia | crisis']
+  puntos numeric [not null]
+  ref text [not null]
+  creado_en timestamptz [not null]
+  indexes { (user_id, ref, categoria) [unique] }
+}
+
+Table crisis_pendientes {
+  user_id uuid [pk, ref: > auth.users.id]
+  categoria int4 [pk]
+  creado_en timestamptz [not null]
+}
+
+// ── Economía e insignias ────────────────────────────────────
+
+Table movimientos_ecocredits {
+  id int8 [pk]
+  user_id uuid [not null, ref: > auth.users.id]
+  delta int4 [not null]
+  motivo text [not null]
+  ref text [not null]
+  creado_en timestamptz [not null]
+  indexes { (user_id, ref) [unique] }
+  Note: 'Libro de movimientos: el saldo es la suma de delta'
+}
+
+Table catalogo_tienda {
+  item_id text [pk]
+  nombre text [not null]
+  descripcion text [not null]
+  icono text [not null]
+  tipo text [not null]
+  modulo_id int4
+  precio int4 [not null]
+  requerido_para text
+  orden int4 [not null]
+  activo bool [not null]
+}
+
+Table inventario_estudiante {
+  user_id uuid [pk, ref: > auth.users.id]
+  item_id text [pk, ref: > catalogo_tienda.item_id]
+  comprado_en timestamptz [not null]
+}
+
+Table catalogo_insignias {
+  insignia_id text [pk]
+  nombre text [not null]
+  icono text [not null]
+  descripcion text [not null]
+  orden int4 [not null]
+  por_compra bool [not null]
+}
+
+Table insignias_obtenidas {
+  user_id uuid [pk, ref: > auth.users.id]
+  insignia_id text [pk, ref: > catalogo_insignias.insignia_id]
+  obtenida_en timestamptz [not null]
+}
+
+// ── Evaluación y medición ───────────────────────────────────
+
+Table resultados_test {
+  user_id uuid [pk, ref: > auth.users.id]
+  test_id text [pk, note: 'nivel_1..nivel_6 | final']
+  aciertos int4 [not null]
+  total int4 [not null]
+  respondido_at timestamptz [not null]
+  correo_enviado_at timestamptz
+}
+
+Table eventos_aprendizaje {
+  id int8 [pk]
+  user_id uuid [ref: > auth.users.id]
+  session_id text [not null]
+  nivel int4 [not null]
+  mision_id text [not null]
+  tipo_evento text [not null]
+  correcto bool
+  intento_num int4
+  detalle jsonb
+  creado_en timestamptz [not null]
+}
+
+Table solicitudes_qr {
+  token text [pk]
+  user_id uuid [not null, ref: > auth.users.id]
+  mision_id text [not null]
+  escaneado bool [not null]
+  creado_en timestamptz [not null]
+  escaneado_en timestamptz
+}

@@ -2396,6 +2396,10 @@ func _on_tests_cargados(tests: Dictionary, elegibles: Array) -> void:
 	for n in elegibles:
 		if not n in _tests_elegibles:
 			_tests_elegibles.append(n)
+	# Si el correo de algún test no salió (Gmail caído, sin red), se reintenta
+	# al entrar; la función no reenvía los que ya salieron.
+	if not tests.is_empty():
+		SupabaseManager.enviar_resumen(str(tests.keys()[0]))
 	# Quien cerró el juego sin hacer un test lo encuentra al volver.
 	_ofrecer_test_pendiente(4.0)
 

@@ -832,6 +832,9 @@ func _procesar_resumen(code: int, datos: Variant, ctx: Dictionary) -> void:
 	if not ok:
 		push_warning("SupabaseManager: no salió el correo de '%s' (HTTP %d): %s"
 			% [str(ctx.get("test_id", "")), code, str(datos).substr(0, 200)])
+	# ya_enviado: no salió nada nuevo (el reintento al entrar), no se avisa.
+	elif bool(datos.get("ya_enviado", false)):
+		return
 	emit_signal("resumen_enviado", ok, str(ctx.get("test_id", "")))
 
 
