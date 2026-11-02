@@ -6,7 +6,9 @@
 ' Cap. 4; el código no se escribe en el óvalo, igual que en la original.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
-' Las asociaciones van sin punta, como en la original.
+' Las tareas del sistema quedan en una columna aparte gracias a los enlaces
+' invisibles (-[hidden]->); sin ellos el programa las apila debajo de las
+' del estudiante. Las asociaciones van sin punta, como en la original.
 @startuml
 left to right direction
 skinparam usecase {
@@ -55,44 +57,23 @@ Estudiante -- HU12
 Estudiante -- HU13
 Estudiante -- HU14
 
-' Orden de arriba abajo: el del juego (HU-001 a HU-014) para el Estudiante y
-' el del flujo para el Sistema. Lo fijan las cadenas invisibles de un solo
-' guion (-[hidden]-): ponen los casos en la misma columna y en ese orden.
-HU1 -[hidden]- HU2
-HU2 -[hidden]- HU3
-HU3 -[hidden]- HU4
-HU4 -[hidden]- HU5
-HU5 -[hidden]- HU6
-HU6 -[hidden]- HU7
-HU7 -[hidden]- HU8
-HU8 -[hidden]- HU9
-HU9 -[hidden]- HU10
-HU10 -[hidden]- HU11
-HU11 -[hidden]- HU12
-HU12 -[hidden]- HU13
-HU13 -[hidden]- HU14
-
-S1 -[hidden]- S2
-S2 -[hidden]- S3
-S3 -[hidden]- S4
-S4 -[hidden]- S5
-
-' Columna del Sistema
-HU1 -[hidden]-> S1
+' Columna del sistema, repartida a lo alto junto a los casos que la usan
+HU2 -[hidden]-> S1
 HU9 -[hidden]-> S4
-
-' «include» = siempre la ejecuta. «extend» = lo agrega solo en ciertos casos;
-' se escribe al revés (<.) para no romper el orden, pero la flecha sigue
-' saliendo del caso que extiende.
-HU6 ..> S2 : <<include>>
-HU6 ..> S3 : <<include>>
-HU13 ..> S5 : <<include>>
-HU6 <. HU7 : <<extend>>
-HU9 <. HU13 : <<extend>>
 
 S1 -- Sistema
 S2 -- Sistema
 S3 -- Sistema
 S4 -- Sistema
 S5 -- Sistema
+
+' Relaciones entre casos: «include» = siempre lo ejecuta; «extend» = lo agrega
+' solo en ciertos casos (la flecha sale del caso que extiende). Los «extend»
+' se escriben al revés (<.): escritos con .> subían el caso que extiende por
+' encima del otro y desordenaban la columna.
+HU6 ..> S2 : <<include>>
+HU6 ..> S3 : <<include>>
+HU13 ..> S5 : <<include>>
+HU6 <. HU7 : <<extend>>
+HU9 <. HU13 : <<extend>>
 @enduml
