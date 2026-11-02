@@ -5,10 +5,11 @@
 ' dispara.
 ' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
 '
-' Ancho: el largo de la línea fija la columna (-- primera, --- segunda);
-' las asociaciones van sin punta, como pide UML.
+' Apaisado: el estudiante arriba y los casos en dos filas de 7, con los
+' «include» en una tercera. Las filas las fijan los enlaces invisibles
+' (-[hidden]->): el largo de las líneas (-- / ---) no alcanza, el programa
+' lo ignora. Las asociaciones van sin punta, como pide UML.
 @startuml
-left to right direction
 skinparam usecase {
   BackgroundColor #F2F2F2
   BorderColor #555555
@@ -38,7 +39,7 @@ rectangle "URBE Rangers: Eco-Quest" {
   usecase "Enviar correo\ncon el avance" as S5
 }
 
-' Primera columna
+' Primera fila
 Estudiante -- HU1
 Estudiante -- HU2
 Estudiante -- HU3
@@ -47,19 +48,27 @@ Estudiante -- HU5
 Estudiante -- HU6
 Estudiante -- HU7
 
-' Segunda columna
-Estudiante --- HU8
-Estudiante --- HU9
-Estudiante --- HU10
-Estudiante --- HU11
-Estudiante --- HU12
-Estudiante --- HU13
-Estudiante --- HU14
+' Segunda fila: cada caso cuelga, invisible, del de arriba
+Estudiante -- HU8
+Estudiante -- HU9
+Estudiante -- HU10
+Estudiante -- HU11
+Estudiante -- HU12
+Estudiante -- HU13
+Estudiante -- HU14
+HU1 -[hidden]-> HU8
+HU2 -[hidden]-> HU9
+HU3 -[hidden]-> HU10
+HU4 -[hidden]-> HU11
+HU5 -[hidden]-> HU12
+HU6 -[hidden]-> HU13
+HU7 -[hidden]-> HU14
 
-' Lo que hace el sistema dentro de cada historia
+' Tercera fila: lo que hace el sistema dentro de cada historia
+HU10 -[hidden]-> S2
 HU6 ..> S1 : <<include>>
 HU6 ..> S2 : <<include>>
 HU8 ..> S1 : <<include>>
 HU13 ..> S5 : <<include>>
-HU13 ..> HU9 : <<extend>>
+HU13 .> HU9 : <<extend>>
 @enduml
