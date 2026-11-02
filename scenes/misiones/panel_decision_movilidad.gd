@@ -177,7 +177,10 @@ func _pintar() -> void:
 		if plan.descartada(decision_id, o["id"]):
 			bloqueo = "Descartada: es contraproducente."
 		elif not plan.alcanza(decision_id, o["id"]):
-			bloqueo = "No alcanza el presupuesto (faltan %d)." % plan.faltante(decision_id, o["id"])
+			# La prueba de usabilidad mostró que no se sabía cómo seguir: se dice
+			# que el presupuesto se libera cambiando otra decisión.
+			bloqueo = ("No alcanza el presupuesto (faltan %d). Libéralo cambiando una decisión "
+				+ "que ya tomaste.") % plan.faltante(decision_id, o["id"])
 		b.disabled = estado != "eligiendo" or bloqueo != ""
 		var revelada : bool = revelar_todo or (estado == "revelado_contra" and elegida)
 		det.text = _consecuencias(o) if revelada else "Costo: %d" % int(o["costo"])

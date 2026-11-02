@@ -384,6 +384,27 @@ func _movilidad() -> void:
 		await _esperar()
 		revisar(dec, "movilidad decisión %s" % id)
 		dec.free()
+	# Presupuesto agotado (el caso de la prueba de usabilidad): las tres
+	# opciones de la buseta muestran "No alcanza… Libéralo cambiando…".
+	var gastado = PLAN_MOV.new()
+	gastado.encargo_aceptado = true
+	for par in [["tr_permisos", "lectoras_de_placas"], ["tr_lote", "ciclovia_arborizada"],
+			["tr_carpool", "app_carpool"], ["tr_dia_sin_carros", "cierre_semanal"]]:
+		gastado.aplicar_valida(par[0], par[1])
+	var sin = DECISION.new()
+	sin.plan = gastado
+	add_child(sin)
+	sin.abrir("tr_shuttle")
+	await _esperar()
+	revisar(sin, "movilidad decisión sin presupuesto")
+	var aviso := false
+	for l in sin.find_children("*", "Label", true, false):
+		if "Libéralo cambiando" in (l as Label).text:
+			aviso = true
+	if not aviso:
+		_fallos += 1
+		printerr("  FALLA sin presupuesto: no aparece cómo liberarlo")
+	sin.free()
 	var con = CONSEJO.new()
 	add_child(con)
 	con.abrir(plan)

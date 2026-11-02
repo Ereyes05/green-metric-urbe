@@ -76,8 +76,13 @@ func _draw() -> void:
 		var p := o.global_position
 		if jugador and jugador.global_position.distance_to(p) < DIST_OCULTAR:
 			continue
-		var punta := p + Vector2(0, -ALTO_SOBRE_PUNTO + dy)
-		var tri := PackedVector2Array([punta, punta + Vector2(-8, -11), punta + Vector2(8, -11)])
+		# Anillo que late alrededor del punto: en la prueba de usabilidad una
+		# estudiante no encontraba las misiones del Nivel 2 solo con la flecha.
+		var latido := 0.5 + 0.5 * sin(_t * 3.0)
+		draw_arc(p, 22.0 + 4.0 * latido, 0.0, TAU, 32,
+			Color(COLOR, 0.35 + 0.35 * (1.0 - latido)), 2.5, true)
+		var punta := p + Vector2(0, -ALTO_SOBRE_PUNTO - 4.0 + dy)
+		var tri := PackedVector2Array([punta, punta + Vector2(-12, -16), punta + Vector2(12, -16)])
 		draw_colored_polygon(tri, COLOR)
 		tri.append(punta)
-		draw_polyline(tri, BORDE, 1.5, true)
+		draw_polyline(tri, BORDE, 2.0, true)
