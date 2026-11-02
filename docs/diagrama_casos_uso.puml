@@ -1,0 +1,60 @@
+' Diagrama de casos de uso de URBE Rangers: Eco-Quest (Figura 2 del Cap. 4)
+' Un caso por historia de usuario (HU-001 a HU-014), más lo que hace el sistema.
+' Para verlo: pegar en https://www.planttext.com y descargar el PNG.
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F2F2F2
+  BorderColor #555555
+}
+
+actor Estudiante
+actor Sistema
+
+rectangle "URBE Rangers: Eco-Quest" {
+  usecase "Registrarse" as HU1
+  usecase "Iniciar sesión" as HU2
+  usecase "Explorar el campus" as HU3
+  usecase "Dialogar con NPC" as HU4
+  usecase "Consultar indicador GreenMetric" as HU5
+  usecase "Completar misión" as HU6
+  usecase "Clasificar residuos\n(minijuego)" as HU7
+  usecase "Responder a crisis ambiental" as HU8
+  usecase "Consultar mapa y zonas" as HU10
+  usecase "Consultar progreso y ranking" as HU11
+  usecase "Comprar en la Tienda\ncon EcoCredits" as HU12
+  usecase "Responder test de\ncierre de nivel" as HU13
+  usecase "Consultar la Bitácora" as HU14
+
+  usecase "Subir de nivel y de rango" as HU9
+  usecase "Calcular puntaje GreenMetric" as S1
+  usecase "Otorgar XP, EcoCredits\ne insignias" as S2
+  usecase "Actualizar color de las zonas" as S3
+  usecase "Guardar progreso" as S4
+  usecase "Enviar correo con el avance" as S5
+}
+
+Estudiante --> HU1
+Estudiante --> HU2
+Estudiante --> HU3
+Estudiante --> HU4
+Estudiante --> HU5
+Estudiante --> HU6
+Estudiante --> HU7
+Estudiante --> HU8
+Estudiante --> HU10
+Estudiante --> HU11
+Estudiante --> HU12
+Estudiante --> HU13
+Estudiante --> HU14
+
+HU9 <-- Sistema
+S1 <-- Sistema
+S2 <-- Sistema
+S3 <-- Sistema
+S4 <-- Sistema
+S5 <-- Sistema
+
+HU13 ..> HU9 : <<extend>>
+@enduml
