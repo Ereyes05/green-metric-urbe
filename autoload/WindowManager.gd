@@ -8,6 +8,14 @@ extends Node
 
 
 const FUENTE_EMOJI : String = "res://assets/fonts/NotoColorEmoji-subset.ttf"
+# Símbolos que no son emoji (✕ ✓ → ↓ ⌨ ⏱ ▶ …): ni Rubik, ni la fuente por
+# defecto, ni el recorte de emoji los traen. Recortes de Noto Sans Math
+# (flechas) y Noto Sans Symbols 2 (el resto) a los bloques U+2190-21FF,
+# 2300-23FF, 2500-257F, 25A0-25FF, 2700-27BF y 2B00-2BFF.
+const FUENTES_SIMBOLOS : Array[String] = [
+	"res://assets/fonts/NotoSansMath-subset.ttf",
+	"res://assets/fonts/NotoSansSymbols2-subset.ttf",
+]
 
 
 # Rendimiento web: solo el jugador usa física, y se mueve con delta. A 60
@@ -60,6 +68,10 @@ func _registrar_fuente_emoji() -> void:
 	if emoji in fallbacks:
 		return
 	fallbacks.append(emoji)
+	for ruta in FUENTES_SIMBOLOS:
+		var simbolos := load(ruta) as Font
+		if simbolos:
+			fallbacks.append(simbolos)
 	base.fallbacks = fallbacks
 
 

@@ -20,9 +20,16 @@
 // Opcionales, para otro servidor SMTP (p. ej. Brevo) sin tocar el código:
 // SMTP_HOST (smtp.gmail.com), SMTP_PORT (465) y MAIL_FROM (el remitente
 // verificado; por defecto GMAIL_USER).
+//
+// Por qué nodemailer y no denomailer: denomailer 1.6.0 arma el cuerpo con
+// saltos de línea LF sueltos (las líneas del HTML) mezclados con CRLF y no
+// hace dot-stuffing; además el remitente "URBE Rangers: Eco-Quest <...>" sin
+// comillas es un From inválido (los ":" piden comillas). Gmail firma con DKIM lo que recibe, pero al entregar la
+// firma no verifica y rebota con "550 5.7.30 DKIM authentication didn't
+// pass" — después de aceptar el envío, así que aquí parecía enviado.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -58,6 +65,20 @@ function json(cuerpo: unknown, status = 200): Response {
 
 function escapar(t: string): string {
   return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// Versión en texto plano del correo: los filtros de Gmail desconfían de un
+// HTML sin alternativa de texto.
+function aTexto(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/g, "\n")
+    .replace(/<\/(p|h2|tr)>/g, "\n")
+    .replace(/<\/td>/g, "  ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n\n")
+    .trim();
 }
 
 type Par = { aciertos: number; total: number };
@@ -175,29 +196,25 @@ Deno.serve(async (req: Request) => {
   }
 
   const { asunto, html } = armarCorreo(resumen as Resumen, testId);
-  const smtp = new SMTPClient({
-    connection: {
-      hostname: SMTP_HOST,
-      port: SMTP_PORT,
-      tls: true,
-      auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
-    },
+  const transporte = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
   });
   try {
-    await smtp.send({
-      from: `URBE Rangers: Eco-Quest <${MAIL_FROM}>`,
+    await transporte.sendMail({
+      from: { name: "URBE Rangers: Eco-Quest", address: MAIL_FROM },
       to: user.email,
       subject: asunto,
-      content: "auto",
       html,
+      text: aTexto(html),
     });
   } catch (e) {
     console.error("enviar_resumen: falló el envío:", e);
     return json({ ok: false, error: "smtp" }, 502);
   } finally {
-    // close() de denomailer no siempre devuelve una promesa: un .catch()
-    // encadenado tiraba TypeError y el 502 de arriba salía como 500.
-    try { await smtp.close(); } catch { /* la conexión ya estaba cerrada */ }
+    transporte.close();
   }
 
   await supabase

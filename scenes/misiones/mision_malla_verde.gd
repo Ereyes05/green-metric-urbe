@@ -9,6 +9,8 @@ extends CanvasLayer
 
 signal malla_verde_completada(mision_id: String, xp: int, ec: int)
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
+
 const PRESUPUESTO_TOTAL : int = 14
 const CAPACIDAD_CARRERA : int = 2
 const MIN_MODULOS_CONFIRMAR : int = 3
@@ -63,6 +65,7 @@ func iniciar(punto_node: Area2D) -> void:
 	_seleccionado  = ""
 	_refrescar_ui()
 	show()
+	AJUSTE.encajar(_panel_root)
 	SupabaseManager.registrar_evento(6, _mision_id, "mision_iniciada")
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
 	if hb:
@@ -352,6 +355,11 @@ func _crear_ui() -> void:
 	badge.add_theme_font_size_override("font_size", 11)
 	badge.add_theme_color_override("font_color", Color(0.75, 0.45, 0.95))
 	header.add_child(badge)
+	# El botón Salir está fijo en la esquina (fuera del VBox): se le guarda
+	# su lugar para que el letrero del nivel no quede debajo de él.
+	var lugar_salir := Control.new()
+	lugar_salir.custom_minimum_size = Vector2(84, 0)
+	header.add_child(lugar_salir)
 
 	var ctx_lbl := Label.new()
 	ctx_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD

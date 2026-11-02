@@ -341,6 +341,11 @@ func _crear_ui() -> void:
 	badge.add_theme_font_size_override("font_size", 11)
 	badge.add_theme_color_override("font_color", Color(0.90, 0.68, 0.25))
 	header.add_child(badge)
+	# El botón Salir está fijo en la esquina (fuera del VBox): se le guarda
+	# su lugar para que el letrero del nivel no quede debajo de él.
+	var lugar_salir := Control.new()
+	lugar_salir.custom_minimum_size = Vector2(84, 0)
+	header.add_child(lugar_salir)
 
 	_contador_lbl = Label.new()
 	_contador_lbl.add_theme_font_size_override("font_size", 12)

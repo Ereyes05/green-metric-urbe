@@ -240,7 +240,10 @@ func _crear_ui() -> void:
 	_feedback_lbl = Label.new()
 	_feedback_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_feedback_lbl.add_theme_font_size_override("font_size", 15)
-	_feedback_lbl.custom_minimum_size = Vector2(0, 28)
+	# Como los botones: ancho fijo y corte de línea. "Resp. correcta: …" con
+	# una respuesta larga ensanchaba el panel fuera de la pantalla.
+	_feedback_lbl.custom_minimum_size = Vector2(PANEL_ANCHO - 56.0, 28)
+	_feedback_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_feedback_lbl)
 
 	# ── Fila inferior: XP ────────────────────────────────
@@ -810,6 +813,7 @@ func _flotar_xp_panel(texto: String, color: Color) -> void:
 
 func _feedback_txt(lbl: Label, texto: String, color: Color) -> void:
 	lbl.text = texto
+	_ajustar_alto.call_deferred()
 	lbl.add_theme_color_override("font_color", color)
 	lbl.modulate.a = 0.0
 	var tw := create_tween()

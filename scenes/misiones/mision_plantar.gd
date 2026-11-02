@@ -8,6 +8,8 @@ extends CanvasLayer
 
 signal mision_completada_plantar(mision_id: String, xp: int, ec: int)
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
+
 # ── Datos de las 3 misiones de plantación ───────────────────
 const MISIONES : Array = [
 	{
@@ -1355,10 +1357,9 @@ func _mostrar_panel_metricas_planta() -> void:
 		+ "🌿  Detalle — %s\n%s" % [tipo.replace("_", " ").capitalize(), detalle]
 	)
 	met_lbl.autowrap_mode       = TextServer.AUTOWRAP_WORD
-	met_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	met_lbl.add_theme_font_size_override("font_size", 11)
 	met_lbl.add_theme_color_override("font_color", Color(0.80, 0.92, 0.80))
-	vb.add_child(met_lbl)
+	vb.add_child(AJUSTE.con_scroll(met_lbl))
 
 	var sep2 := HSeparator.new()
 	sep2.add_theme_color_override("color", Color(0.22, 0.88, 0.30, 0.3))
@@ -1388,6 +1389,7 @@ func _mostrar_panel_metricas_planta() -> void:
 		hide()
 	)
 	vb.add_child(btn)
+	AJUSTE.encajar(met)
 
 	met.modulate.a = 0.0
 	var tw := create_tween()
@@ -1401,6 +1403,7 @@ func _mostrar_feedback(correcto: bool, titulo: String, desc: String) -> void:
 		Color(0.30, 0.95, 0.35) if correcto else Color(0.95, 0.35, 0.30))
 	_fb_desc.text   = desc
 	_fb_btn.text    = "  ¡A plantar! 🌱  " if correcto else "  Intentar de nuevo  "
+	AJUSTE.encajar(_feedback_panel)
 
 	_feedback_panel.modulate.a = 0.0
 	_feedback_panel.visible    = true

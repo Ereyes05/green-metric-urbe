@@ -8,6 +8,8 @@ extends CanvasLayer
 
 signal mision_interior_completada(mision_id: String, xp: int, ec: int)
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
+
 # ── Datos de los edificios con misiones LED ──────────────────
 const BLOQUES : Array = [
 	{
@@ -691,10 +693,9 @@ func _mostrar_panel_metricas_led(xp: int, ec: int) -> void:
 		+ "   • Proceso documentado y replicable en todo el campus"
 	)
 	met_lbl.autowrap_mode       = TextServer.AUTOWRAP_WORD
-	met_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	met_lbl.add_theme_font_size_override("font_size", 11)
 	met_lbl.add_theme_color_override("font_color", Color(0.80, 0.92, 0.80))
-	vb.add_child(met_lbl)
+	vb.add_child(AJUSTE.con_scroll(met_lbl))
 
 	var sep2 := HSeparator.new()
 	sep2.add_theme_color_override("color", Color(0.22, 0.88, 0.30, 0.3))
@@ -719,6 +720,7 @@ func _mostrar_panel_metricas_led(xp: int, ec: int) -> void:
 	btn.add_theme_color_override("font_color", Color(0.88, 1.0, 0.88))
 	btn.pressed.connect(func(): met.queue_free(); _on_salir())
 	vb.add_child(btn)
+	AJUSTE.encajar(met)
 
 	met.modulate.a = 0.0
 	var tw := create_tween()
