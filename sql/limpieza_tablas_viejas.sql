@@ -1,0 +1,89 @@
+-- ============================================================
+-- limpieza_tablas_viejas.sql — GreenMetric_URBE
+-- Borra las 4 tablas del diseño inicial que el juego ya no usa, para que la
+-- base coincida con el diagrama E-R (docs/diagrama_er.dbml).
+--
+-- - preguntas_quiz / respuestas_estudiante: las preguntas viven en el juego
+--   (QUIZ_POR_MISION) y el resultado se guarda con registrar_quiz en
+--   puntos_calidad. Solo las usaba responder_pregunta, que el juego nunca
+--   llama: se borra con ellas.
+-- - insignias / insignias_estudiante: reemplazadas por catalogo_insignias +
+--   insignias_obtenidas (sql/insignias_1_migracion.sql).
+--
+-- Comprobado antes de borrar (2026-11-02): las 4 con 0 filas, sin vistas ni
+-- FK de otras tablas que dependan de ellas.
+--
+-- ESTADO: NO APLICADA. El 2026-11-02 Ramon dio el OK en el chat, pero el
+-- permiso de la migración se rechazó al aplicarla.
+-- ============================================================
+
+drop function if exists public.responder_pregunta(integer, character);
+drop table if exists public.respuestas_estudiante;
+drop table if exists public.preguntas_quiz;
+drop table if exists public.insignias_estudiante;
+drop table if exists public.insignias;
+
+-- Rollback (estructura; estaban vacías, no hay datos que recuperar):
+-- create table public.preguntas_quiz (
+--   id serial primary key,
+--   modulo_id int not null references modulos_greenmetric(id) on delete cascade,
+--   pregunta text not null, opcion_a text not null, opcion_b text not null,
+--   opcion_c text not null, opcion_d text not null,
+--   respuesta_correcta char(1) not null, puntos int not null,
+--   nivel_dificultad int not null, explicacion text);
+-- create table public.respuestas_estudiante (
+--   id bigserial primary key,
+--   user_id uuid not null references estudiantes(id) on delete cascade,
+--   pregunta_id int not null references preguntas_quiz(id) on delete cascade,
+--   intentos int not null, acertada bool not null, xp_otorgada int not null,
+--   primera_respuesta timestamptz not null default now(),
+--   ultima_respuesta timestamptz not null default now(),
+--   unique (user_id, pregunta_id));
+-- create table public.insignias (
+--   id serial primary key, nombre text not null unique, descripcion text,
+--   icono_url text, condicion_tipo text not null, condicion_valor int not null);
+-- create table public.insignias_estudiante (
+--   id serial primary key,
+--   user_id uuid not null references estudiantes(id) on delete cascade,
+--   insignia_id int not null references insignias(id),
+--   fecha_obtenida timestamptz not null default now(),
+--   unique (user_id, insignia_id));
+-- responder_pregunta (definición original, comentada):
+-- create or replace function public.responder_pregunta(p_pregunta_id integer, p_opcion character)
+-- returns jsonb language plpgsql security definer set search_path to 'public' as $function$
+-- declare
+--   v_user uuid := auth.uid(); v_preg record; v_correcto boolean;
+--   v_xp integer := 0; v_ya_acertada boolean;
+-- begin
+--   if v_user is null then raise exception 'No autenticado' using errcode = '42501'; end if;
+--   if lower(p_opcion) not in ('a','b','c','d') then raise exception 'Opcion invalida' using errcode = '22023'; end if;
+--   select * into v_preg from preguntas_quiz where id = p_pregunta_id;
+--   if not found then raise exception 'Pregunta inexistente' using errcode = '22023'; end if;
+--   if not exists (select 1 from estudiantes where id = v_user) then
+--     raise exception 'Perfil de estudiante no encontrado' using errcode = '23503';
+--   end if;
+--   v_correcto := (lower(p_opcion) = v_preg.respuesta_correcta);
+--   select acertada into v_ya_acertada from respuestas_estudiante
+--   where user_id = v_user and pregunta_id = p_pregunta_id;
+--   if v_correcto and coalesce(v_ya_acertada, false) = false then v_xp := v_preg.puntos; end if;
+--   insert into respuestas_estudiante (user_id, pregunta_id, intentos, acertada, xp_otorgada)
+--   values (v_user, p_pregunta_id, 1, v_correcto, v_xp)
+--   on conflict (user_id, pregunta_id) do update set
+--     intentos = respuestas_estudiante.intentos + 1,
+--     acertada = respuestas_estudiante.acertada or excluded.acertada,
+--     xp_otorgada = respuestas_estudiante.xp_otorgada + excluded.xp_otorgada,
+--     ultima_respuesta = now();
+--   if v_xp > 0 then
+--     insert into progreso_estudiante (user_id, modulo_id, puntaje_obtenido, intentos, xp_ganada)
+--     values (v_user, v_preg.modulo_id, v_xp, 1, v_xp)
+--     on conflict (user_id, modulo_id) do update set
+--       puntaje_obtenido = progreso_estudiante.puntaje_obtenido + excluded.puntaje_obtenido,
+--       intentos = progreso_estudiante.intentos + 1,
+--       xp_ganada = progreso_estudiante.xp_ganada + excluded.xp_ganada;
+--     update estudiantes set xp_total = xp_total + v_xp where id = v_user;
+--   end if;
+--   return jsonb_build_object('correcto', v_correcto, 'xp_ganada', v_xp,
+--     'explicacion', v_preg.explicacion,
+--     'respuesta_correcta', case when v_correcto then v_preg.respuesta_correcta else null end);
+-- end;
+-- $function$;
