@@ -6,6 +6,8 @@
 >
 > **Desde el 2026-11-03 Supabase Auth usa SMTP propio:** la cuenta de Gmail del proyecto (`smtp.gmail.com`, puerto 465, contraseña de aplicación), la misma de la función `enviar_resumen`. Configurado en *Authentication → Emails → SMTP Settings*, con la plantilla **Reset Password** de la sección 2. Con eso el correo llega a cualquier dirección y `RECUPERACION_POR_CORREO` está en `true` en `SceneLogin.gd`. Si se cambia la contraseña de aplicación de Gmail, hay que actualizarla en los dos lugares (SMTP Settings y el secreto `GMAIL_APP_PASSWORD`).
 >
+> **`Email OTP Length` tiene que estar en 6** (*Sign In / Providers → Email*): el juego exige exactamente 6 dígitos. Venía en 8 y el juego rechazaba el código; se corrigió el 2026-11-03 y la recuperación quedó probada de punta a punta con una cuenta real.
+>
 > La **confirmación por correo sigue apagada** desde el 2026-09-24 (`Confirm email` en *Authentication → Sign In / Providers → Email*): el estudiante se registra y entra directo. Antes se apagó porque el servicio de fábrica solo entregaba a las direcciones del equipo y admitía 2 mensajes por hora.
 
 Esto vive **solo en el panel de Supabase**, no en el código. Se guarda acá porque si alguien lo cambia o se pierde, no hay de dónde recuperarlo — y porque cuando está mal, el juego no lo puede arreglar desde su lado.
