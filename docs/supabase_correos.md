@@ -1,16 +1,12 @@
 # Correos de Supabase — plantillas y configuración
 
-**Proyecto:** `ikohikbpvtbvsgyumvbr` · **Última revisión:** 2026-09-24
+**Proyecto:** `ikohikbpvtbvsgyumvbr` · **Última revisión:** 2026-11-03
 
-> ## Estado actual: los correos están fuera de servicio, a propósito
+> ## Estado actual: la recuperación de contraseña funciona; el registro no manda correo
 >
-> El **2026-09-24 se apagó la confirmación por correo** (`Confirm email` en *Authentication → Sign In / Providers → Email*). El estudiante se registra y entra directo. Verificado en `/auth/v1/settings`: `mailer_autoconfirm = true`.
+> **Desde el 2026-11-03 Supabase Auth usa SMTP propio:** la cuenta de Gmail del proyecto (`smtp.gmail.com`, puerto 465, contraseña de aplicación), la misma de la función `enviar_resumen`. Configurado en *Authentication → Emails → SMTP Settings*, con la plantilla **Reset Password** de la sección 2. Con eso el correo llega a cualquier dirección y `RECUPERACION_POR_CORREO` está en `true` en `SceneLogin.gd`. Si se cambia la contraseña de aplicación de Gmail, hay que actualizarla en los dos lugares (SMTP Settings y el secreto `GMAIL_APP_PASSWORD`).
 >
-> **Por qué:** el servicio de correo que Supabase trae de fábrica **solo entrega a las direcciones del equipo del proyecto** y admite **2 mensajes por hora** para todo el proyecto. A los estudiantes no les llegaba nada — ni se notaba, porque la pantalla decía que sí se había enviado.
->
-> **Consecuencia:** la recuperación de contraseña **tampoco funciona** y muestra *"¡Código enviado!"* igual. Se resuelve a mano: *Authentication → Users* → cambiar la contraseña del estudiante.
->
-> Lo de abajo (plantillas y Site URL) queda escrito para cuando se contrate un servicio de correo externo. **Hasta entonces no se puede aplicar**: Supabase no deja editar las plantillas sin SMTP propio.
+> La **confirmación por correo sigue apagada** desde el 2026-09-24 (`Confirm email` en *Authentication → Sign In / Providers → Email*): el estudiante se registra y entra directo. Antes se apagó porque el servicio de fábrica solo entregaba a las direcciones del equipo y admitía 2 mensajes por hora.
 
 Esto vive **solo en el panel de Supabase**, no en el código. Se guarda acá porque si alguien lo cambia o se pierde, no hay de dónde recuperarlo — y porque cuando está mal, el juego no lo puede arreglar desde su lado.
 

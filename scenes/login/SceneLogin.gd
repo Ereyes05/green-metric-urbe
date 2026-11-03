@@ -66,10 +66,11 @@ const DOMINIOS_PERMITIDOS  : Array  = ["urbe.edu", "gmail.com", "outlook.com",
 # le dice "¡Código enviado! Revisa tu bandeja" igual — o sea que afirma en
 # falso, que es peor que no ofrecer la opción.
 #
-# El código de la recuperación NO se borra: sigue entero y probado. Cuando
-# se contrate un SMTP propio (ver docs/supabase_correos.md), esto vuelve a
-# true y la pantalla reaparece tal cual estaba.
-const RECUPERACION_POR_CORREO : bool = false
+# En true desde el 2026-11-03: Supabase Auth manda el correo por el SMTP
+# de Gmail del proyecto (el mismo de enviar_resumen) y la plantilla Reset
+# Password muestra el código de 6 dígitos (ver docs/supabase_correos.md).
+# Si se apaga ese SMTP, esto tiene que volver a false.
+const RECUPERACION_POR_CORREO : bool = true
 var _re_email : RegEx = null
 
 # ── Estado ───────────────────────────────────────────────────

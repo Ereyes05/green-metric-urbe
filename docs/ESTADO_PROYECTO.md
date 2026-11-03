@@ -13,7 +13,7 @@ importante en una línea cada una:
 - Existe un **borrador del manual de usuarios**: [manual_usuarios.md](manual_usuarios.md).
 - Las **insignias las decide el servidor**, no el cliente.
 - Se eliminaron **energía y vidas**.
-- El **registro ya no manda correo** y la recuperación de contraseña está oculta.
+- El **registro ya no manda correo**. La recuperación de contraseña volvió el 2026-11-03, con el SMTP de Gmail en Supabase Auth.
 - La descarga del juego bajó de **4,6 a 1,4 MB**.
 - Hay **22 suites de prueba** en `tests/`.
 
@@ -1155,8 +1155,9 @@ recuperable en git (commit `38b2d1a`).
 - **"¿Olvidaste tu contraseña?" está oculto**, detrás de
   `RECUPERACION_POR_CORREO` en `SceneLogin.gd`. La pantalla funciona contra la
   API pero el correo no sale, y decía *"¡Código enviado!"* igual. Afirmar en
-  falso es peor que no ofrecer la opción. Se resuelve a mano desde
-  *Authentication → Users*.
+  falso es peor que no ofrecer la opción. **Reactivado el 2026-11-03**:
+  Supabase Auth manda por el SMTP de Gmail del proyecto y la plantilla
+  muestra el código ([supabase_correos.md](supabase_correos.md)).
 - **Faltaba "Ingeniería en Informática"** en las carreras del registro — la
   población del estudio. Estaba solo "Computación", que es otra carrera.
 - Todo el porqué y qué haría falta para tener correo de verdad:

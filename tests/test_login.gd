@@ -41,11 +41,11 @@ func _ready() -> void:
 	for d in ["urbe.edu", "gmail.com"]:
 		_check(src.contains('"%s"' % d), "se acepta el dominio %s" % d)
 
-	# ── Recuperación por correo, apagada ────────────────────────
-	# No sirve poner el botón detrás de un `if` si alguien más adelante lo
-	# agrega igual: por eso se comprueban las dos mitades.
-	_check(src.contains("const RECUPERACION_POR_CORREO : bool = false"),
-		   "la recuperación por correo está apagada")
+	# ── Recuperación por correo, encendida desde el 2026-11-03 ──
+	# El interruptor sigue existiendo para poder apagarla si se cae el SMTP:
+	# por eso se comprueban también las dos mitades protegidas.
+	_check(src.contains("const RECUPERACION_POR_CORREO : bool = true"),
+		   "la recuperación por correo está encendida")
 	_check(src.contains("if RECUPERACION_POR_CORREO:"),
 		   "el botón se crea solo cuando el interruptor está encendido")
 	_check(src.contains("if btn_olvide:"),

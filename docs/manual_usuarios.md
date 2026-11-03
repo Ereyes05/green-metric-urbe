@@ -135,14 +135,7 @@ Si los datos son correctos, el juego carga el progreso guardado y lleva directam
 
 ### 3.3. Si se olvidó la contraseña
 
-**Avisarle al docente o responsable de la actividad**, que la cambia en el momento. No hay que hacer ningún trámite.
-
-En el juego no aparece ninguna opción de recuperar la contraseña: está oculta a propósito mientras no haya un servicio de correo (ver la nota de abajo).
-
-> **Nota para el equipo — borrar antes de entregar.**
-> La pantalla *"¿Olvidaste tu contraseña?"* existe en el juego y está programada, pero **hoy no funciona para los estudiantes** y peor: dice *"¡Código enviado!"* aunque no se haya enviado nada. El correo lo manda el servicio interno de Supabase, que solo entrega a las direcciones del equipo del proyecto y admite 2 mensajes por hora.
-> Para que funcione hay que contratar un servicio de correo externo. Detalle y pasos en [supabase_correos.md](supabase_correos.md).
-> **Mientras tanto se resuelve a mano:** panel de Supabase → *Authentication → Users* → buscar al estudiante → cambiar la contraseña. Diez segundos.
+Pulsar **¿Olvidaste tu contraseña?** en la pantalla de inicio, escribir el correo registrado y pulsar **Enviar código**. Llega al correo un código de 6 dígitos; escribirlo en el juego, elegir la contraseña nueva y entrar con ella. El código vence en una hora.
 
 ---
 
