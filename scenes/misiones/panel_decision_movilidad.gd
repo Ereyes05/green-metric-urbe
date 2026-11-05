@@ -1,8 +1,10 @@
 # ============================================================
 # panel_decision_movilidad.gd — NIVEL 5: panel de una decisión del Plan de
 # Movilidad (también los bicicleteros). Regla Mixta (spec §8): antes de
-# confirmar solo se ve el costo; la contraproducente resta 1, no gasta y
-# permite reintentar; la válida revela las tres opciones.
+# confirmar se ve el costo y, en la opción marcada, qué implica y a quién
+# beneficia (DATOS.detalle, pedido del jurado nov. 2026), nunca los puntos;
+# la contraproducente resta 1, no gasta y permite reintentar; la válida
+# revela las tres opciones.
 # Mismo patrón de interacción que simulador_decision.gd. Estilo: solo
 # tokens de hud_tema.gd vía ui_movilidad.gd.
 # Modifica el plan en memoria; guardar, misiones y telemetría son del
@@ -183,7 +185,12 @@ func _pintar() -> void:
 				+ "que ya tomaste.") % plan.faltante(decision_id, o["id"])
 		b.disabled = estado != "eligiendo" or bloqueo != ""
 		var revelada : bool = revelar_todo or (estado == "revelado_contra" and elegida)
-		det.text = _consecuencias(o) if revelada else "Costo: %d" % int(o["costo"])
+		if revelada:
+			det.text = _consecuencias(o)
+		elif elegida and estado == "eligiendo":
+			det.text = "Costo: %d\n%s" % [int(o["costo"]), DATOS.detalle(o["id"])]
+		else:
+			det.text = "Costo: %d" % int(o["costo"])
 		if bloqueo != "" and estado == "eligiendo":
 			det.text += "  ·  " + bloqueo
 		var color := TEMA.TEXTO_3

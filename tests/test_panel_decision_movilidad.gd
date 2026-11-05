@@ -54,6 +54,12 @@ func _ready() -> void:
 	_check(panel._accion.disabled, "confirmar deshabilitado sin elección")
 	panel._on_opcion(i_contra)
 	_check(not panel._accion.disabled and panel._detalles[i_contra].text.begins_with("Costo"), "elegir no revela")
+	var det_marcada : String = panel._detalles[i_contra].text
+	_check(det_marcada.contains(DATOS.detalle("vender_puestos_reservados")) and det_marcada.contains("Beneficia"),
+		"marcar una opción muestra qué implica y a quién beneficia (pedido del jurado)")
+	_check(not det_marcada.contains("Contraproducente") and not det_marcada.contains("Transporte +"),
+		"el detalle no revela puntos ni si es contraproducente")
+	_check(not panel._detalles[i_app].text.contains("Beneficia"), "el detalle se ve solo en la opción marcada")
 	panel._on_accion()
 	_check(panel.estado == "esperando" and llamadas == [["tr_carpool", "vender_puestos_reservados"]], "confirmar registra una vez")
 	_check(panel._cerrar.disabled and panel._botones[i_app].disabled, "esperando: nada clicable")

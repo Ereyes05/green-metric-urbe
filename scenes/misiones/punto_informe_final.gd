@@ -11,6 +11,7 @@ extends Area2D
 @export var mision_id    : String = "informe_final"
 @export var nombre_punto : String = "Decanato — Informe de Sostenibilidad"
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
 const PREREQUISITOS : Array[String] = ["malla_verde", "comite_ambiental", "semana_verde"]
 
 signal informe_solicitado(punto: Area2D)
@@ -108,7 +109,6 @@ func _crear_prompt() -> void:
 	_prompt_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	_prompt_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	_prompt_lbl.add_theme_font_size_override("font_size", 12)
 	_prompt_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.70))
 	_prompt_panel.add_child(_prompt_lbl)
@@ -126,7 +126,7 @@ func _process(_delta: float) -> void:
 	var cam_off   := cam.global_position - vp_size * 0.5 / cam_zoom
 	var screen_pos := (gp - cam_off) * cam_zoom
 	_prompt_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_prompt_panel.position = screen_pos
+	AJUSTE.colocar_aviso(_prompt_panel, _prompt_lbl, screen_pos)
 
 
 func _pendientes() -> Array[String]:

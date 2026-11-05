@@ -10,7 +10,8 @@ const TESTS := preload("res://scenes/misiones/tests_nivel.gd")
 const CAPTURAS := [
 	"login", "registro", "tutorial_1", "tutorial_2", "hud", "dialogo", "quiz",
 	"quiz_fallo", "mision_campo", "decision", "crisis", "reporte", "simulador",
-	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado", "guia_1", "guia_4", "guia_7",
+	"tienda", "ranking", "avance", "test", "test_resultado", "insignia", "npc_bloqueado", "guia_1", "guia_4", "guia_7", "guia_11", "guia_13",
+	"minimapa", "plantar_ficha", "decision_detalle", "solar_paso1",
 	"practica_oferta", "practica", "minijuego_fallido",
 ]
 
@@ -207,10 +208,42 @@ func _preparar(id: String) -> void:
 			await _esperar(1.0)
 			npc.iniciar_dialogo()
 			await _esperar(0.6)
-		"guia_1", "guia_4", "guia_7":
+		"guia_1", "guia_4", "guia_7", "guia_11", "guia_13":
 			_mapa._guia.pagina = int(id.trim_prefix("guia_")) - 1
 			_mapa._guia.abrir()
 			await _esperar(0.8)
+		"minimapa":
+			_mapa._minimapa.alternar()
+			await _esperar(1.0)
+		"f1_con_minimapa":
+			# Verificación (no va al manual): F1 desde el mapa abre la Bitácora
+			# y el minimapa abierto queda detrás de ella.
+			_mapa._minimapa.alternar()
+			await _esperar(0.5)
+			var f1 := InputEventKey.new()
+			f1.keycode = KEY_F1
+			f1.pressed = true
+			_mapa._input(f1)
+			await _esperar(0.8)
+			print("F1 abrió la bitácora: ", _mapa._guia.esta_abierta(),
+				" · capa minimapa ", _mapa._minimapa.layer, " < capa bitácora ", _mapa._guia.layer)
+		"plantar_ficha":
+			var zona = _hijo_con_script("res://scenes/misiones/zona_tierra.gd")
+			_mapa._plantar_ui.iniciar(0, zona, "click")
+			await _esperar(1.0)
+			for c in _mapa._plantar_ui._cartas:
+				if c.get_meta("es_valida"):
+					_mapa._plantar_ui._seleccionar_carta(c)
+			await _esperar(0.6)
+		"decision_detalle":
+			_mapa._nivel5.plan.encargo_aceptado = true
+			_mapa._nivel5.panel_decision.abrir("tr_permisos")
+			await _esperar(0.6)
+			_mapa._nivel5.panel_decision._on_opcion(2)
+			await _esperar(0.6)
+		"solar_paso1":
+			_mapa._solar_ui.iniciar(0, null)
+			await _esperar(1.0)
 		"guia_giro":
 			# A mitad del giro de la hoja (no va al manual).
 			_mapa._guia.abrir()

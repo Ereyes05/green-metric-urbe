@@ -56,6 +56,7 @@ func _ready() -> void:
 	await _tienda()
 	await _minijuego_residuos()
 	await _movilidad()
+	await _avisos_mapa()
 	if nm:
 		nm.name = "NivelManager"
 	print("  %d cuadros revisados" % _revisados)
@@ -166,6 +167,72 @@ func _rect_texto(c: Control) -> Rect2:
 	return r
 
 
+# ── Avisos del mapa ("[E] Regar la planta — …") ──────────────────
+# El Label ocupa todo el cuadro, así que revisar() no ve el texto que se
+# pasa del borde: acá se mide el texto contra el ancho del cuadro.
+const AVISOS := [
+	["res://scenes/misiones/zona_tierra.gd", "nombre_zona"],
+	["res://scenes/misiones/zona_reciclaje.gd", "nombre_zona"],
+	["res://scenes/misiones/llave_agua.gd", "nombre_llave"],
+	["res://scenes/misiones/punto_captacion.gd", "nombre_punto"],
+	["res://scenes/misiones/punto_comite_ambiental.gd", "nombre_punto"],
+	["res://scenes/misiones/punto_critico_energia.gd", "nombre_punto"],
+	["res://scenes/misiones/punto_informe_final.gd", "nombre_punto"],
+	["res://scenes/misiones/punto_malla_verde.gd", "nombre_punto"],
+	["res://scenes/misiones/punto_semana_verde.gd", "nombre_punto"],
+]
+
+
+func _avisos_mapa() -> void:
+	var cam := Camera2D.new()
+	add_child(cam)
+	cam.make_current()
+	var jug := Node2D.new()
+	jug.add_to_group("jugador")
+	add_child(jug)
+	for a in AVISOS:
+		var p = load(a[0]).new()
+		p.set(a[1], "Jardín del Estacionamiento")
+		add_child(p)
+		await get_tree().process_frame
+		p._al_entrar(jug)
+		await _revisar_aviso(p, a[0].get_file())
+		if a[0].ends_with("zona_tierra.gd"):
+			p._completada = true
+			p._necesita_riego = true
+			p._actualizar_texto_prompt()
+			await _revisar_aviso(p, "zona_tierra regar")
+		elif a[0].ends_with("zona_reciclaje.gd"):
+			p._completada = true
+			p.nivel_llenado = 0.9
+			p._actualizar_prompt_texto()
+			await _revisar_aviso(p, "zona_reciclaje llamar al servicio")
+		p.queue_free()
+	cam.queue_free()
+	jug.queue_free()
+
+
+func _revisar_aviso(p: Node, que: String) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_revisados += 1
+	var panel : Control = p._prompt_panel
+	var lbl : Label = p._prompt_lbl
+	var fuente := lbl.get_theme_font("font")
+	var ancho := fuente.get_string_size(lbl.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		lbl.get_theme_font_size("font_size")).x
+	var r := panel.get_global_rect()
+	var pantalla := Rect2(Vector2.ZERO, Vector2(1280, 720)).grow(TOLERANCIA)
+	if ancho > r.size.x - 8.0:
+		_fallos += 1
+		printerr("  FALLA aviso %s: «%s» mide %.0f px y el cuadro %.0f" % [que, lbl.text, ancho, r.size.x])
+	elif r.position.x < pantalla.position.x or r.end.x > pantalla.end.x:
+		_fallos += 1
+		printerr("  FALLA aviso %s: el cuadro se sale de la pantalla %s" % [que, r])
+	else:
+		print("  ok    aviso ", que, " (", lbl.text, ")")
+
+
 # ── Nivel 1: elegir planta, respuesta y métricas ─────────────────
 func _plantar() -> void:
 	var ui = PLANTAR.new()
@@ -176,17 +243,25 @@ func _plantar() -> void:
 		ui.iniciar(i, null)
 		await _esperar()
 		revisar(ui._panel_root, "plantar %s" % m["id"])
+		for carta in ui._cartas:
+			ui._seleccionar_carta(carta)
+			await _esperar()
+			revisar(ui._panel_root, "plantar %s ficha %s" % [m["id"], carta.get_meta("planta_id")])
 		for pid in m["feedback"]:
-			ui._mostrar_feedback(pid == m["correcta"], "¡Planta correcta!", m["feedback"][pid])
+			ui._mostrar_feedback(pid == m["correcta"], "Opción válida", m["feedback"][pid])
 			await _esperar()
 			revisar(ui._feedback_panel, "plantar %s respuesta %s" % [m["id"], pid])
 		ui._feedback_panel.visible = false
-		ui._planta_elegida = m["correcta"]
-		ui._mostrar_panel_metricas_planta()
-		await _esperar()
-		var met : Control = ui.get_child(ui.get_child_count() - 1)
-		revisar(met, "plantar %s métricas" % m["id"])
-		met.free()
+		for pid in [m["correcta"], m.get("valida", "")]:
+			if pid == "":
+				continue
+			ui._planta_elegida = pid
+			ui._calidad = "mejor" if pid == m["correcta"] else "valida"
+			ui._mostrar_panel_metricas_planta()
+			await _esperar()
+			var met : Control = ui.get_child(ui.get_child_count() - 1)
+			revisar(met, "plantar %s métricas %s" % [m["id"], pid])
+			met.free()
 	ui.queue_free()
 
 
@@ -383,6 +458,11 @@ func _movilidad() -> void:
 		dec.abrir(id)
 		await _esperar()
 		revisar(dec, "movilidad decisión %s" % id)
+		# Al marcar cada opción aparece su detalle (qué implica, a quién beneficia).
+		for i in 3:
+			dec._on_opcion(i)
+			await _esperar()
+			revisar(dec, "movilidad decisión %s opción %d marcada" % [id, i + 1])
 		dec.free()
 	# Presupuesto agotado (el caso de la prueba de usabilidad): las tres
 	# opciones de la buseta muestran "No alcanza… Libéralo cambiando…".

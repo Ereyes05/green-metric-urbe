@@ -63,6 +63,7 @@ const HUD_BANNER     := preload("res://scenes/ui/hud_banner_zona.gd")
 const HUD_AVISO      := preload("res://scenes/ui/hud_aviso.gd")
 const HUD_AVANCE     := preload("res://scenes/ui/hud_panel_avance.gd")
 const GUIA_LIBRO     := preload("res://scenes/ui/guia_libro.gd")
+const MINIMAPA       := preload("res://scenes/ui/minimapa.gd")
 
 # ── Datos de los NPCs (uno por zona) — mapa nuevo (urbe_removed (1).png) ─
 # "pos" es LOCAL al nodo raíz SceneMapaMundo (que en la escena está en
@@ -437,7 +438,8 @@ var _hud_acciones = null   # hud_acciones.gd
 var _hud_banner   = null   # hud_banner_zona.gd
 var _hud_aviso    = null   # hud_aviso.gd
 var _hud_avance   = null   # hud_panel_avance.gd (botón Avance)
-var _guia         = null   # guia_libro.gd (botón "?" y tecla H)
+var _guia         = null   # guia_libro.gd (botón "?" y teclas F1 / H)
+var _minimapa     = null   # minimapa.gd (botón 📍 y tecla M)
 
 # ── Panel de misión completada ────────────────────────────────
 var _complete_panel  : Panel  = null
@@ -623,6 +625,9 @@ func _construir_hud() -> void:
 	add_child(_hud_avance)
 	_guia = GUIA_LIBRO.new()
 	add_child(_guia)
+	_minimapa = MINIMAPA.new()
+	_minimapa.mapa = self
+	add_child(_minimapa)
 
 
 # Barra de acciones del HUD (botones o teclas 1–5).
@@ -834,6 +839,14 @@ func _hay_ui_modal_abierta() -> bool:
 	return false
 
 
+# jugador.gd lo consulta en cada frame: con la Bitácora, el ranking, el avance
+# o el menú de pausa abiertos, las flechas no deben mover al personaje.
+func ui_bloquea_jugador() -> bool:
+	if is_instance_valid(_menu_pausa_canvas) and _menu_pausa_canvas.visible:
+		return true
+	return _hay_ui_modal_abierta()
+
+
 # ── Input ────────────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -873,9 +886,16 @@ func _input(event: InputEvent) -> void:
 	if _hud_acciones and not _hay_ui_modal_abierta() and _hud_acciones.tecla(event.keycode):
 		get_viewport().set_input_as_handled()
 		return
-	# H abre la guía (con la guía abierta, la H la cierra guia_libro.gd).
-	if event.keycode == KEY_H and _guia and not _hay_ui_modal_abierta():
+	# F1 o H abren la guía (con la guía abierta las cierra guia_libro.gd).
+	# F1 lo pidió el jurado (nov. 2026); H queda por si el navegador se queda
+	# con F1 (su ayuda).
+	if event.keycode in [KEY_H, KEY_F1] and _guia and not _hay_ui_modal_abierta():
 		_guia.abrir()
+		get_viewport().set_input_as_handled()
+		return
+	# M abre y cierra el minimapa (no es modal: se camina con él abierto).
+	if event.keycode == KEY_M and _minimapa and not _hay_ui_modal_abierta():
+		_minimapa.alternar()
 		get_viewport().set_input_as_handled()
 		return
 

@@ -65,6 +65,18 @@ func _ready() -> void:
 	g.abrir()
 	_tecla(g, KEY_H)
 	_check(not g.esta_abierta(), "H cierra")
+	g.abrir()
+	_tecla(g, KEY_F1)
+	_check(not g.esta_abierta(), "F1 cierra (pedido del jurado)")
+	var cubre := true
+	for n in range(1, 7):
+		var esta := false
+		for p in GUIA.PAGINAS:
+			for parrafo in p[4]:
+				if (parrafo as String).begins_with("Nivel %d." % n):
+					esta = true
+		cubre = cubre and esta
+	_check(cubre, "la bitácora explica cómo pasar los seis niveles")
 
 	print("test_guia: %d fallos" % _fallos)
 	get_tree().quit(1 if _fallos > 0 else 0)

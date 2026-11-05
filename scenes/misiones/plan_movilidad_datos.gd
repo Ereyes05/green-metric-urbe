@@ -16,7 +16,7 @@ extends RefCounted
 const PRESUPUESTO := 100
 const DECISION_CONSEJO := "tr_consejo"
 
-const ENCARGO := "La Dirección de Sustentabilidad y el Rectorado te encargan un Plan de Movilidad para URBE, que vas a presentar ante el Consejo Universitario. Tienes un presupuesto de 100 puntos para seis decisiones repartidas por el campus (en el orden que quieras) y dos bicicleteros (necesitas el kit de la Tienda). Antes de elegir solo vas a ver el costo de cada opción: sus efectos se conocen al confirmar. Una opción contraproducente según GreenMetric resta 1 punto en Decisiones de Transporte, no gasta presupuesto y te deja reintentar. Cuando tengas todo listo, presenta el plan en el Rectorado."
+const ENCARGO := "La Dirección de Sustentabilidad y el Rectorado te encargan un Plan de Movilidad para URBE, que vas a presentar ante el Consejo Universitario. Tienes un presupuesto de 100 puntos para seis decisiones repartidas por el campus (en el orden que quieras) y dos bicicleteros (necesitas el kit de la Tienda). Al marcar una opción ves su costo, qué implica y a quién beneficia; cuántos puntos da y si es contraproducente se sabe al confirmar. Una opción contraproducente según GreenMetric resta 1 punto en Decisiones de Transporte, no gasta presupuesto y te deja reintentar. Cuando tengas todo listo, presenta el plan en el Rectorado."
 
 const ACEPTACION_TEXTO : Dictionary = {
 	"alta": "Aceptación alta", "media": "Aceptación media", "baja": "Aceptación baja",
@@ -401,6 +401,39 @@ const OBJECIONES : Dictionary = {
 		],
 	},
 }
+
+
+# Lo que se ve al MARCAR una opción, antes de confirmar (pedido del jurado,
+# nov. 2026): qué implica y a quién beneficia. Neutral a propósito: no dice
+# los puntos ni si es contraproducente, eso se revela al confirmar. Clave =
+# id de la opción (los dos bicicleteros comparten las mismas tres).
+const DETALLES : Dictionary = {
+	"lectoras_de_placas": "Beneficia a quien entra en carro: la entrada sería más rápida y la universidad tendría el conteo exacto de vehículos que entran cada día. Requiere cámaras, barrera y mantenimiento del equipo.",
+	"pintar_mas_puestos": "Beneficia a quien llega en carro: más puestos y menos cola en la hora pico. Es una obra rápida de pintura y demarcación sobre la franja de grama.",
+	"permiso_por_necesidad": "Beneficia a quien más necesita el carro: vive lejos, tiene movilidad reducida o comparte el viaje. Es una regla, sin obra, pero hay que revisar solicitudes; los demás pierden el permiso anual.",
+	"asfaltar_lote": "Beneficia a quien llega en carro: 60 puestos usables todo el año, sin barro ni polvo, y menos presión sobre el M5. Requiere asfalto y demarcación.",
+	"ciclovia_arborizada": "Beneficia a quien camina o va en bici: un tramo con sombra conectado al portón. Requiere sembrar árboles, que tardan unos años en dar sombra plena. Se pierden los puestos del lote.",
+	"plaza_de_eventos": "Beneficia a las agrupaciones estudiantiles y a la universidad: un espacio para ferias y eventos. Requiere piso permeable. Se pierden los puestos del lote.",
+	"app_carpool": "Beneficia a quien quiere compartir viaje: le ayuda a encontrar compañeros de su misma urbanización. Requiere pagar la licencia de la aplicación cada año.",
+	"puestos_3_ocupantes": "Beneficia a quien comparte el carro: se queda con los puestos más cómodos. Requiere señalizarlos y que la garita verifique hasta las 9 a. m.",
+	"vender_puestos_reservados": "Beneficia a quien pueda pagar la cuota: un puesto asegurado con su nombre. Le deja ingresos a la universidad para el mantenimiento del M5.",
+	"bono_gasolina": "Beneficia al personal que viene en carro: un ahorro en gasolina cada mes. La universidad deja de mantener la buseta.",
+	"ruta_a_paradas": "Beneficia a quien llega en por puesto o autobús: no camina bajo el sol desde la avenida. Requiere dos busetas con chofer en los tres turnos.",
+	"park_and_ride": "Beneficia a quien viene en carro desde lejos: lo deja afuera y entra en buseta. Requiere pagar cada mes el alquiler del estacionamiento y tres busetas.",
+	"cierre_semanal": "Beneficia al campus un día por semana: menos tráfico y ruido. Afecta todos los viernes a quien depende del carro; requiere contratar busetas de refuerzo.",
+	"jornada_mensual_con_feria": "Beneficia a toda la comunidad con una feria de movilidad, charlas y taller de bicis. Afecta un día al mes a quien depende del carro; requiere busetas de refuerzo.",
+	"motos_por_la_acera": "Beneficia a quien viene en moto: sigue entrando ese día y estaciona cerca de los bloques. Requiere solo avisar y señalizar.",
+	"triciclos_de_carga": "Beneficia a la cuadrilla en los trabajos cortos: vehículos baratos y sin combustible. Para los trabajos largos seguiría usando el carrito a gasolina.",
+	"camioneta_diesel": "Beneficia a la cuadrilla: un solo vehículo más grande que lleva todo en un viaje. Requiere comprar la camioneta y su combustible.",
+	"carritos_electricos": "Beneficia a la cuadrilla: dos carritos nuevos y confiables. Requiere instalar cargadores junto al techo solar del estacionamiento.",
+	"simple_con_candado": "Beneficia a quien viene en bici: un lugar donde asegurarla. Es la instalación más sencilla, al aire libre.",
+	"techado_con_panel": "Beneficia a quien viene en bici: un lugar seguro, con sombra de día y luz de noche. Requiere el techo y un panel solar pequeño.",
+	"sobre_el_sendero": "Beneficia a quien viene en bici: la deja bajo techo sin construir nada nuevo. Usa la baranda del pasillo peatonal.",
+}
+
+
+static func detalle(opcion_id: String) -> String:
+	return str(DETALLES.get(opcion_id, ""))
 
 
 static func decision(id: String) -> Dictionary:

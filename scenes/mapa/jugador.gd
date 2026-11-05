@@ -33,8 +33,12 @@ func _physics_process(delta: float) -> void:
 	var crisis_ui    = get_tree().get_first_node_in_group("ui_crisis")
 	var interior_ui  = get_tree().get_first_node_in_group("interior_bloque")
 	var tienda_ui    = get_tree().get_first_node_in_group("ui_tienda")
+	# Paneles del mapa que no están en esos grupos (Bitácora, ranking, avance…).
+	var mapa := get_parent()
+	var panel_mapa : bool = mapa != null and mapa.has_method("ui_bloquea_jugador") \
+			and mapa.ui_bloquea_jugador()
 
-	if (dlg and dlg.visible) or (quiz and quiz.visible) \
+	if panel_mapa or (dlg and dlg.visible) or (quiz and quiz.visible) \
 			or (mision_ui and mision_ui.visible) \
 			or (minijuego_ui and minijuego_ui.visible) \
 			or (tutorial_ui and tutorial_ui.visible) \

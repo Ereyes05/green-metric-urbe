@@ -19,17 +19,18 @@ const MISIONES : Array = [
 		"contexto": "Los corredores del campus reciben el sol directo todo el día.\nLos estudiantes necesitan sombra natural y las aceras requieren raíces no invasivas.",
 		"criterio": "Necesitamos un árbol nativo que dé sombra amplia sin dañar la infraestructura.",
 		"correcta": "araguaney",
+		"valida":   "vera",
 		"plantas":  [
-			{"id": "araguaney",      "nombre": "Araguaney",          "desc": "Árbol Nacional · Sombra amplia · Raíces no invasivas"},
+			{"id": "araguaney",      "nombre": "Araguaney",          "desc": "Árbol Nacional · Copa amplia · Raíces no invasivas"},
 			{"id": "nim",            "nombre": "Nim",                 "desc": "Especie introducida · Originaria de la India"},
 			{"id": "cactus",         "nombre": "Cactus del Desierto", "desc": "Especie desértica · Sin sombra"},
-			{"id": "pino_canadiense","nombre": "Pino Canadiense",     "desc": "Especie foránea · Clima frío"},
+			{"id": "vera",           "nombre": "Vera",                "desc": "Nativa del Zulia · Madera dura · Crece lento"},
 		],
 		"feedback": {
 			"araguaney":       "✅ ¡Excelente! El Araguaney es el Árbol Nacional de Venezuela. Su copa amplia proporciona sombra perfecta y sus raíces no dañan las aceras. ¡Elección ideal para corredores universitarios!",
 			"nim":             "❌ El nim es una especie introducida, originaria de la India. Aunque es común en Maracaibo, aquí se pide un árbol nativo.",
 			"cactus":          "❌ El cactus no da sombra ni refresca el paso. Un corredor universitario necesita un árbol de copa amplia.",
-			"pino_canadiense": "❌ El pino canadiense es una especie de clima frío. No tolera las altas temperaturas de Maracaibo y no brinda la sombra adecuada para corredores universitarios.",
+			"vera":            "🟡 Opción válida. La Vera es nativa del Zulia, resiste la sequía y llega a dar buena sombra, pero crece muy lento: pasarían años antes de que el corredor tenga la sombra que necesita hoy. El Araguaney era la mejor opción.",
 		},
 	},
 	{
@@ -39,16 +40,17 @@ const MISIONES : Array = [
 		"contexto": "El jardín principal del Rectorado es la carta de presentación del campus.\nNecesita plantas ornamentales con bajo consumo de agua y alto impacto visual.",
 		"criterio": "Buscamos plantas decorativas adaptadas al trópico, resistentes al calor y sin pesticidas.",
 		"correcta": "buganvilia",
+		"valida":   "cayena",
 		"plantas":  [
 			{"id": "buganvilia",  "nombre": "Buganvilia (Veranera)", "desc": "Tropical · Ornamental · Resistente · Poco agua"},
 			{"id": "rosa_inglesa","nombre": "Rosa Inglesa",          "desc": "Alto mantenimiento · Necesita pesticidas"},
-			{"id": "bambu",       "nombre": "Bambú Gigante",         "desc": "Invasivo · Crece descontrolado"},
+			{"id": "cayena",      "nombre": "Cayena",                "desc": "Ornamental · Flor todo el año · Pide riego"},
 			{"id": "cactus",      "nombre": "Cactus",                "desc": "Sin valor ornamental para jardín formal"},
 		],
 		"feedback": {
 			"buganvilia":   "✅ ¡Perfecto! La Buganvilia (Veranera) es ideal: resistente al calor de Maracaibo, consume poca agua, florece abundantemente todo el año y embellece el campus sin requerir pesticidas.",
 			"rosa_inglesa": "❌ La rosa inglesa requiere muchos cuidados, pesticidas y condiciones de clima templado. Su mantenimiento intensivo es incompatible con los principios de sostenibilidad de GreenMetric.",
-			"bambu":        "❌ El bambú gigante es una especie invasiva. Se propaga de forma descontrolada, puede dañar estructuras y no es adecuado para un jardín formal universitario.",
+			"cayena":       "🟡 Opción válida. La Cayena es ornamental y florece todo el año en Maracaibo, pero necesita riego frecuente y poda. Para un jardín de bajo consumo de agua, la Buganvilia era la mejor opción.",
 			"cactus":       "❌ El cactus no tiene valor ornamental para un jardín universitario formal. No produce flores vistosas ni proporciona la imagen verde que necesita el Rectorado.",
 		},
 	},
@@ -58,18 +60,21 @@ const MISIONES : Array = [
 		"icono":    "🌿",
 		"contexto": "El patio central es el espacio de descanso de los estudiantes.\nNecesita vegetación que cree un microclima fresco sin obstruir el paso ni crear peligros.",
 		"criterio": "Plantas de bajo mantenimiento que reduzcan la temperatura y sean seguras para el tránsito.",
-		"correcta": "helecho_tropical",
+		# Mejor y válida invertidas tras la revisión del 2026-11-04: el criterio
+		# pide bajo mantenimiento y el pasto hay que cortarlo; el maní no.
+		"correcta": "mani_forrajero",
+		"valida":   "helecho_tropical",
 		"plantas":  [
-			{"id": "helecho_tropical","nombre": "Helecho Tropical + Pasto","desc": "Bajo mantenimiento · Fresco · Seguro"},
+			{"id": "helecho_tropical","nombre": "Helecho Tropical + Pasto","desc": "Fresco · Seguro · El pasto se corta seguido"},
 			{"id": "mango",           "nombre": "Árbol de Mango",          "desc": "Frutos resbalosos · Raíces invasivas"},
 			{"id": "bambu",           "nombre": "Bambú",                   "desc": "Invasivo · Obstruye el paso"},
-			{"id": "eucalipto",       "nombre": "Eucalipto",               "desc": "Invasivo · Tóxico para otras plantas"},
+			{"id": "mani_forrajero",  "nombre": "Maní Forrajero",          "desc": "Cubresuelo · Flores amarillas · Seguro al pisar"},
 		],
 		"feedback": {
-			"helecho_tropical": "✅ ¡Correcto! El helecho tropical con pasto San Agustín crea un manto verde de bajo mantenimiento que reduce la temperatura del suelo, es seguro para el tránsito estudiantil y no requiere podas frecuentes.",
+			"helecho_tropical": "🟡 Opción válida. El helecho tropical con pasto San Agustín refresca el suelo y es seguro para el tránsito, pero el pasto hay que cortarlo con frecuencia: su mantenimiento es mayor. Para un patio de bajo mantenimiento, el maní forrajero era la mejor opción.",
 			"mango":            "❌ El árbol de mango presenta riesgos: sus frutos caídos son resbalosos y peligrosos, sus raíces invasivas dañan las aceras y su sombra irregular no es ideal para zonas de tránsito.",
 			"bambu":            "❌ El bambú se propaga invasivamente y puede obstruir el paso en el patio. Su rápido crecimiento requiere mantenimiento constante y podría dañar la infraestructura cercana.",
-			"eucalipto":        "❌ El eucalipto libera compuestos alelopáticos que inhiben el crecimiento de otras plantas. Además es invasivo y consume grandes cantidades de agua subterránea.",
+			"mani_forrajero":   "✅ ¡Excelente! El maní forrajero cubre el suelo con flores amarillas, lo mantiene fresco y es seguro para el tránsito. Casi no necesita mantenimiento: no hay que cortarlo como un pasto. En el clima seco de Maracaibo hay que regarlo, pero es la opción que mejor cumple el criterio de bajo mantenimiento.",
 		},
 	},
 	{
@@ -79,17 +84,18 @@ const MISIONES : Array = [
 		"contexto": "El camino norte es la entrada principal al campus. Necesita vegetación que dé bienvenida y sombra a los estudiantes.",
 		"criterio": "Árbol de copa amplia, nativo de la región y con valor representativo.",
 		"correcta": "araguaney",
+		"valida":   "apamate",
 		"plantas":  [
-			{"id": "araguaney",       "nombre": "Araguaney",         "desc": "Árbol Nacional · Sombra amplia · Raíces no invasivas"},
+			{"id": "araguaney",       "nombre": "Araguaney",         "desc": "Árbol Nacional · Copa amplia · Raíces no invasivas"},
 			{"id": "eucalipto",       "nombre": "Eucalipto",          "desc": "Especie invasiva · Raíces agresivas"},
 			{"id": "bambu",           "nombre": "Bambú",              "desc": "Invasivo · No apropiado para entradas"},
-			{"id": "pino_canadiense", "nombre": "Pino Canadiense",    "desc": "Especie foránea · Clima frío"},
+			{"id": "apamate",         "nombre": "Apamate",            "desc": "Nativo · Flores rosadas · Copa amplia"},
 		],
 		"feedback": {
 			"araguaney":       "✅ El Araguaney es la elección perfecta. Su floración amarilla representa la identidad venezolana y su copa proporciona sombra ideal para la entrada del campus.",
 			"eucalipto":       "❌ El eucalipto es invasivo y consume grandes cantidades de agua subterránea. Sus raíces agresivas dañan aceras e infraestructura.",
 			"bambu":           "❌ El bambú crece de forma descontrolada y no proyecta la imagen representativa que necesita la entrada del campus.",
-			"pino_canadiense": "❌ El pino canadiense no se adapta al clima tropical de Maracaibo ni representa la flora local.",
+			"apamate":         "🟡 Opción válida. El Apamate es nativo y da sombra amplia, pero pide más agua que el Araguaney y no tiene su valor representativo: para la entrada del campus, el Árbol Nacional era la mejor opción.",
 		},
 	},
 	{
@@ -119,17 +125,18 @@ const MISIONES : Array = [
 		"contexto": "El corredor noreste conecta el Bloque E con los Estudios a Distancia.\nEs una zona de tránsito constante que necesita vegetación fresca y de bajo mantenimiento.",
 		"criterio": "Vegetación nativa de bajo mantenimiento que reduzca la temperatura del corredor.",
 		"correcta": "helecho_tropical",
+		"valida":   "mani_forrajero",
 		"plantas":  [
-			{"id": "helecho_tropical","nombre": "Helecho Tropical + Pasto","desc": "Bajo mantenimiento · Refresca · Nativo"},
+			{"id": "helecho_tropical","nombre": "Helecho Tropical + Pasto","desc": "Nativo · Refresca · El pasto se corta seguido"},
 			{"id": "rosa_inglesa",    "nombre": "Rosa Inglesa",            "desc": "Alto mantenimiento · Requiere pesticidas"},
 			{"id": "cactus",          "nombre": "Cactus",                  "desc": "Desértico · Sin sombra ni frescor"},
-			{"id": "bambu",           "nombre": "Bambú Invasivo",          "desc": "Se expande sin control · Daña infraestructura"},
+			{"id": "mani_forrajero",  "nombre": "Maní Forrajero",          "desc": "Cubresuelo · Flores amarillas · Introducido"},
 		],
 		"feedback": {
 			"helecho_tropical": "✅ El helecho tropical con pasto crea un suelo verde fresco de bajo mantenimiento. Ideal para reducir la temperatura en corredores de tránsito intenso.",
 			"rosa_inglesa":      "❌ La rosa inglesa requiere pesticidas y riego frecuente. Es incompatible con los principios de sostenibilidad del campus.",
 			"cactus":            "❌ El cactus no contribuye a refrescar el corredor ni ofrece sombra. No es adecuado para zonas de tránsito estudiantil.",
-			"bambu":             "❌ El bambú invasivo se expande sin control y puede dañar la infraestructura del corredor. Su mantenimiento es costoso y frecuente.",
+			"mani_forrajero":    "🟡 Opción válida. El maní forrajero cubre el suelo y casi no necesita poda, pero es introducido (viene de Brasil) y aquí se pide vegetación nativa; además, en Maracaibo hay que regarlo con frecuencia. El helecho con pasto era la mejor opción.",
 		},
 	},
 	{
@@ -139,15 +146,16 @@ const MISIONES : Array = [
 		"contexto": "La zona sur del campus recibe alta insolación todo el día. Estudiantes y docentes necesitan sombra durante el recorrido entre bloques.",
 		"criterio": "Árbol de crecimiento rápido, copa amplia, resistente al calor de Maracaibo.",
 		"correcta": "araguaney",
+		"valida":   "vera",
 		"plantas":  [
 			{"id": "araguaney",       "nombre": "Araguaney",         "desc": "Copa amplia · Resistente al calor · Nativo"},
-			{"id": "pino_canadiense", "nombre": "Pino Canadiense",   "desc": "No se adapta al trópico · Clima frío"},
+			{"id": "vera",            "nombre": "Vera",              "desc": "Nativa del Zulia · Madera dura · Crece lento"},
 			{"id": "eucalipto",       "nombre": "Eucalipto",          "desc": "Especie invasiva · Perjudicial para otras plantas"},
 			{"id": "rosa_inglesa",    "nombre": "Rosa Inglesa",       "desc": "Sin sombra · Alto mantenimiento"},
 		],
 		"feedback": {
 			"araguaney":       "✅ El Araguaney ofrece sombra amplia y resiste el intenso calor maracaibero. Su floración amarilla también mejora la estética del campus.",
-			"pino_canadiense": "❌ El pino canadiense no tolera el calor tropical de Maracaibo. Su forma cónica no proporciona suficiente sombra lateral.",
+			"vera":            "🟡 Opción válida. La Vera es nativa y resiste el calor, pero crece muy lento y tardaría años en dar sombra. El Araguaney era la mejor opción.",
 			"eucalipto":       "❌ El eucalipto es invasivo y sus raíces pueden dañar la infraestructura. Su alelopatía afecta a las plantas cercanas.",
 			"rosa_inglesa":    "❌ La rosa inglesa no proporciona sombra suficiente y requiere cuidados intensivos que contradicen los principios de sostenibilidad.",
 		},
@@ -159,20 +167,45 @@ const MISIONES : Array = [
 		"contexto": "El corredor oeste sur está junto al estacionamiento. Necesita plantas que actúen como barrera verde y mejoren la calidad del aire.",
 		"criterio": "Plantas que filtren gases vehiculares y actúen como barrera visual natural.",
 		"correcta": "buganvilia",
+		"valida":   "coralillo",
 		"plantas":  [
 			{"id": "buganvilia",     "nombre": "Buganvilia (Veranera)", "desc": "Resistente · Filtra el aire · Ornamental"},
 			{"id": "eucalipto",      "nombre": "Eucalipto",             "desc": "Invasivo · Consume mucha agua"},
 			{"id": "cactus",         "nombre": "Cactus",                "desc": "No filtra gases · Sin barrera visual"},
-			{"id": "pino_canadiense","nombre": "Pino Canadiense",       "desc": "No se adapta al clima tropical"},
+			{"id": "coralillo",      "nombre": "Coralillo",             "desc": "Nativo · Arbusto para setos · Atrae colibríes"},
 		],
 		"feedback": {
 			"buganvilia":     "✅ La Buganvilia forma una barrera verde densa y colorida. Resiste los gases vehiculares y mejora la estética del área junto al estacionamiento.",
 			"eucalipto":      "❌ Aunque crece rápido, el eucalipto es invasivo y puede dañar la infraestructura del estacionamiento con sus raíces agresivas.",
 			"cactus":         "❌ El cactus no forma una barrera visual efectiva ni filtra gases vehiculares. No es apropiado para esta zona de tránsito.",
-			"pino_canadiense":"❌ El pino canadiense no se adapta al clima tropical de Maracaibo y no puede sobrevivir a las altas temperaturas de la región.",
+			"coralillo":      "🟡 Opción válida. El Coralillo es nativo de América tropical, forma un seto y atrae colibríes, pero pide más riego y poda que la Buganvilia, que forma una barrera más densa con menos agua. La Buganvilia era la mejor opción.",
 		},
 	},
 ]
+
+# ── Ficha de cada planta (se ve al tocar la tarjeta, antes de plantar) ──
+# Pedido del jurado (nov. 2026): comparar sombra y agua antes de elegir.
+# Especies aprobadas por Cruz Barreto el 2026-11-04; los valores de la ficha
+# son cualitativos y quedan pendientes de su revisión.
+const FICHAS : Dictionary = {
+	"araguaney":        {"sombra": "Media (pierde hojas en sequía)", "agua": "Baja",  "mant": "Bajo", "origen": "Nativa"},
+	"vera":             {"sombra": "Alta, pero tarda años",          "agua": "Baja",  "mant": "Bajo", "origen": "Nativa"},
+	"apamate":          {"sombra": "Alta",                           "agua": "Media", "mant": "Bajo", "origen": "Nativa"},
+	"nim":              {"sombra": "Alta",                           "agua": "Baja",  "mant": "Bajo", "origen": "Introducida (India)"},
+	"cactus":           {"sombra": "Nula",                           "agua": "Muy baja", "mant": "Bajo", "origen": "Introducida"},
+	"eucalipto":        {"sombra": "Media",                          "agua": "Alta",  "mant": "Medio", "origen": "Introducida (Australia)"},
+	"bambu":            {"sombra": "Media",                          "agua": "Alta",  "mant": "Alto (se expande)", "origen": "Introducida"},
+	"buganvilia":       {"sombra": "Baja",                           "agua": "Baja",  "mant": "Bajo", "origen": "Introducida, adaptada"},
+	"cayena":           {"sombra": "Baja",                           "agua": "Alta",  "mant": "Medio", "origen": "Introducida"},
+	"rosa_inglesa":     {"sombra": "Nula",                           "agua": "Alta",  "mant": "Alto", "origen": "Introducida"},
+	"coralillo":        {"sombra": "Baja",                           "agua": "Media", "mant": "Medio (poda)", "origen": "Nativa de América tropical"},
+	"helecho_tropical": {"sombra": "Nula (cubre el suelo)",          "agua": "Media", "mant": "Medio", "origen": "Nativa"},
+	"mani_forrajero":   {"sombra": "Nula (cubre el suelo)",          "agua": "Alta (en Maracaibo)", "mant": "Bajo", "origen": "Introducida (Brasil)"},
+	"mango":            {"sombra": "Alta",                           "agua": "Media", "mant": "Alto (frutos)", "origen": "Introducida"},
+}
+# La opción válida completa la misión, pero da menos XP que la mejor. Los
+# EcoCredits no cambian: los fija el servidor por nivel.
+const XP_MENOS_VALIDA : int = 10
 
 # ── Constantes visuales ──────────────────────────────────────
 const PANEL_W   : float = 960.0
@@ -242,6 +275,11 @@ var _fb_desc        : Label         = null
 var _fb_btn         : Button        = null
 var _pct_lbl        : Label         = null
 var _nivel_badge    : Label         = null
+var _carta_sel      : Panel         = null
+var _calidad        : String        = ""      # "mejor" o "valida" al acertar
+var _ficha_titulo   : Label         = null
+var _ficha_lbl      : Label         = null
+var _btn_plantar    : Button        = null
 
 # ── Nodos UI — fase 2 (plantación interactiva) ────────────────
 var _plant_panel      : Panel      = null
@@ -268,10 +306,14 @@ class PlantaVisual extends Node2D:
 			"buganvilia":      _buganvilia()
 			"cactus":          _cactus()
 			"eucalipto":       _eucalipto()
-			"pino_canadiense": _pino()
 			"rosa_inglesa":    _rosa()
 			"bambu":           _bambu()
 			"helecho_tropical":_helecho()
+			"vera":            _arbol_copa(Color(0.16, 0.48, 0.14), Color(0.98, 0.84, 0.20), 0.85)
+			"apamate":         _arbol_copa(Color(0.22, 0.50, 0.18), Color(0.96, 0.62, 0.80), 1.0)
+			"cayena":          _arbusto_flores(Color(0.90, 0.12, 0.18), 7.0)
+			"coralillo":       _arbusto_flores(Color(0.98, 0.42, 0.12), 4.0)
+			"mani_forrajero":  _cubresuelo()
 			_:                 _generico()
 
 	func _araguaney() -> void:
@@ -363,33 +405,6 @@ class PlantaVisual extends Node2D:
 		draw_line(Vector2(-18, -36), Vector2(18, -8), Color(0.88, 0.15, 0.15, 0.70), 3.0)
 		draw_line(Vector2(-18, -8), Vector2(18, -36), Color(0.88, 0.15, 0.15, 0.70), 3.0)
 
-	func _pino() -> void:
-		# Tronco
-		draw_rect(Rect2(-4, 18, 8, 18), Color(0.42, 0.28, 0.14))
-		# Capas del pino (triángulos superpuestos)
-		var capas := [
-			{"y": 18.0, "w": 28.0}, {"y": 4.0,  "w": 22.0},
-			{"y": -8.0, "w": 18.0}, {"y": -20.0,"w": 13.0},
-		]
-		for capa in capas:
-			var pts := PackedVector2Array([
-				Vector2(-(capa["w"] as float), capa["y"] as float),
-				Vector2( (capa["w"] as float), capa["y"] as float),
-				Vector2(0.0, (capa["y"] as float) - 18.0)
-			])
-			draw_colored_polygon(pts, Color(0.10, 0.30, 0.14))
-			draw_line(pts[0], pts[2], Color(0.15, 0.40, 0.18), 1.5)
-			draw_line(pts[1], pts[2], Color(0.15, 0.40, 0.18), 1.5)
-		# Punta de la copa
-		var top_pts := PackedVector2Array([
-			Vector2(-9, -20), Vector2(9, -20), Vector2(0, -36)
-		])
-		draw_colored_polygon(top_pts, Color(0.10, 0.28, 0.12))
-		# Nieve en punta (clima frío, especie foránea)
-		draw_circle(Vector2(0, -34), 6.5, Color(0.92, 0.94, 0.96, 0.90))
-		draw_arc(Vector2(-22, 4), 6.0, PI, TAU, 8, Color(0.90, 0.93, 0.96, 0.80), 8.0)
-		draw_arc(Vector2( 22, 4), 6.0, PI, TAU, 8, Color(0.90, 0.93, 0.96, 0.80), 8.0)
-
 	func _rosa() -> void:
 		# Tallo con espinas
 		draw_line(Vector2(0, 34), Vector2(0, -12), Color(0.18, 0.48, 0.14), 3.0)
@@ -453,6 +468,40 @@ class PlantaVisual extends Node2D:
 	func _generico() -> void:
 		draw_circle(Vector2(0, -10), 20.0, Color(0.20, 0.60, 0.20))
 		draw_rect(Rect2(-4, 5, 8, 28), Color(0.42, 0.26, 0.10))
+
+	# Vera (copa verde con flor amarilla) y Apamate (flor rosada).
+	func _arbol_copa(hoja: Color, flor: Color, tam: float) -> void:
+		draw_rect(Rect2(-4, 0, 8, 32), Color(0.40, 0.26, 0.12))
+		draw_circle(Vector2(0, -16), 26.0 * tam, hoja)
+		draw_circle(Vector2(-15, -6), 16.0 * tam, hoja)
+		draw_circle(Vector2(15, -6), 16.0 * tam, hoja)
+		for i in 9:
+			var a := float(i) / 9.0 * TAU
+			var r := 16.0 * tam + sin(_t * 2.0 + a) * 2.0
+			draw_circle(Vector2(cos(a) * r, sin(a) * r * 0.7 - 14), 3.5, flor)
+
+	# Cayena (flores grandes) y Coralillo (flores pequeñas y tubulares).
+	func _arbusto_flores(flor: Color, r_flor: float) -> void:
+		draw_line(Vector2(0, 34), Vector2(-12, 4), Color(0.30, 0.42, 0.14), 3.0)
+		draw_line(Vector2(0, 34), Vector2(12, 4), Color(0.30, 0.42, 0.14), 3.0)
+		draw_line(Vector2(0, 34), Vector2(0, -6), Color(0.30, 0.42, 0.14), 3.0)
+		for h in [Vector2(-14, 2), Vector2(14, 2), Vector2(0, -10), Vector2(-8, -18), Vector2(8, -18)]:
+			draw_circle(h, 12.0, Color(0.16, 0.50, 0.16, 0.90))
+		for f in [Vector2(-18, -4), Vector2(16, -8), Vector2(-4, -24), Vector2(10, -22), Vector2(0, -6)]:
+			draw_circle(f, r_flor, flor)
+			draw_circle(f, r_flor * 0.35, Color(1.0, 0.85, 0.25))
+
+	# Maní forrajero: cubresuelo bajo con florcitas amarillas.
+	func _cubresuelo() -> void:
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(-38, 34), Vector2(38, 34), Vector2(34, 16), Vector2(-34, 16)
+		]), Color(0.20, 0.52, 0.16))
+		for i in 14:
+			var x := -32.0 + float(i) * 5.0
+			draw_circle(Vector2(x, 16 + sin(float(i) * 1.7) * 3.0), 6.0, Color(0.24, 0.60, 0.20))
+		for i in 7:
+			var x := -28.0 + float(i) * 9.5
+			draw_circle(Vector2(x, 12 + cos(float(i) * 2.1) * 3.0), 3.0, Color(1.0, 0.86, 0.15))
 
 # ── Inner class: suelo animado ────────────────────────────────
 class SueloVisual extends Node2D:
@@ -638,6 +687,8 @@ func iniciar(indice: int, zona_node: Area2D, modo: String = "click") -> void:
 	_modo           = modo
 	_seleccion_ok   = false
 	_planta_elegida = ""
+	_carta_sel      = null
+	_calidad        = ""
 	_paso_actual    = 0
 	_paso_progreso  = 0
 	_drag_pressed   = false
@@ -649,12 +700,14 @@ func iniciar(indice: int, zona_node: Area2D, modo: String = "click") -> void:
 		_plant_panel.visible = false
 	_panel_root.visible = true
 	for c in _cartas:
+		c.set_meta("descartada", false)
 		_resetear_carta(c)
 	_poblar_datos()
+	_mostrar_ficha(null)
 	show()
 	var hb = get_tree().get_first_node_in_group("hint_bubble")
 	if hb:
-		var msg := "🌱 Elige la planta correcta para esta zona." if modo == "click" \
+		var msg := "🌱 Toca cada planta para ver su ficha y elige la mejor para esta zona." if modo == "click" \
 			else "🖐 ¡Zona de área verde! Elegirás la planta y luego frotarás el mouse para plantarla."
 		hb.push("primer_plantar", msg)
 
@@ -680,7 +733,7 @@ func _poblar_datos() -> void:
 		if i >= plantas.size(): continue
 		var pdata : Dictionary = plantas[i]
 		_configurar_carta(carta, pdata["id"], pdata["nombre"], pdata["desc"],
-						  pdata["id"] == m["correcta"])
+						  pdata["id"] == m["correcta"], pdata["id"] == m.get("valida", ""))
 
 
 # ── Crear UI ──────────────────────────────────────────────────
@@ -775,7 +828,7 @@ func _crear_ui() -> void:
 
 	# Columna izquierda: contexto + suelo
 	var col_izq := VBoxContainer.new()
-	col_izq.custom_minimum_size   = Vector2(230, 0)
+	col_izq.custom_minimum_size   = Vector2(300, 0)
 	col_izq.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col_izq.add_theme_constant_override("separation", 10)
 	content_row.add_child(col_izq)
@@ -791,6 +844,8 @@ func _crear_ui() -> void:
 	_criterio_lbl.add_theme_font_size_override("font_size", 11)
 	_criterio_lbl.add_theme_color_override("font_color", Color(0.55, 0.88, 0.60))
 	col_izq.add_child(_criterio_lbl)
+
+	_crear_ficha(col_izq)
 
 	# Contenedor visual del suelo
 	var suelo_cont := Control.new()
@@ -824,7 +879,7 @@ func _crear_ui() -> void:
 	content_row.add_child(col_der)
 
 	var instruccion := Label.new()
-	instruccion.text = "🔍  Selecciona la planta más adecuada para esta zona:"
+	instruccion.text = "🔍  Toca una planta para ver su ficha y elige la más adecuada:"
 	instruccion.add_theme_font_size_override("font_size", 13)
 	instruccion.add_theme_color_override("font_color", Color(0.88, 0.92, 0.88))
 	col_der.add_child(instruccion)
@@ -847,6 +902,45 @@ func _crear_ui() -> void:
 	_crear_panel_feedback()
 
 
+func _crear_ficha(padre: Container) -> void:
+	var ficha := PanelContainer.new()
+	var fs := StyleBoxFlat.new()
+	fs.bg_color     = Color(0.07, 0.13, 0.09, 0.95)
+	fs.border_color = Color(0.95, 0.80, 0.25, 0.70)
+	fs.set_border_width_all(2)
+	fs.set_corner_radius_all(10)
+	fs.set_content_margin_all(10)
+	ficha.add_theme_stylebox_override("panel", fs)
+	padre.add_child(ficha)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	ficha.add_child(vb)
+
+	_ficha_titulo = Label.new()
+	_ficha_titulo.add_theme_font_size_override("font_size", 13)
+	_ficha_titulo.add_theme_color_override("font_color", Color(0.98, 0.88, 0.45))
+	vb.add_child(_ficha_titulo)
+
+	_ficha_lbl = Label.new()
+	_ficha_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_ficha_lbl.add_theme_font_size_override("font_size", 11)
+	_ficha_lbl.add_theme_color_override("font_color", Color(0.85, 0.92, 0.85))
+	vb.add_child(_ficha_lbl)
+
+	_btn_plantar = Button.new()
+	_btn_plantar.custom_minimum_size = Vector2(0, 34)
+	_btn_plantar.add_theme_font_size_override("font_size", 13)
+	var bs := StyleBoxFlat.new()
+	bs.bg_color     = Color(0.06, 0.34, 0.08)
+	bs.border_color = Color(0.22, 0.84, 0.22)
+	bs.set_border_width_all(2)
+	bs.set_corner_radius_all(10)
+	_btn_plantar.add_theme_stylebox_override("normal", bs)
+	_btn_plantar.pressed.connect(_on_plantar_esta)
+	vb.add_child(_btn_plantar)
+
+
 func _crear_carta() -> Panel:
 	var carta := Panel.new()
 	carta.custom_minimum_size = Vector2(CARTA_W, CARTA_H)
@@ -867,6 +961,9 @@ func _crear_carta() -> Panel:
 	visual_cont.custom_minimum_size = Vector2(0, 110)
 	visual_cont.offset_bottom = 110.0
 	visual_cont.clip_contents = true
+	# Sin esto la zona del dibujo se tragaba el clic: la tarjeta solo
+	# respondía en su parte de abajo (observación del jurado, nov. 2026).
+	visual_cont.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	carta.add_child(visual_cont)
 
 	var pv := PlantaVisual.new()
@@ -905,9 +1002,10 @@ func _crear_carta() -> Panel:
 
 
 func _configurar_carta(carta: Panel, pid: String, nombre: String,
-					   desc: String, es_correcta: bool) -> void:
+					   desc: String, es_correcta: bool, es_valida: bool = false) -> void:
 	carta.set_meta("planta_id",   pid)
 	carta.set_meta("es_correcta", es_correcta)
+	carta.set_meta("es_valida",   es_valida)
 	(carta.get_meta("nombre_lbl") as Label).text = nombre
 	(carta.get_meta("desc_lbl") as Label).text   = desc
 	(carta.get_meta("planta_visual") as PlantaVisual).tipo = pid
@@ -930,22 +1028,65 @@ func _on_carta_input(event: InputEvent, carta: Panel) -> void:
 	var ev := event as InputEventMouseButton
 	if not (ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT): return
 	if _seleccion_ok: return
-	_procesar_seleccion(carta)
+	_seleccionar_carta(carta)
+
+
+# Tocar una tarjeta solo la marca y muestra su ficha; se planta con el botón
+# "Plantar esta". Antes se plantaba al primer clic, sin poder comparar.
+func _seleccionar_carta(carta: Panel) -> void:
+	if is_instance_valid(_carta_sel) and _carta_sel != carta \
+			and not _carta_sel.get_meta("descartada", false):
+		_resetear_carta(_carta_sel)
+	_carta_sel = carta
+	if not carta.get_meta("descartada", false):
+		var ps := StyleBoxFlat.new()
+		ps.bg_color     = Color(0.10, 0.16, 0.08, 0.98)
+		ps.border_color = Color(0.95, 0.80, 0.25)
+		ps.set_border_width_all(3)
+		ps.set_corner_radius_all(12)
+		carta.add_theme_stylebox_override("panel", ps)
+	_mostrar_ficha(carta)
+
+
+func _mostrar_ficha(carta: Panel) -> void:
+	if carta == null:
+		_ficha_titulo.text = "Ficha de la planta"
+		_ficha_lbl.text = "Toca una tarjeta para ver cuánta sombra da, cuánta agua necesita, su mantenimiento y su origen."
+		_btn_plantar.disabled = true
+		_btn_plantar.text = "🌱  Plantar esta"
+		return
+	var pid : String = carta.get_meta("planta_id")
+	var f : Dictionary = FICHAS.get(pid, {})
+	_ficha_titulo.text = (carta.get_meta("nombre_lbl") as Label).text
+	_ficha_lbl.text = "Sombra: %s\nAgua que necesita: %s\nMantenimiento: %s\nOrigen: %s" % [
+		f.get("sombra", "—"), f.get("agua", "—"), f.get("mant", "—"), f.get("origen", "—")]
+	var descartada : bool = carta.get_meta("descartada", false)
+	_btn_plantar.disabled = descartada
+	_btn_plantar.text = "Ya la descartaste" if descartada else "🌱  Plantar esta"
+
+
+func _on_plantar_esta() -> void:
+	if _seleccion_ok or not is_instance_valid(_carta_sel): return
+	_procesar_seleccion(_carta_sel)
 
 
 func _procesar_seleccion(carta: Panel) -> void:
 	var pid        : String = carta.get_meta("planta_id")
 	var es_ok      : bool   = carta.get_meta("es_correcta")
+	var es_valida  : bool   = carta.get_meta("es_valida", false)
 	var m          : Dictionary = MISIONES[_mision_idx]
 	var feedback_txt : String = m["feedback"].get(pid, "Respuesta no reconocida.")
 
-	if es_ok:
+	if es_ok or es_valida:
 		_seleccion_ok   = true
 		_planta_elegida = pid
+		_calidad        = "mejor" if es_ok else "valida"
 		_animar_carta_ok(carta)
-		_mostrar_feedback(true, "¡Planta correcta!", feedback_txt)
+		_mostrar_feedback(true, "¡La mejor opción!" if es_ok else "Opción válida", feedback_txt)
 	else:
+		carta.set_meta("descartada", true)
 		_animar_carta_mal(carta)
+		_mostrar_ficha(carta)
 		_mostrar_feedback(false, "Planta incorrecta", feedback_txt)
 
 
@@ -1276,9 +1417,27 @@ func _completar_plantacion() -> void:
 	tw.tween_callback(_mostrar_panel_metricas_planta)
 
 
+func _nombre_planta(pid: String) -> String:
+	for p in MISIONES[_mision_idx]["plantas"]:
+		if p["id"] == pid:
+			return p["nombre"]
+	return pid.replace("_", " ").capitalize()
+
+
+func _con_bono(xp: int) -> int:
+	var eco = get_node_or_null("/root/EconomiaManager")
+	return eco.aplicar_bono_xp(xp) if eco else xp
+
+
+func _xp_mision() -> int:
+	var nm = _nivel_mgr()
+	var xp : int = int(nm.XP_POR_MISION.get(1, 40)) if nm else 40
+	return xp - XP_MENOS_VALIDA if _calidad == "valida" else xp
+
+
 func _mostrar_panel_metricas_planta() -> void:
 	var nm   = _nivel_mgr()
-	var xp   : int    = int(nm.XP_POR_MISION.get(1, 40)) if nm else 40
+	var xp   : int    = _xp_mision()
 	var ec   : int    = int(nm.EC_POR_MISION.get(1, 15)) if nm else 15
 	var m    : Dictionary = MISIONES[_mision_idx]
 	var zona : String = m["zona"]
@@ -1298,6 +1457,18 @@ func _mostrar_panel_metricas_planta() -> void:
 			detalle = "💧  Cobertura del suelo → mejora el drenaje\n" \
 				+ "🌬  Evapotranspiración natural → refresca el aire\n" \
 				+ "🌿  Hábitat para insectos y microorganismos del suelo"
+		"vera", "apamate":
+			detalle = "🌡  Árbol nativo → sombra y frescor cuando crezca\n" \
+				+ "🐝  Sus flores atraen polinizadores nativos\n" \
+				+ "💧  Pide más agua o más años que la mejor opción"
+		"cayena", "coralillo":
+			detalle = "🌸  Arbusto con flores todo el año → atrae colibríes\n" \
+				+ "💨  Forma una barrera verde baja\n" \
+				+ "💧  Necesita más riego y poda que la mejor opción"
+		"mani_forrajero":
+			detalle = "🌿  Cubre el suelo y evita la erosión\n" \
+				+ "🐝  Sus flores amarillas atraen insectos polinizadores\n" \
+				+ "💧  En Maracaibo necesita riego frecuente"
 		_:
 			detalle = "🌿  Vegetación nativa adaptada al clima tropical\n" \
 				+ "💧  Retención hídrica y mejora del suelo\n" \
@@ -1348,13 +1519,13 @@ func _mostrar_panel_metricas_planta() -> void:
 	met_lbl.text = (
 		"🏛  Infraestructura y Configuración\n"
 		+ "   • Espacio verde activo en el campus\n"
-		+ "   • Vegetación nativa adaptada al trópico\n\n"
+		+ "   • Vegetación adaptada al trópico\n\n"
 		+ "⚡  Energía y Cambio Climático\n"
 		+ "   • Absorción de CO₂: ~12 kg/año\n"
 		+ "   • Reducción térmica: ↓ 1.5 °C en el área\n\n"
 		+ "💧  Agua\n"
 		+ "   • Mejora el drenaje y la retención hídrica del suelo\n\n"
-		+ "🌿  Detalle — %s\n%s" % [tipo.replace("_", " ").capitalize(), detalle]
+		+ "🌿  Detalle — %s\n%s" % [_nombre_planta(tipo), detalle]
 	)
 	met_lbl.autowrap_mode       = TextServer.AUTOWRAP_WORD
 	met_lbl.add_theme_font_size_override("font_size", 11)
@@ -1366,7 +1537,10 @@ func _mostrar_panel_metricas_planta() -> void:
 	vb.add_child(sep2)
 
 	var recomp := Label.new()
-	recomp.text = "+%d XP   ·   +%d EcoCredits" % [xp, ec]
+	# Con el bono de la credencial de voluntario, igual que la XP que suma el mapa.
+	recomp.text = "+%d XP   ·   +%d EcoCredits" % [_con_bono(xp), ec]
+	if _calidad == "valida":
+		recomp.text += "\n(la mejor opción daba +%d XP)" % _con_bono(xp + XP_MENOS_VALIDA)
 	recomp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	recomp.add_theme_font_size_override("font_size", 14)
 	recomp.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55))
@@ -1425,13 +1599,13 @@ func _nivel_mgr():
 
 func _completar_mision() -> void:
 	SupabaseManager.registrar_evento(1, _mision_id, "mision_completada",
-		{"planta": _planta_elegida, "modo": _modo})
+		{"planta": _planta_elegida, "modo": _modo, "calidad": _calidad})
 	var nm = _nivel_mgr()
 	if nm:
 		nm.completar_mision(1, _mision_id)
 	if is_instance_valid(_zona_ref) and _zona_ref.has_method("_marcar_completada"):
 		_zona_ref._marcar_completada()
-	var xp : int = int(nm.XP_POR_MISION.get(1, 40)) if nm else 40
+	var xp : int = _xp_mision()
 	var ec : int = int(nm.EC_POR_MISION.get(1, 15)) if nm else 15
 	mision_completada_plantar.emit(_mision_id, xp, ec)
 

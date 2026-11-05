@@ -10,6 +10,7 @@ extends Area2D
 
 signal malla_verde_solicitada(punto: Area2D)
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
 const RADIO_DETEC : float = 55.0
 
 var _jugador_cerca : bool = false
@@ -123,7 +124,7 @@ func _process(_delta: float) -> void:
 	var cam_off   := cam.global_position - vp_size * 0.5 / cam_zoom
 	var screen_pos := (gp - cam_off) * cam_zoom
 	_prompt_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_prompt_panel.position = screen_pos
+	AJUSTE.colocar_aviso(_prompt_panel, _prompt_lbl, screen_pos)
 
 
 func _actualizar_prompt_texto() -> void:

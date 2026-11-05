@@ -221,7 +221,9 @@ Cuando ocurre algo —se completa una misión, se gana una insignia, sube el ran
 
 ### 5.6. Guía rápida dentro del juego
 
-El botón **?** de la esquina inferior derecha, o la tecla **H**, abre la **Bitácora del Eco-Ranger**: una libreta de campo con diez capítulos que resumen este manual (controles, personajes, misiones, test de cierre, puntaje, tienda, rangos y qué hacer si algo no funciona). Las hojas se pasan con **‹ Anterior** y **Siguiente ›** o con las flechas del teclado, y las **pestañas de colores** del borde llevan directo a cada capítulo. Se cierra con **Esc**, con **H** o con **Cerrar**.
+El botón **?** de la esquina inferior derecha, o las teclas **F1** o **H**, abren la **Bitácora del Eco-Ranger**: una libreta de campo con trece capítulos que resumen este manual (controles, personajes, misiones, test de cierre, puntaje, tienda, rangos, qué hacer si algo no funciona y, en los capítulos 11 a 13, cómo pasar cada nivel). Las hojas se pasan con **‹ Anterior** y **Siguiente ›** o con las flechas del teclado, y las **pestañas de colores** del borde llevan directo a cada capítulo. Mientras está abierta, el personaje no se mueve. Se cierra con **Esc**, **F1**, **H** o **Cerrar**.
+
+**Minimapa.** El botón **📍**, encima del **?**, o la tecla **M**, abre un mapa pequeño del campus. Un punto rojo que titila marca cada misión que falta del nivel en curso, y un punto celeste marca dónde está el estudiante. Al completar una misión, su punto desaparece. Se puede seguir caminando con el minimapa abierto; se cierra con **M** o con el mismo botón.
 
 ![Figura 7b. La Bitácora del Eco-Ranger abierta en su primer capítulo.](manual/capturas/guia_1.png)
 *Figura 7b. La Bitácora del Eco-Ranger abierta en su primer capítulo.*
@@ -237,7 +239,8 @@ El botón **?** de la esquina inferior derecha, o la tecla **H**, abre la **Bit�
 | **W A S D** o **flechas** | Mover al Eco-Ranger |
 | **E** | Interactuar con lo que se tenga cerca: hablar con un NPC, entrar a un edificio, iniciar una misión |
 | **1 – 5** | Abrir los paneles de la barra de acciones |
-| **H** | Abrir y cerrar la guía rápida (también el botón **?**) |
+| **F1** o **H** | Abrir y cerrar la guía rápida (también el botón **?**) |
+| **M** | Abrir y cerrar el minimapa (también el botón **📍**) |
 | **Esc** | Abrir y cerrar el menú de pausa |
 | **Clic** | Todos los botones y paneles se manejan con el ratón |
 
@@ -305,6 +308,8 @@ Se activan acercándose al punto señalado y pulsando **E**. Cada una explica qu
 
 Algunas misiones **necesitan una herramienta comprada en la tienda** (ver sección 11). Si falta, el juego lo dice y ofrece abrir la tienda con la herramienta ya señalada.
 
+En la misión de plantar, al tocar cada planta se ve su **ficha**: cuánta sombra da, cuánta agua necesita, su mantenimiento y su origen. Se planta con el botón **Plantar esta**. En cada zona hay una planta **mejor** y una **válida**: las dos completan la misión, pero la válida da 10 XP menos, y el juego explica por qué la otra era mejor.
+
 ![Figura 11. Misión de plantación (Nivel 1): elegir la planta adecuada para la zona.](manual/capturas/mision_campo.png)
 *Figura 11. Misión de plantación (Nivel 1): elegir la planta adecuada para la zona.*
 
@@ -314,7 +319,7 @@ En algunos puntos el juego no pide ejecutar una acción, sino **elegir entre alt
 
 El caso más desarrollado es el **Nivel 5 (Plan de Movilidad)**: el estudiante recibe un presupuesto limitado y debe repartirlo entre seis medidas de transporte —permisos de estacionamiento, transporte compartido, servicio de transporte interno, día sin carros, renovación de flota— sabiendo que **no alcanza para todas**. Al final, el Consejo evalúa el plan completo.
 
-Las respuestas no se revelan de antemano: el estudiante decide con la información que los NPC le dieron, y ve las consecuencias después.
+Al marcar una opción, antes de confirmar, se ve su costo, qué implica y a quién beneficia. Lo que no se revela de antemano es cuántos puntos da ni si es contraproducente: el estudiante decide con esa información y con lo que le explicaron los NPC, y ve las consecuencias al confirmar.
 
 ![Figura 12. Decisión del Plan de Movilidad, con el presupuesto disponible y el costo de cada opción.](manual/capturas/decision.png)
 *Figura 12. Decisión del Plan de Movilidad, con el presupuesto disponible y el costo de cada opción.*
@@ -365,6 +370,17 @@ Al completar los **seis** tests de nivel aparece el **test final**: doce pregunt
 | **4** | 💧 Uso del Agua | 8 | Cerrar seis llaves con fugas e instalar dos sistemas de captación de agua de lluvia. |
 | **5** | 🚲 Transporte Sostenible | 9 | Elaborar el Plan de Movilidad: seis decisiones presupuestarias, dos bicicleteros y la defensa ante el Consejo. |
 | **6** | 📚 Educación e Investigación | 4 | Malla curricular verde, Comité Ambiental, Semana Verde e informe final. |
+
+### Cómo se pasa cada nivel
+
+Las misiones que faltan se ven en el mapa con una flecha amarilla y en el minimapa (tecla **M**) con un punto rojo. A cada misión se entra acercándose y pulsando **E**.
+
+- **Nivel 1 — Entorno.** En cada una de las seis zonas verdes se toca cada planta para ver su ficha (sombra, agua, mantenimiento y origen) y se planta la mejor con **Plantar esta**. Después se cava, se coloca y se riega con clics o frotando el ratón, según la zona. La opción válida también completa la misión, con menos XP. Cada 10 minutos la planta pide riego: volver a regarla da XP extra.
+- **Nivel 2 — Energía.** En los bloques A a F se entra por la puerta marcada, se camina hasta las luminarias naranjas y, con **E**, se apaga, se retira el bombillo y se instala el LED. Los paneles solares del Rectorado y del estacionamiento piden el **kit solar** de la tienda. Se instalan en cinco pasos que explican hacia dónde se orientan los paneles en Maracaibo (al sur), con qué inclinación (10° a 15°) y por qué.
+- **Nivel 3 — Residuos.** En cada uno de los seis puntos de reciclaje se arrastran los ocho objetos donados a su contenedor; si uno va al contenedor equivocado, vuelve a su lugar. Con el tiempo las papeleras se llenan: escanear su QR llama al servicio de limpieza y da XP extra.
+- **Nivel 4 — Agua.** Se cierran con **E** las seis llaves que gotean (el aviso muestra los litros perdidos). Las dos captaciones de agua de lluvia piden el **kit pluvial** de la tienda y se instalan en cinco pasos.
+- **Nivel 5 — Transporte.** Se recibe el encargo en la Oficina de Movilidad, se toman las seis decisiones del plan repartidas por el campus, se montan los dos bicicleteros (piden el **kit de bicicletero**) y se defiende el plan ante el Consejo, en el Rectorado, respondiendo sus objeciones.
+- **Nivel 6 — Educación.** Se rediseña la malla curricular, se recluta el Comité Ambiental convenciendo a cinco estudiantes, se organiza la Semana Verde eligiendo tres de siete actividades y, al final, se publica el informe.
 
 ### Cómo se desbloquean
 

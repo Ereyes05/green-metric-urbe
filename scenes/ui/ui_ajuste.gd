@@ -70,3 +70,23 @@ static func _poner_alto(panel: Control, alto: float) -> void:
 	panel.custom_minimum_size.y = alto
 	panel.offset_top    = centro - alto / 2.0
 	panel.offset_bottom = centro + alto / 2.0
+
+
+# Avisos del mapa ("[E] Regar la planta — Jardín de la Plazoleta"): el cuadro
+# tenía ancho fijo y el texto largo se salía. Llamar en vez de asignar
+# position: ensancha el cuadro hasta que entre el texto, lo deja centrado
+# donde estaba y sin salirse de la pantalla.
+static func colocar_aviso(panel: Control, lbl: Label, pos: Vector2) -> void:
+	if not panel.has_meta("ancho_base"):
+		panel.set_meta("ancho_base", panel.custom_minimum_size.x)
+	var base : float = panel.get_meta("ancho_base")
+	# En pasos de 24 px: un aviso que cambia solo (los litros de la llave) no
+	# salta de lado cada vez que el número gana un dígito.
+	var ancho := maxf(base, ceilf((lbl.get_minimum_size().x + 28.0) / 24.0) * 24.0)
+	panel.custom_minimum_size.x = ancho
+	panel.size.x = ancho
+	pos.x -= (ancho - base) * 0.5
+	var vp := panel.get_viewport_rect().size
+	pos.x = clampf(pos.x, MARGEN_PANTALLA, maxf(MARGEN_PANTALLA, vp.x - ancho - MARGEN_PANTALLA))
+	pos.y = clampf(pos.y, MARGEN_PANTALLA, maxf(MARGEN_PANTALLA, vp.y - panel.size.y - MARGEN_PANTALLA))
+	panel.position = pos

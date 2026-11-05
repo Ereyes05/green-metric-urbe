@@ -102,6 +102,18 @@ func _ready() -> void:
 	_check(DATOS.NOMBRE_LUGAR.has("oficina_movilidad") and DATOS.NOMBRE_LUGAR.has("rectorado"), "nombres de Oficina y Rectorado")
 	_check(DATOS.opcion("tr_lote", "no_existe").is_empty() and DATOS.decision("x").is_empty(), "consultas inexistentes devuelven {}")
 	_check(DATOS.ENCARGO.contains("100"), "el encargo menciona el presupuesto")
+	# Detalle neutral que se ve al marcar (pedido del jurado, nov. 2026).
+	var sin_detalle := []
+	var delatan := []
+	for d in DATOS.DECISIONES:
+		for o in d["opciones"]:
+			var t := DATOS.detalle(o["id"])
+			if t == "":
+				sin_detalle.append(o["id"])
+			elif t.to_lower().contains("contraproducente") or t.to_lower().contains("punto") or t.contains("TR"):
+				delatan.append(o["id"])
+	_check(sin_detalle.is_empty(), "toda opción tiene detalle %s" % str(sin_detalle))
+	_check(delatan.is_empty(), "ningún detalle menciona puntos, indicadores ni contraproducente %s" % str(delatan))
 
 	# I2: título legible de cada misión del Nivel 5 (antes SceneMapaMundo
 	# mostraba el id crudo capitalizado: "Tr Permisos", "Tr Consejo").

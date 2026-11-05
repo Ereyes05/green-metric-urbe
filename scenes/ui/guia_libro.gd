@@ -1,6 +1,6 @@
 # ============================================================
 # guia_libro.gd — guía rápida dentro del juego: la bitácora de campo del
-# Eco-Ranger. Botón "?" en la esquina inferior derecha (o tecla H, ver
+# Eco-Ranger. Botón "?" en la esquina inferior derecha (o F1 / H, ver
 # SceneMapaMundo._input). Es un resumen del manual de usuarios
 # (docs/manual_usuarios.md): si cambia una regla del juego, cambiar las dos.
 #
@@ -33,13 +33,13 @@ const PAGINAS : Array = [
 	["📖", "Bitácora del Eco-Ranger", "Lo esencial para jugar", TEMA.VERDE, [
 		"Este juego te enseña los seis criterios con los que el ranking UI GreenMetric evalúa qué tan sostenible es una universidad.",
 		"Recorres el campus de la URBE, hablas con los responsables de cada área, haces misiones y ves cómo tus decisiones mueven el puntaje del campus.",
-		"Pasa las hojas con las flechas del teclado o con las pestañas del borde. Cierra con Esc o con la tecla H.",
+		"Pasa las hojas con las flechas o con las pestañas del borde. Cierra con Esc, F1 o H. Los capítulos 11 a 13 explican cómo pasar cada nivel.",
 	]],
 	["🕹", "Controles", "Teclado y ratón", TEMA.CIAN, [
 		"W A S D o las flechas: mover al Eco-Ranger.",
 		"E: hablar con un personaje, entrar a un edificio o empezar una misión. Si hay dos cosas cerca, gana la más cercana.",
 		"1 a 5: abrir Avance, Reporte, Ranking, Simular y Tienda.",
-		"H: abrir esta bitácora.   Esc: menú de pausa.",
+		"F1 o H: abrir esta bitácora.   M: minimapa.   Esc: menú de pausa.",
 	]],
 	["📊", "Tu pantalla", "Qué muestra cada parte", TEMA.CIAN, [
 		"Arriba a la izquierda: tu nivel, tu rango y tus EcoCredits.",
@@ -81,6 +81,20 @@ const PAGINAS : Array = [
 		"Un personaje no habla: está apagado porque es de un nivel posterior.",
 		"Una misión no arranca: te falta la herramienta de la tienda.",
 		"Tu progreso se guarda solo en cada acción. Si se cierra el juego, no pierdes nada.",
+	]],
+	# Capítulos 11 a 13: cómo se pasa cada nivel (pregunta del jurado, nov.
+	# 2026). Mismo texto que la sección 8 del manual.
+	["🌳", "Niveles 1 y 2", "Cómo pasarlos: Entorno y Energía", TEMA.VERDE, [
+		"Nivel 1. En cada zona verde marcada pulsa E. Toca las plantas para ver su ficha y planta la mejor con «Plantar esta»; luego cava, coloca y riega. La válida también sirve, pero da menos XP.",
+		"Nivel 2. Entra a los bloques A a F, acércate a las luminarias naranjas y pulsa E para cambiarlas a LED. Los paneles solares piden el kit solar de la tienda: sigue sus cinco pasos.",
+	]],
+	["♻", "Niveles 3 y 4", "Cómo pasarlos: Residuos y Agua", TEMA.TEAL, [
+		"Nivel 3. En cada punto de reciclaje pulsa E y arrastra los ocho objetos a su contenedor; si te equivocas, el objeto vuelve. Cuando una papelera se llena, escanea su QR para llamar al servicio.",
+		"Nivel 4. Cierra con E las seis llaves que gotean: cuanto antes, menos litros se pierden. Las dos captaciones de lluvia piden el kit pluvial de la tienda.",
+	]],
+	["🚲", "Niveles 5 y 6", "Cómo pasarlos: Transporte y Educación", TEMA.VIOLETA, [
+		"Nivel 5. Recibe el encargo en la Oficina de Movilidad, toma las seis decisiones del plan, monta los dos bicicleteros (kit de la tienda) y defiende el plan ante el Consejo, en el Rectorado.",
+		"Nivel 6. Rediseña la malla curricular, recluta el Comité Ambiental, organiza la Semana Verde y, al final, publica el informe.",
 	]],
 ]
 
@@ -181,7 +195,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_ESCAPE, KEY_H: cerrar()
+			KEY_ESCAPE, KEY_H, KEY_F1: cerrar()
 			KEY_LEFT, KEY_A: pasar(-1)
 			KEY_RIGHT, KEY_D: pasar(1)
 			_: pass
@@ -192,7 +206,7 @@ func _input(event: InputEvent) -> void:
 func _crear_boton() -> void:
 	_boton = Button.new()
 	_boton.text = "?"
-	_boton.tooltip_text = "Bitácora del Eco-Ranger (H)"
+	_boton.tooltip_text = "Bitácora del Eco-Ranger (F1 o H)"
 	_boton.focus_mode = Control.FOCUS_NONE
 	_boton.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	_boton.offset_left = -58; _boton.offset_top = -58

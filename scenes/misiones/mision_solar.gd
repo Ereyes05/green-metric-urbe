@@ -34,17 +34,17 @@ const BENEFICIOS_SOLAR : Array = [
 const PASOS_SOLAR : Array = [
 	{
 		"titulo": "Paso 1 — Evaluación de superficie",
-		"desc":   "Se verifica la orientación, inclinación y resistencia estructural del techo. El techo sur es ideal: máxima exposición solar en el hemisferio norte.",
+		"desc":   "Se verifica que el techo aguante el peso y que nada le haga sombra (árboles, tanques, otros edificios) entre las 9 a. m. y las 3 p. m., las horas de más sol.\n📍 Maracaibo está unos 10,6° al norte del ecuador: el sol sale por el este, se pone por el oeste y a mediodía pasa casi encima, algo inclinado hacia el sur la mayor parte del año (de finales de abril a mediados de agosto pasa un poco al norte). Por eso los paneles se orientan hacia el SUR: en el año completo es la orientación que más energía produce.",
 		"icono":  "🔍", "color": Color(0.28, 0.88, 0.95),
 	},
 	{
 		"titulo": "Paso 2 — Instalación de estructura soporte",
-		"desc":   "Se instalan los rieles de aluminio anclados al techo con sellos impermeables. La estructura soporta hasta 150 km/h de viento.",
+		"desc":   "Se instalan los rieles de aluminio anclados al techo con sellos impermeables. La estructura soporta hasta 150 km/h de viento.\n📐 Inclinación: en un sitio fijo conviene inclinar los paneles más o menos lo mismo que la latitud, así que en Maracaibo van a unos 10° a 15° mirando al sur. Casi planos captan bien el sol alto del trópico, y esa pequeña pendiente deja que la lluvia arrastre el polvo: un panel sucio genera menos.",
 		"icono":  "🔧", "color": Color(0.95, 0.75, 0.15),
 	},
 	{
 		"titulo": "Paso 3 — Colocación de paneles",
-		"desc":   "Cada panel monocristalino de 400W se fija a la estructura. Haz clic en cada celda para colocar un panel fotovoltaico.",
+		"desc":   "Cada panel monocristalino de 400W se fija a la estructura, dejando espacio entre filas para que un panel no le haga sombra al de atrás. Haz clic en cada celda para colocar un panel fotovoltaico.",
 		"icono":  "☀️", "color": Color(0.98, 0.82, 0.08),
 	},
 	{
@@ -54,7 +54,7 @@ const PASOS_SOLAR : Array = [
 	},
 	{
 		"titulo": "Paso 5 — Sistema operativo",
-		"desc":   "¡Sistema activo! El medidor bidireccional registra la generación. El excedente se inyecta a la red.\nCarbono evitado estimado: 4.2 t CO₂/año.",
+		"desc":   "¡Sistema activo! El medidor bidireccional registra la generación. El excedente se inyecta a la red.\nCarbono evitado estimado: 4.2 t CO₂/año.\n💧 Mantenimiento: en la época seca hay que limpiar el polvo de los paneles cada pocos meses; en la de lluvias, la inclinación hace casi todo el trabajo.",
 		"icono":  "✅", "color": Color(0.22, 0.90, 0.30),
 	},
 ]

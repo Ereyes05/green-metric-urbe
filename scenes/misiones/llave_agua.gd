@@ -11,6 +11,7 @@ extends Area2D
 
 signal llave_cerrada(mision_id: String, xp: int, ec: int)
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
 const RADIO_DETEC  : float = 48.0
 const TASA_FUGA     : float = 0.0032   # 0→100% en ~5 min
 const TIEMPO_CIERRE : float = 0.8      # duración de la animación de cierre
@@ -162,7 +163,7 @@ func _process(delta: float) -> void:
 	var cam_off   := cam.global_position - vp_size * 0.5 / cam_zoom
 	var screen_pos := (gp - cam_off) * cam_zoom
 	_prompt_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_prompt_panel.position = screen_pos
+	AJUSTE.colocar_aviso(_prompt_panel, _prompt_lbl, screen_pos)
 
 
 func _actualizar_prompt_texto() -> void:

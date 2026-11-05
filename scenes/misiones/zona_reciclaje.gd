@@ -12,6 +12,7 @@ extends Area2D
 signal reciclar_solicitado(zona: Area2D)
 signal vaciado_servicio(xp: int, ec: int)
 
+const AJUSTE := preload("res://scenes/ui/ui_ajuste.gd")
 const RADIO_DETEC  : float = 55.0
 # Llenado ambiental. Antes era 0.0025 (~6,7 min de 0 a 100 %), que de
 # vacía a "llamá al servicio" (35 %) daban 2,3 min: apenas terminabas de
@@ -363,7 +364,7 @@ func _process(delta: float) -> void:
 	var cam_off   := cam.global_position - vp_size * 0.5 / cam_zoom
 	var screen_pos := (gp - cam_off) * cam_zoom
 	_prompt_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_prompt_panel.position = screen_pos
+	AJUSTE.colocar_aviso(_prompt_panel, _prompt_lbl, screen_pos)
 
 
 func _actualizar_prompt_texto() -> void:

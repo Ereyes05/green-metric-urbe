@@ -36,14 +36,18 @@ func _process(delta: float) -> void:
 
 
 func _buscar() -> void:
-	_objetivos.clear()
-	var nm = get_node_or_null("/root/NivelManager")
-	var mapa := get_parent()
+	_objetivos = pendientes(get_parent(), get_node_or_null("/root/NivelManager"))
+
+
+# Puntos del mapa con misiones del nivel actual que faltan. También la usa
+# el minimapa (scenes/ui/minimapa.gd) para sus puntos rojos.
+static func pendientes(mapa: Node, nm) -> Array[Node2D]:
+	var out : Array[Node2D] = []
 	if nm == null or mapa == null:
-		return
-	var nivel := _nivel_actual(nm)
+		return out
+	var nivel := nivel_actual(nm)
 	if nivel == 0:
-		return
+		return out
 	var ids : Array = nm.misiones_nivel.get(nivel, [])
 	for n in mapa.get_children():
 		if not (n is Node2D) or not n.is_visible_in_tree():
@@ -57,10 +61,11 @@ func _buscar() -> void:
 			continue
 		if not es_oficina and nm.mision_completada_q(nivel, n.get("mision_id")):
 			continue
-		_objetivos.append(n)
+		out.append(n)
+	return out
 
 
-func _nivel_actual(nm) -> int:
+static func nivel_actual(nm) -> int:
 	for n in range(1, 7):
 		if nm.nivel_desbloqueado(n) and not nm.nivel_completo(n):
 			return n
