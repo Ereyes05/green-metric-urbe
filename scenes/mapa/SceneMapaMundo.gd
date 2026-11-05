@@ -479,6 +479,8 @@ var _volvio_donde_quedo   : bool    = false
 var _timer_crisis         : float   = 0.0
 var _crises_desbloqueadas : bool    = false
 var _menu_pausa_canvas    : CanvasLayer = null
+# "Reiniciar Misiones" del menú de pausa: solo al correr desde el editor.
+var permitir_reinicio     : bool = OS.is_debug_build()
 const _CRISIS_MIN         : float   = 90.0
 const _CRISIS_MAX         : float   = 180.0
 var _insignia_lbl     : Label       = null
@@ -788,15 +790,21 @@ func _construir_menu_pausa() -> void:
 		get_tree().change_scene_to_file("res://scenes/login/scene_login.tscn"))
 	vb.add_child(btn_login)
 
-	var btn_reset := Button.new()
-	btn_reset.text = "🔄  Reiniciar Misiones"
-	btn_reset.add_theme_font_size_override("font_size", 16)
-	btn_reset.pressed.connect(func():
-		var nm = _nivel_mgr()
-		if nm:
-			nm.reset_progreso()
-		get_tree().reload_current_scene())
-	vb.add_child(btn_reset)
+	# Herramienta de desarrollo: solo borra el guardado local. La XP, el
+	# puntaje, el ranking y los EcoCredits viven en el servidor y no se
+	# tocan, y al volver a entrar las misiones se recuperan del servidor.
+	# En la versión web (export release) no aparece: un estudiante que la
+	# usó veía el nivel en 0 con el puntaje y el ranking intactos.
+	if permitir_reinicio:
+		var btn_reset := Button.new()
+		btn_reset.text = "🔄  Reiniciar Misiones"
+		btn_reset.add_theme_font_size_override("font_size", 16)
+		btn_reset.pressed.connect(func():
+			var nm = _nivel_mgr()
+			if nm:
+				nm.reset_progreso()
+			get_tree().reload_current_scene())
+		vb.add_child(btn_reset)
 
 	var btn_cont := Button.new()
 	btn_cont.text = "▶  Continuar"
