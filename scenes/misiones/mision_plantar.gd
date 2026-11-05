@@ -30,7 +30,7 @@ const MISIONES : Array = [
 			"araguaney":       "✅ ¡Excelente! El Araguaney es el Árbol Nacional de Venezuela. Su copa amplia proporciona sombra perfecta y sus raíces no dañan las aceras. ¡Elección ideal para corredores universitarios!",
 			"nim":             "❌ El nim es una especie introducida, originaria de la India. Aunque es común en Maracaibo, aquí se pide un árbol nativo.",
 			"cactus":          "❌ El cactus no da sombra ni refresca el paso. Un corredor universitario necesita un árbol de copa amplia.",
-			"vera":            "🟡 Opción válida. La Vera es nativa del Zulia, resiste la sequía y llega a dar buena sombra, pero crece muy lento: pasarían años antes de que el corredor tenga la sombra que necesita hoy. El Araguaney era la mejor opción.",
+			"vera":            "La Vera es nativa del Zulia, resiste la sequía y llega a dar buena sombra, pero crece muy lento: pasarían años antes de que el corredor tenga la sombra que necesita hoy. El Araguaney era la mejor opción.",
 		},
 	},
 	{
@@ -50,7 +50,7 @@ const MISIONES : Array = [
 		"feedback": {
 			"buganvilia":   "✅ ¡Perfecto! La Buganvilia (Veranera) es ideal: resistente al calor de Maracaibo, consume poca agua, florece abundantemente todo el año y embellece el campus sin requerir pesticidas.",
 			"rosa_inglesa": "❌ La rosa inglesa requiere muchos cuidados, pesticidas y condiciones de clima templado. Su mantenimiento intensivo es incompatible con los principios de sostenibilidad de GreenMetric.",
-			"cayena":       "🟡 Opción válida. La Cayena es ornamental y florece todo el año en Maracaibo, pero necesita riego frecuente y poda. Para un jardín de bajo consumo de agua, la Buganvilia era la mejor opción.",
+			"cayena":       "La Cayena es ornamental y florece todo el año en Maracaibo, pero necesita riego frecuente y poda. Para un jardín de bajo consumo de agua, la Buganvilia era la mejor opción.",
 			"cactus":       "❌ El cactus no tiene valor ornamental para un jardín universitario formal. No produce flores vistosas ni proporciona la imagen verde que necesita el Rectorado.",
 		},
 	},
@@ -71,7 +71,7 @@ const MISIONES : Array = [
 			{"id": "mani_forrajero",  "nombre": "Maní Forrajero",          "desc": "Cubresuelo · Flores amarillas · Seguro al pisar"},
 		],
 		"feedback": {
-			"helecho_tropical": "🟡 Opción válida. El helecho tropical con pasto San Agustín refresca el suelo y es seguro para el tránsito, pero el pasto hay que cortarlo con frecuencia: su mantenimiento es mayor. Para un patio de bajo mantenimiento, el maní forrajero era la mejor opción.",
+			"helecho_tropical": "El helecho tropical con pasto San Agustín refresca el suelo y es seguro para el tránsito, pero el pasto hay que cortarlo con frecuencia: su mantenimiento es mayor. Para un patio de bajo mantenimiento, el maní forrajero era la mejor opción.",
 			"mango":            "❌ El árbol de mango presenta riesgos: sus frutos caídos son resbalosos y peligrosos, sus raíces invasivas dañan las aceras y su sombra irregular no es ideal para zonas de tránsito.",
 			"bambu":            "❌ El bambú se propaga invasivamente y puede obstruir el paso en el patio. Su rápido crecimiento requiere mantenimiento constante y podría dañar la infraestructura cercana.",
 			"mani_forrajero":   "✅ ¡Excelente! El maní forrajero cubre el suelo con flores amarillas, lo mantiene fresco y es seguro para el tránsito. Casi no necesita mantenimiento: no hay que cortarlo como un pasto. En el clima seco de Maracaibo hay que regarlo, pero es la opción que mejor cumple el criterio de bajo mantenimiento.",
@@ -95,7 +95,7 @@ const MISIONES : Array = [
 			"araguaney":       "✅ El Araguaney es la elección perfecta. Su floración amarilla representa la identidad venezolana y su copa proporciona sombra ideal para la entrada del campus.",
 			"eucalipto":       "❌ El eucalipto es invasivo y consume grandes cantidades de agua subterránea. Sus raíces agresivas dañan aceras e infraestructura.",
 			"bambu":           "❌ El bambú crece de forma descontrolada y no proyecta la imagen representativa que necesita la entrada del campus.",
-			"apamate":         "🟡 Opción válida. El Apamate es nativo y da sombra amplia, pero pide más agua que el Araguaney y no tiene su valor representativo: para la entrada del campus, el Árbol Nacional era la mejor opción.",
+			"apamate":         "El Apamate es nativo y da sombra amplia, pero pide más agua que el Araguaney y no tiene su valor representativo: para la entrada del campus, el Árbol Nacional era la mejor opción.",
 		},
 	},
 	{
@@ -136,7 +136,7 @@ const MISIONES : Array = [
 			"helecho_tropical": "✅ El helecho tropical con pasto crea un suelo verde fresco de bajo mantenimiento. Ideal para reducir la temperatura en corredores de tránsito intenso.",
 			"rosa_inglesa":      "❌ La rosa inglesa requiere pesticidas y riego frecuente. Es incompatible con los principios de sostenibilidad del campus.",
 			"cactus":            "❌ El cactus no contribuye a refrescar el corredor ni ofrece sombra. No es adecuado para zonas de tránsito estudiantil.",
-			"mani_forrajero":    "🟡 Opción válida. El maní forrajero cubre el suelo y casi no necesita poda, pero es introducido (viene de Brasil) y aquí se pide vegetación nativa; además, en Maracaibo hay que regarlo con frecuencia. El helecho con pasto era la mejor opción.",
+			"mani_forrajero":    "El maní forrajero cubre el suelo y casi no necesita poda, pero es introducido (viene de Brasil) y aquí se pide vegetación nativa; además, en Maracaibo hay que regarlo con frecuencia. El helecho con pasto era la mejor opción.",
 		},
 	},
 	{
@@ -155,7 +155,7 @@ const MISIONES : Array = [
 		],
 		"feedback": {
 			"araguaney":       "✅ El Araguaney ofrece sombra amplia y resiste el intenso calor maracaibero. Su floración amarilla también mejora la estética del campus.",
-			"vera":            "🟡 Opción válida. La Vera es nativa y resiste el calor, pero crece muy lento y tardaría años en dar sombra. El Araguaney era la mejor opción.",
+			"vera":            "La Vera es nativa y resiste el calor, pero crece muy lento y tardaría años en dar sombra. El Araguaney era la mejor opción.",
 			"eucalipto":       "❌ El eucalipto es invasivo y sus raíces pueden dañar la infraestructura. Su alelopatía afecta a las plantas cercanas.",
 			"rosa_inglesa":    "❌ La rosa inglesa no proporciona sombra suficiente y requiere cuidados intensivos que contradicen los principios de sostenibilidad.",
 		},
@@ -178,7 +178,7 @@ const MISIONES : Array = [
 			"buganvilia":     "✅ La Buganvilia forma una barrera verde densa y colorida. Resiste los gases vehiculares y mejora la estética del área junto al estacionamiento.",
 			"eucalipto":      "❌ Aunque crece rápido, el eucalipto es invasivo y puede dañar la infraestructura del estacionamiento con sus raíces agresivas.",
 			"cactus":         "❌ El cactus no forma una barrera visual efectiva ni filtra gases vehiculares. No es apropiado para esta zona de tránsito.",
-			"coralillo":      "🟡 Opción válida. El Coralillo es nativo de América tropical, forma un seto y atrae colibríes, pero pide más riego y poda que la Buganvilia, que forma una barrera más densa con menos agua. La Buganvilia era la mejor opción.",
+			"coralillo":      "El Coralillo es nativo de América tropical, forma un seto y atrae colibríes, pero pide más riego y poda que la Buganvilia, que forma una barrera más densa con menos agua. La Buganvilia era la mejor opción.",
 		},
 	},
 ]

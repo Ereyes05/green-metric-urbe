@@ -215,6 +215,24 @@ func _preparar(id: String) -> void:
 		"minimapa":
 			_mapa._minimapa.alternar()
 			await _esperar(1.0)
+		"plantar_valida":
+			var zona = _hijo_con_script("res://scenes/misiones/zona_tierra.gd")
+			_mapa._plantar_ui.iniciar(0, zona, "click")
+			await _esperar(1.0)
+			for c in _mapa._plantar_ui._cartas:
+				if c.get_meta("es_valida"):
+					_mapa._plantar_ui._seleccionar_carta(c)
+			_mapa._plantar_ui._on_plantar_esta()
+			await _esperar(0.8)
+		"aviso_regar":
+			# El aviso que se salía del cuadro (pedido del jurado).
+			var zona = _hijo_con_script("res://scenes/misiones/zona_tierra.gd")
+			_mapa.jugador.global_position = zona.global_position + Vector2(0, 40)
+			await _esperar(0.8)
+			zona._completada = true
+			zona._necesita_riego = true
+			zona._al_entrar(_mapa.jugador)
+			await _esperar(0.8)
 		"f1_con_minimapa":
 			# Verificación (no va al manual): F1 desde el mapa abre la Bitácora
 			# y el minimapa abierto queda detrás de ella.
