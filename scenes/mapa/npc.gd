@@ -275,73 +275,121 @@ func _crear_char_visual() -> void:
 # ════════════════════════════════════════════════════════════
 # BURBUJA DE NOMBRE
 # ════════════════════════════════════════════════════════════
+# Antes (hasta 2026-11-06) el Label quedaba en la esquina superior izquierda
+# del Panel: el Panel no acomoda a sus hijos, así que el nombre se veía
+# corrido a la izquierda y pegado arriba. Ahora es un PanelContainer, que
+# centra el Label dentro de sus márgenes, y el tamaño sale del texto real
+# (sin esperar un frame). Estilo: el del HUD (hud_tema.gd), con el borde en
+# el color del NPC para que se lo siga reconociendo por color.
+const TEMA := preload("res://scenes/ui/hud_tema.gd")
+const BURBUJA_FUENTE    : int   = 13
+const BURBUJA_SEPARA    : float = 9.0    # px entre la cabeza y el borde inferior
+const BURBUJA_REBOTE    : float = 2.0    # amplitud del rebote, en px
+
+var _fondo_burbuja : PanelContainer = null
+var _punto_burbuja : Panel          = null
+var _tween_punto   : Tween          = null
+var _tween_fade    : Tween          = null
+
+
 func _crear_burbuja() -> void:
 	_burbuja = Control.new()
-	_burbuja.custom_minimum_size = Vector2(0, 40)
+	_burbuja.name = "Burbuja"
 	_burbuja.visible = false
+	_burbuja.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_burbuja)
 
-	# Panel de la burbuja
-	var fondo := Panel.new()
-	fondo.name = "Fondo"
-	var sb := StyleBoxFlat.new()
-	sb.bg_color     = color.darkened(0.35)
-	sb.bg_color.a   = 0.92
-	sb.border_color = color.lightened(0.20)
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(8)
-	sb.shadow_color  = Color(0, 0, 0, 0.45)
-	sb.shadow_size   = 5
+	_fondo_burbuja = PanelContainer.new()
+	_fondo_burbuja.name = "Fondo"
+	_fondo_burbuja.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fondo_col := TEMA.PANEL_BG
+	fondo_col.a = 0.94
+	var sb := TEMA.caja(fondo_col, color.lightened(0.30), 2, 9, 10, 3)
+	sb.shadow_color  = Color(0, 0, 0, 0.40)
+	sb.shadow_size   = 4
 	sb.shadow_offset = Vector2(0, 2)
-	sb.content_margin_left   = 8
-	sb.content_margin_right  = 8
-	sb.content_margin_top    = 4
-	sb.content_margin_bottom = 4
-	fondo.add_theme_stylebox_override("panel", sb)
-	_burbuja.add_child(fondo)
+	_fondo_burbuja.add_theme_stylebox_override("panel", sb)
+	_burbuja.add_child(_fondo_burbuja)
 
-	# Etiqueta del nombre
-	var nombre_lbl := Label.new()
+	var nombre_lbl := TEMA.label(nombre_npc, BURBUJA_FUENTE, TEMA.TEXTO, 600)
 	nombre_lbl.name = "Nombre"
-	nombre_lbl.text = nombre_npc
 	nombre_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nombre_lbl.add_theme_font_size_override("font_size", 11)
-	nombre_lbl.add_theme_color_override("font_color", Color.WHITE)
-	fondo.add_child(nombre_lbl)
+	nombre_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	_fondo_burbuja.add_child(nombre_lbl)
 
-	await get_tree().process_frame
-	if not is_instance_valid(nombre_lbl): return
-
-	var ancho : float = max(nombre_lbl.size.x + 18.0, 60.0)
-	var alto  : float = 26.0
-
-	# Borde inferior 6.5 px sobre la cabeza (dibujo procedural: tope≈-37.5 → -44)
+	# El tamaño mínimo ya se puede calcular: el nodo está en el árbol y la
+	# fuente está puesta como override. Redondeado a píxeles enteros para que
+	# el texto no quede en medio píxel (se ve borroso).
+	var tam : Vector2 = _fondo_burbuja.get_combined_minimum_size().ceil()
+	if int(tam.x) % 2 == 1:
+		tam.x += 1.0   # ancho par → el centro cae justo sobre el NPC
 	var tope : float = _char_visual.tope_cabeza if _char_visual else -37.5
-	fondo.position = Vector2(-ancho * 0.5, -alto + tope - 6.5)
-	fondo.size     = Vector2(ancho, alto)
+	_fondo_burbuja.size     = tam
+	_fondo_burbuja.position = Vector2(-tam.x * 0.5, round(tope - BURBUJA_SEPARA - tam.y))
 
-	# Punto indicador pulsante bajo la burbuja
-	var dot := Panel.new()
-	dot.custom_minimum_size = Vector2(8, 8)
-	dot.position            = Vector2(ancho * 0.5 - 4.0, alto - 1.0)
+	# Punto indicador bajo la burbuja, centrado sobre la cabeza.
+	_punto_burbuja = Panel.new()
+	_punto_burbuja.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_punto_burbuja.size     = Vector2(6, 6)
+	_punto_burbuja.position = Vector2(-3.0, round(tope - BURBUJA_SEPARA + 1.5))
 	var ds := StyleBoxFlat.new()
-	ds.bg_color = color.lightened(0.28)
-	ds.set_corner_radius_all(4)
-	dot.add_theme_stylebox_override("panel", ds)
-	fondo.add_child(dot)
-	var tw_dot := dot.create_tween().set_loops()
-	tw_dot.tween_property(dot, "modulate:a", 0.22, 0.55)
-	tw_dot.tween_property(dot, "modulate:a", 1.0,  0.55)
+	ds.bg_color = color.lightened(0.30)
+	ds.set_corner_radius_all(3)
+	ds.anti_aliasing = true
+	_punto_burbuja.add_theme_stylebox_override("panel", ds)
+	_burbuja.add_child(_punto_burbuja)
 
-	_iniciar_bounce()
+	# La animación de aparición escala desde la cabeza, no desde los pies.
+	_burbuja.pivot_offset = Vector2(0, tope)
 
 
-func _iniciar_bounce() -> void:
-	if not is_instance_valid(_burbuja): return
-	if _tween_bounce: _tween_bounce.kill()
+# El rebote y el latido del punto corren solo mientras la burbuja se ve.
+# Antes eran tweens en bucle que seguían corriendo con la burbuja oculta:
+# 24 tweens permanentes (12 NPCs × 2) que no mostraban nada.
+func _iniciar_animaciones_burbuja() -> void:
+	_detener_animaciones_burbuja()
+	_burbuja.position.y = 0.0
 	_tween_bounce = create_tween().set_loops()
-	_tween_bounce.tween_property(_burbuja, "position:y", -6.0, 0.42).set_ease(Tween.EASE_IN_OUT)
-	_tween_bounce.tween_property(_burbuja, "position:y", -2.0, 0.42).set_ease(Tween.EASE_IN_OUT)
+	_tween_bounce.tween_property(_burbuja, "position:y", -BURBUJA_REBOTE, 0.45) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_tween_bounce.tween_property(_burbuja, "position:y", 0.0, 0.45) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_tween_punto = create_tween().set_loops()
+	_tween_punto.tween_property(_punto_burbuja, "modulate:a", 0.30, 0.55)
+	_tween_punto.tween_property(_punto_burbuja, "modulate:a", 1.0, 0.55)
+
+
+func _detener_animaciones_burbuja() -> void:
+	if _tween_bounce: _tween_bounce.kill()
+	if _tween_punto:  _tween_punto.kill()
+	_tween_bounce = null
+	_tween_punto  = null
+
+
+func _mostrar_burbuja() -> void:
+	if not is_instance_valid(_burbuja): return
+	if _tween_fade: _tween_fade.kill()
+	_burbuja.modulate.a = 0.0
+	_burbuja.visible    = true
+	_iniciar_animaciones_burbuja()
+	_tween_fade = create_tween()
+	_tween_fade.tween_property(_burbuja, "modulate:a", 1.0, 0.22)
+	_tween_fade.parallel().tween_property(_burbuja, "scale", Vector2.ONE, 0.22) \
+		.from(Vector2(0.6, 0.6)).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _ocultar_burbuja(animar: bool = true) -> void:
+	if not is_instance_valid(_burbuja): return
+	if _tween_fade: _tween_fade.kill()
+	if not animar:
+		_burbuja.visible = false
+		_detener_animaciones_burbuja()
+		return
+	_tween_fade = create_tween()
+	_tween_fade.tween_property(_burbuja, "modulate:a", 0.0, 0.18)
+	_tween_fade.tween_callback(func():
+		_burbuja.visible = false
+		_detener_animaciones_burbuja())
 
 
 # ════════════════════════════════════════════════════════════
@@ -360,13 +408,7 @@ func _al_entrar(body: Node) -> void:
 		if hb:
 			hb.push("primer_npc", "💬 ¡Presiona [E] para hablar con el NPC!")
 
-		if is_instance_valid(_burbuja):
-			_burbuja.modulate.a = 0.0
-			_burbuja.visible    = true
-			var tw := create_tween()
-			tw.tween_property(_burbuja, "modulate:a", 1.0, 0.22)
-			tw.parallel().tween_property(_burbuja, "scale",
-										 Vector2(1.0, 1.0), 0.22).from(Vector2(0.5, 0.5))
+		_mostrar_burbuja()
 
 
 func _al_salir(body: Node) -> void:
@@ -377,18 +419,14 @@ func _al_salir(body: Node) -> void:
 		if is_instance_valid(_char_visual):
 			_char_visual.glow_on = false
 
-		if is_instance_valid(_burbuja):
-			var tw := create_tween()
-			tw.tween_property(_burbuja, "modulate:a", 0.0, 0.18)
-			tw.tween_callback(func(): _burbuja.visible = false)
+		_ocultar_burbuja()
 
 
 func iniciar_dialogo() -> void:
 	if bloqueado:
 		bloqueo_tocado.emit(aviso_bloqueo)
 		return
-	if is_instance_valid(_burbuja):
-		_burbuja.visible = false
+	_ocultar_burbuja(false)
 	var ui = get_tree().get_first_node_in_group("ui_dialogo")
 	if ui:
 		ui.iniciar(nombre_npc, dialogos, mision_id, color, textura)
