@@ -92,7 +92,7 @@ body {
 		</style>
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
-<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#canvas{display:block;position:absolute;top:0;left:0;width:100vw;height:100vh}</style>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#canvas{display:block;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(100vw,calc(100vh*16/9));height:min(100vh,calc(100vw*9/16))}</style>
 	</head>
 	<body>
 		<canvas id="canvas">
@@ -111,7 +111,7 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","mainPack":"index.pck?v=acb36b28c221","experimentalVK":false,"fileSizes":{"index.pck":2890704,"index.wasm":39509339},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2985912,"index.wasm":39509339},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
