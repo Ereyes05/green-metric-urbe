@@ -148,6 +148,20 @@ func _ready() -> void:
 	var i_inp := mapa_src.find("if _nivel5 and _nivel5.hay_panel_abierto():\n\t\tget_viewport().set_input_as_handled()")
 	_check(i_inp != -1, "E: con un panel del Plan abierto la tecla se marca consumida")
 
+	# Con el panel del QR de residuos abierto el jugador no camina por debajo:
+	# hay_qr_abierto() alimenta _hay_ui_modal_abierta() → ui_bloquea_jugador().
+	const ZONA_REC := preload("res://scenes/misiones/zona_reciclaje.gd")
+	var z1 : Area2D = ZONA_REC.new()
+	var z2 : Area2D = ZONA_REC.new()
+	_check(not mapa.hay_qr_abierto([z1, z2]), "QR residuos: sin panel abierto no bloquea")
+	z2.qr_abierto = true
+	_check(mapa.hay_qr_abierto([z1, z2]), "QR residuos: con el panel abierto bloquea")
+	z1.free()
+	z2.free()
+	var i_modal := mapa_src.find("func _hay_ui_modal_abierta")
+	_check(mapa_src.substr(i_modal, 2400).contains("if _qr_reciclaje_abierto(): return true"),
+		"QR residuos: cuenta como UI modal (frena al jugador)")
+
 	# I2/I3 (revisión final): el aviso de misión completada usa el título
 	# real de las tr_* (no el id crudo capitalizado) y oculta la línea de XP
 	# cuando xp_ganado es 0 (quien ya cobró el Nivel 5 viejo no ve "+0 XP").

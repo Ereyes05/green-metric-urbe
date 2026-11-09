@@ -34,6 +34,9 @@ var _t             : float = 0.0
 
 var nivel_llenado : float = 0.25   # 0.0 .. 1.0
 var en_servicio   : bool  = false
+# true mientras el panel del QR está en pantalla: SceneMapaMundo lo consulta
+# para que el jugador no camine por debajo del panel.
+var qr_abierto    : bool  = false
 
 var _prompt_canvas : CanvasLayer = null
 var _prompt_panel  : Panel       = null
@@ -444,6 +447,7 @@ func _url_qr(token: String) -> String:
 # celular a mano.
 func _mostrar_modal_qr() -> void:
 	var token := _generar_token()
+	qr_abierto = true
 
 	var canvas := CanvasLayer.new()
 	canvas.layer = 20
@@ -591,6 +595,7 @@ func _mostrar_modal_qr() -> void:
 			estado_lbl.text = "⏱ Tiempo agotado —\ncontinuando de todas formas"
 	await get_tree().create_timer(0.6).timeout
 
+	qr_abierto = false
 	canvas.queue_free()
 
 

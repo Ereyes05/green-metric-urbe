@@ -8,6 +8,9 @@
 # consecuencia educativa; si la elegida no era la mejor, se indica cuál
 # lo era. El botón pasa entonces a "Siguiente caso →" para rotar entre
 # los escenarios de Agua (M4) y Residuos (M3).
+# Cada caso se juega una sola vez por sesión: al confirmar el último, el
+# botón pasa a "Finalizar" y el panel muestra que ya se completaron todos;
+# si se vuelve a abrir, muestra ese cierre en vez de repetir los casos.
 # La señal decision_tomada se conserva por compatibilidad de firma, pero
 # ya NO se emite: este simulador no afecta el puntaje GreenMetric ni los
 # EcoCredits.
@@ -110,10 +113,14 @@ const ESCENARIOS : Array = [
 
 var _esc_actual    : Dictionary = {}
 var _escenario_idx : int        = 0
+var _idx_actual    : int        = -1
+var _completados   : Dictionary = {}   # índice de ESCENARIOS → true
+var _en_fin        : bool       = false
 var _opcion_sel    : int        = -1
 var _confirmado    : bool       = false
 
 var _overlay       : ColorRect   = null
+var _modo_lbl      : Label       = null
 var _panel         : PanelContainer = null
 var _mg            : MarginContainer = null
 var _titulo_lbl    : Label       = null
@@ -142,6 +149,14 @@ func mostrar(modulo_id: int = 0) -> void:
 			if ESCENARIOS[i]["modulo"] == modulo_id:
 				_escenario_idx = i
 				break
+	if todos_completados():
+		_mostrar_fin()
+		show()
+		return
+	# Salta los casos ya hechos: nunca se repite uno.
+	while _completados.has(_escenario_idx):
+		_escenario_idx = (_escenario_idx + 1) % ESCENARIOS.size()
+	_idx_actual = _escenario_idx
 	_esc_actual = ESCENARIOS[_escenario_idx]
 	_escenario_idx = (_escenario_idx + 1) % ESCENARIOS.size()
 	_opcion_sel    = -1
@@ -149,11 +164,41 @@ func mostrar(modulo_id: int = 0) -> void:
 	show()
 
 
+func todos_completados() -> bool:
+	return _completados.size() >= ESCENARIOS.size()
+
+
+# Cierre del simulador: reemplaza el caso por un mensaje de fin y deja solo
+# el botón "Cerrar".
+func _mostrar_fin() -> void:
+	_en_fin     = true
+	_confirmado = true
+	var col := Color(0.28, 0.95, 0.28)
+	_panel.get_theme_stylebox("panel").border_color = col
+	_modo_lbl.text     = "🔬 Simulador · Modo práctica · %d de %d casos" % [ESCENARIOS.size(), ESCENARIOS.size()]
+	_icono_lbl.text    = "✅"
+	_titulo_lbl.text   = "¡Simulaciones completadas!"
+	_titulo_lbl.add_theme_color_override("font_color", col)
+	_ctx_lbl.text      = "Ya realizaste los %d casos del simulador (Agua y Residuos). Repasá lo aprendido aplicándolo en las misiones del campus." % ESCENARIOS.size()
+	_pregunta_lbl.visible = false
+	for btn in _btn_ops:
+		(btn as Button).get_parent().visible = false
+	_edu_box.visible   = false
+	_mejor_lbl.visible = false
+	_btn_confirmar.text     = "Cerrar"
+	_btn_confirmar.disabled = false
+
+
 func _poblar() -> void:
 	var e  : Dictionary = _esc_actual
 	var col : Color     = e["color"]
 
 	_confirmado = false
+	_en_fin     = false
+	_modo_lbl.text = "🔬 Simulador · Modo práctica · Caso %d de %d" % [_completados.size() + 1, ESCENARIOS.size()]
+	_pregunta_lbl.visible = true
+	for btn in _btn_ops:
+		(btn as Button).get_parent().visible = true
 	_panel.get_theme_stylebox("panel").border_color = col
 	_icono_lbl.text    = e["icono"]
 	_titulo_lbl.text   = e["titulo"]
@@ -268,13 +313,19 @@ func _confirmar() -> void:
 		_mejor_lbl.text    = ""
 		_mejor_lbl.visible = false
 
-	_btn_confirmar.text     = "Siguiente caso →"
+	if _idx_actual >= 0:
+		_completados[_idx_actual] = true
+	_btn_confirmar.text     = "✅  Finalizar" if todos_completados() else "Siguiente caso →"
 	_btn_confirmar.disabled = false
 
 
 func _on_btn_accion_pressed() -> void:
-	if not _confirmado:
+	if _en_fin:
+		hide()
+	elif not _confirmado:
 		_confirmar()
+	elif todos_completados():
+		_mostrar_fin()
 	else:
 		mostrar()
 
@@ -315,11 +366,11 @@ func _crear_ui() -> void:
 	_mg.add_child(vbox)
 
 	# Rótulo fijo de modo práctica
-	var modo_lbl := Label.new()
-	modo_lbl.text = "🔬 Simulador · Modo práctica"
-	modo_lbl.add_theme_font_size_override("font_size", 13)
-	modo_lbl.add_theme_color_override("font_color", Color(0.45, 0.85, 0.95))
-	vbox.add_child(modo_lbl)
+	_modo_lbl = Label.new()
+	_modo_lbl.text = "🔬 Simulador · Modo práctica"
+	_modo_lbl.add_theme_font_size_override("font_size", 13)
+	_modo_lbl.add_theme_color_override("font_color", Color(0.45, 0.85, 0.95))
+	vbox.add_child(_modo_lbl)
 
 	var subtitulo_lbl := Label.new()
 	subtitulo_lbl.text = "Practicá decisiones reales del campus. No suma puntaje ni EcoCredits."

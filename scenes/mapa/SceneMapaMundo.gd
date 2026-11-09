@@ -844,6 +844,20 @@ func _hay_ui_modal_abierta() -> bool:
 	if _comite_ui and _comite_ui.visible: return true
 	if _semana_verde_ui and _semana_verde_ui.visible: return true
 	if _informe_ui and _informe_ui.visible: return true
+	if _qr_reciclaje_abierto(): return true
+	return false
+
+
+# Panel del QR del servicio de limpieza (Nivel 3): lo crea cada papelera, no
+# este script, así que se pregunta a las papeleras.
+func _qr_reciclaje_abierto() -> bool:
+	return hay_qr_abierto(get_tree().get_nodes_in_group("zona_reciclaje"))
+
+
+static func hay_qr_abierto(zonas: Array) -> bool:
+	for zona in zonas:
+		if is_instance_valid(zona) and zona.get("qr_abierto") == true:
+			return true
 	return false
 
 
@@ -908,6 +922,11 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if event.keycode != KEY_E:
+		return
+
+	# Con el QR del servicio de limpieza en pantalla, la E no abre otra misión.
+	if _qr_reciclaje_abierto():
+		get_viewport().set_input_as_handled()
 		return
 
 	# E cierra la escena de edificio (funciona como "Salir")
