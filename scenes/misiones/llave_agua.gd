@@ -6,6 +6,9 @@
 # ============================================================
 extends Area2D
 
+# Los íconos se redibujan a ~12 Hz, no en cada cuadro (ver redibujo.gd).
+const Redibujo := preload("res://scenes/mapa/redibujo.gd")
+
 @export var mision_id    : String = "llave_1"
 @export var nombre_llave : String = "Llave del Baño"
 
@@ -34,9 +37,15 @@ class FaucetVisual extends Node2D:
 	var cerrando   : bool  = false
 	var _t         : float = 0.0
 
+	var _redibujo : float = randf() * Redibujo.CADA   # fase al azar: no todos en el mismo cuadro
+
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
+		_redibujo -= delta
+		# Mientras se cierra la manija gira rápido: ahí sí en cada cuadro.
+		if _redibujo <= 0.0 or cerrando:
+			_redibujo = Redibujo.CADA
+			queue_redraw()
 
 	func _draw() -> void:
 		_draw_soporte()

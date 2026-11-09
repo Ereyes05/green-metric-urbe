@@ -7,6 +7,9 @@
 # ============================================================
 extends Area2D
 
+# Los íconos se redibujan a ~12 Hz, no en cada cuadro (ver redibujo.gd).
+const Redibujo := preload("res://scenes/mapa/redibujo.gd")
+
 const LUGARES := preload("res://scenes/mapa/lugares_campus.gd")
 const TEMA := preload("res://scenes/ui/hud_tema.gd")
 
@@ -38,9 +41,14 @@ class Icono extends Node2D:
 	var apagado : Color = Color.WHITE
 	var _t : float = 0.0
 
+	var _redibujo : float = randf() * Redibujo.CADA   # fase al azar: no todos en el mismo cuadro
+
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
+		_redibujo -= delta
+		if _redibujo <= 0.0:
+			_redibujo = Redibujo.CADA
+			queue_redraw()
 
 	func _draw() -> void:
 		var col : Color = apagado if estado == "bloqueado" else acento

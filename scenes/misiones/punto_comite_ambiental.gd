@@ -6,6 +6,9 @@
 # ============================================================
 extends Area2D
 
+# Los íconos se redibujan a ~12 Hz, no en cada cuadro (ver redibujo.gd).
+const Redibujo := preload("res://scenes/mapa/redibujo.gd")
+
 @export var mision_id    : String = "comite_ambiental"
 @export var nombre_punto : String = "Mesa del Comité Ambiental"
 
@@ -28,9 +31,14 @@ class ComiteIcon extends Node2D:
 	var convencidos : int   = 0
 	var _t          : float = 0.0
 
+	var _redibujo : float = randf() * Redibujo.CADA   # fase al azar: no todos en el mismo cuadro
+
 	func _process(delta: float) -> void:
 		_t += delta
-		queue_redraw()
+		_redibujo -= delta
+		if _redibujo <= 0.0:
+			_redibujo = Redibujo.CADA
+			queue_redraw()
 
 	func _draw() -> void:
 		draw_arc(Vector2(0, 12), 16.0, 0.0, PI, 16, Color(0.0, 0.0, 0.0, 0.22), 10.0)
